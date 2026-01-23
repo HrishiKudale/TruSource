@@ -1,5 +1,4 @@
 # backend/app_config.py
-
 import os
 
 def load_config(app):
@@ -11,7 +10,7 @@ def load_config(app):
     # ------------------------------
     app.config["MONGO_URI"] = os.getenv(
         "MONGO_URI",
-        "mongodb://localhost:27017/crop_traceability_db"
+        "mongodb+srv://precisiontraceability_db_user:RqT4DWJAi3FeEXUd@traceability.c9crsed.mongodb.net/crop_traceability_db"
     )
 
     # ------------------------------
