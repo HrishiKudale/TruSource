@@ -3,7 +3,6 @@ from flask_pymongo import PyMongo
 mongo = PyMongo()
 
 def init_mongo(app):
-    # Replace with your Atlas URI
-    app.config["MONGO_URI"] = "mongodb+srv://precisiontraceability_db_user:RqT4DWJAi3FeEXUd@traceability.c9crsed.mongodb.net/"
+    # Mongo URI comes from app.config (set in config.py)
     mongo.init_app(app)
     return mongo
