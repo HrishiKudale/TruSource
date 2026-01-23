@@ -1,0 +1,230 @@
+{% extends "farmer_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='marketplace.css') }}">
+
+<div class="marketplace-page">
+
+  <!-- ===== Page Header ===== -->
+  <div class="page-header">
+    <div class="header-left">
+      <img src="{{ url_for('static', filename='svg-icons/Marketplace/StorefrontProperty 1=Filled.svg') }}" class="title-icon" />
+      <h1 class="text-wrapper-4">Marketplace</h1>
+    </div>
+    
+  <div class="frame-17">
+    <a href="{{ url_for('farmer_marketplace_bp.add_market_blank') }}" class="button">
+      <span class="bt-text">Add New List</span>
+      <img class="img-2" src="{{ url_for('static', filename='svg-icons/Plus.svg') }}" />
+    </a>
+
+    <button class="button-2" type="button">
+      <span class="bt-text-2">Export</span>
+      <img class="img-2" src="{{ url_for('static', filename='svg-icons/Export.svg') }}" />
+    </button>
+  </div>
+  </div>
+
+  <!-- ===== 3 Cards Layout ===== -->
+  <div class="market-grid">
+
+    <!-- ===================== CARD 1 — ACTIVE DEMAND ===================== -->
+    <div class="market-card">
+      <div class="market-card-header">
+        <p class="market-card-title">Active Demand</p>
+      </div>
+
+      <div class="market-card-body">
+        <table class="market-table">
+          <thead>
+            <tr>
+              <th>Posted On</th>
+              <th>Buyer</th>
+              <th>Crop Name</th>
+              <th>Buyer Type</th>
+              <th>Location</th>
+              <th>Offered Price</th>
+              <th>Quantity</th>
+              <th>Expiry</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if active_demand and active_demand|length > 0 %}
+            {% for row in active_demand %}
+            <tr class="clickable-row"
+                data-href="{{ url_for('farmer_marketplace_bp.market_info_page', demand_id=row['_id']) }}">
+
+              <td>{{ row.posted_on }}</td>
+              <td>{{ row.buyer }}</td>
+              <td>{{ row.crop_name }}</td>
+              <td>{{ row.buyer_type }}</td>
+              <td>{{ row.location }}</td>
+              <td>{{ row.offered_price }}</td>
+              <td>{{ row.quantity }}</td>
+              <td>{{ row.expiry }}</td>
+              <td>{{ row.status }}</td>
+            </tr>
+            {% endfor %}
+
+            {% else %}
+            <tr class="empty-row">
+              <td colspan="9">
+                <div class="empty-state">
+                  <img src="{{ url_for('static', filename='svg-icons/Marketplace/Empty active demand table.svg') }}">
+                  <p class="empty-state-text">No Buyer Requests Found</p>
+                    <p class="empty-state-subtext">
+                      You haven't received any active demands from buyers.
+                      <br>Check again later or list you r crop for sale.
+                    </p>
+                </div>
+              </td>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== CARD 2 — MY LISTINGS ===================== -->
+    <div class="market-card-row">
+      <div class="market-card">
+      <!-- Card Header with dropdown -->
+      <div class="market-card-header justify-between">
+        <div class="header-left">
+          <p class="market-card-title">My Listings</p>
+        </div>
+
+        <div class="header-dropdown field-input field-input--select small">
+          <select name="listing_status_filter">
+            <option selected value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Closed">Closed</option>
+          </select>
+          <div class="select-chevron">⌄</div>
+        </div>
+      </div>
+
+      <div class="market-card-body">
+        <table class="market-table">
+          <thead>
+            <tr>
+              <th>Listing ID</th>
+              <th>Crop Name</th>
+              <th>Quantity</th>
+              <th>Offered Price</th>
+              <th>Offer</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% if listings and listings|length > 0 %}
+              {% for row in listings %}
+              <tr onclick="window.location.href='/farmer/marketplace/listing/{{ row.listing_id }}'">
+
+                <td>{{ row.listing_id }}</td>
+                <td>{{ row.crop_name }}</td>
+                <td>{{ row.quantity }}</td>
+                <td>{{ row.offered_price }}</td>
+                <td>{{ row.offer }}</td>
+                <td>{{ row.status }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+            <tr class="empty-row">
+              <td colspan="6">
+                <div class="empty-state">
+                  <img src="{{ url_for('static', filename='svg-icons/Marketplace/My lsting empty table.svg') }}">
+                  <p class="empty-state-text">Nothing Listed for Sale</p>
+                  <p class="empty-state-subtext">
+                    You haven't listed anycrops for sale.
+                    <br> Add a listing to receive buyer offers.
+                  </p>
+                </div>
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- ===================== CARD 3 — TOP BUYERS ===================== -->
+    <div class="market-card">
+
+      <div class="market-card-header justify-between">
+        <div class="header-left">
+          <p class="market-card-title">Top Buyers</p>
+        </div>
+
+        <div class="header-dropdown field-input field-input--select small">
+          <select name="buyer_filter">
+            <option selected value="All">All Buyer Types</option>
+            <option value="Wholesaler">Wholesaler</option>
+            <option value="Retailer">Retailer</option>
+          </select>
+          <div class="select-chevron">⌄</div>
+        </div>
+      </div>
+
+      <div class="market-card-body">
+        <table class="market-table">
+          <thead>
+            <tr>
+              <th>Crop Name</th>
+              <th>Buyer Type</th>
+              <th>Buyer</th>
+              <th>Frequency</th>
+              <th>Revenue Generated</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% if top_buyers and top_buyers|length > 0 %}
+              {% for row in top_buyers %}
+              <tr>
+                <td>{{ row.crop_name }}</td>
+                <td>{{ row.buyer_type }}</td>
+                <td>{{ row.buyer }}</td>
+                <td>{{ row.frequency }}</td>
+                <td>{{ row.revenue }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+            <tr class="empty-row">
+              <td colspan="5">
+                <div class="empty-state">
+                  <img src="{{ url_for('static', filename='svg-icons/Marketplace/Empty top buyer.svg') }}">
+                  <p class="empty-state-text">Start Selling to Build Buyer History</p>
+                  <p class="empty-state-subtext">
+                    Your top buyers will be shown here as soon as
+                    <br> you start receiving orders.
+                  </p>
+                </div>
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".clickable-row").forEach(row => {
+    row.addEventListener("click", () => {
+      window.location.href = row.dataset.href;
+    });
+  });
+});
+</script>
+
+{% endblock %}

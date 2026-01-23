@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🌾 Crop Traceability System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+            background: url("{{ url_for('static', filename='images/login5.png') }}") no-repeat center center fixed;
+            background-size: cover;  /* Makes the background image cover the entire screen */
+
+      color: #1b5e20;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .hero img {
+      width: 220px;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 6px solid #a5d6a7;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-top: 10px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin: 15px 0 5px;
+    }
+
+    .tagline {
+      font-size: 1.1rem;
+      color: #4e734e;
+      margin-bottom: 30px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      justify-content: center;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .button-card {
+      background-color: #ffffffdd;
+      padding: 6px 4px;
+      border-radius: 12px;
+      border: 2px solid #c8e6c9;
+      text-decoration: none;
+      color: #1b5e20;
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 2 / 1;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .button-card span {
+      font-size: 0.72rem;
+      color: #555;
+      margin-top: 4px;
+    }
+
+    .button-card:hover {
+      transform: scale(1.03);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 0.85rem;
+      color: #4e734e;
+    }
+
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .button-card {
+        padding: 12px 8px;
+        font-size: 0.85rem;
+      }
+
+      .hero img {
+        width: 180px;
+        height: 140px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .tagline {
+        font-size: 1rem;
+      }
+
+      footer {
+        font-size: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <img src="{{ url_for('static', filename='images/Precision Grow LOGO round-03.png') }}" alt="Farmer Logo" />
+    <h1>🌾 Product Traceability System</h1>
+    <p class="tagline">Empowering farmers and consumers with blockchain-powered food transparency.</p>
+  </div>
+
+  <div class="grid">
+    <a href="/newregister" class="button-card">🌱 Farmer<span>(Plantation & Harvest)</span></a>
+    <a href="/newlogin" class="button-card">🏭 Manufacturer<span></span>(Processing)</a>
+    <a href="/newlogin" class="button-card">🚚 Distributor<span>(Log Entry)</span></a>
+    <a href="/newlogin" class="button-card">🛒 Retailer<span>(Update Status)</span></a>
+    <a href="/owner_panel" class="button-card">🔐 Admin<span>(Monitor & Verify)</span></a>
+    <a href="/consumer/scan" class="button-card">🔍 Track Product<span>(Consumer)</span></a>
+  </div>
+
+  <footer>
+    © 2025 PrecisionGrow | Built with ⚙️ Blockchain & Agri-Tech
+  </footer>
+
+</body>
+</html>

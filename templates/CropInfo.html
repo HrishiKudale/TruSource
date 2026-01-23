@@ -1,0 +1,337 @@
+{% extends "farmer_base.html" %}
+{% set current_page = "my_crops" %}
+
+{% block content %}
+
+<!-- Your CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='cropinfo.css') }}">
+
+<!-- Leaflet Core -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+<!-- GeometryUtil (REQUIRED for centroid + area) -->
+<script src="https://unpkg.com/leaflet-geometryutil"></script>
+
+
+<div class="cropinfo-container">
+
+    <!-- Back + Title Row -->
+    <div class="cropinfo-header">
+        <a href="/farmer/crop/mycrop" class="back-btn" style="width: 34px;height: 34px;">
+            <img src="/static/svg-icons/BackAddCrop.svg" alt="Back">
+        </a>
+
+        <img src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}">
+        <h1 class="crop-title"> {{ crop.id }}</h1>
+
+        <span class="status-pill {% if crop.status == 'Planted' %}status-planted{% else %}status-harvested{% endif %}">
+            {{ crop.status }}
+        </span>
+
+        <div class="header-actions">
+            <button class="archive-btn">
+                <img src="{{ url_for('static', filename='svg-icons/archive.svg') }}" alt="">
+                Archive
+            </button>
+
+            <button class="export-btn">
+                
+                
+                Export
+            </button>
+        </div>
+    </div>
+
+    <div class="cropinfo-layout">
+
+        <!-- LEFT COLUMN -->
+        <div class="left-col">
+
+            <!-- CROP INFO + CROP DETAILS SIDE-BY-SIDE -->
+            <div class="crop-info-row">
+
+                <!-- CARD 1: BASIC CROP INFO -->
+                <div class="card crop-basic-card">
+                    <div class="card-body">
+                    <div class="basic-card-content">
+
+                        <img src="{{ url_for('static', filename='icons/harvested.png') }}"
+                             class="crop-image" alt="Crop Image">
+
+                        <p class="label">Crop Name</p>
+                        <p class="value">{{ crop.crop_name }}</p><br>
+
+                        <p class="label">Planting Date</p>
+                        <p class="value">{{ crop.date_planted }}</p>
+
+                    </div>
+                    </div>
+                </div>
+
+                <!-- CARD 2: CROP DETAILS -->
+                <div class="card crop-details-card">
+
+                    <div class="card-header">
+                        <img src="{{ url_for('static', filename='svg-icons/Crop detail.svg') }}" class="card-icon">
+                        <h2 class="section-title">Crop Details</h2>
+                    </div>
+                    <div class="card-body">
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <p class="label">Crop ID</p>
+                            <p class="value">{{ crop.id }}</p>
+                        </div>
+
+                        <div class="detail-item">
+                            <p class="label">Crop Type</p>
+                            <p class="value">{{ crop.crop_type }}</p>
+                        </div>
+
+                        <div class="detail-item">
+                            <p class="label">Farming Type</p>
+                            <p class="value">{{ crop.farming_type }}</p>
+                        </div>
+
+                        <div class="detail-item">
+                            <p class="label">Seed Type</p>
+                            <p class="value">{{ crop.seed_type }}</p>
+                        </div>
+
+                        <div class="detail-item">
+                            <p class="label">Farmer Name</p>
+                            <p class="value">{{ session.get('username', 'N/A') }}</p>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+            </div>
+
+
+            <!-- Harvest + Stock Row -->
+            <div class="harvest-stock-row">
+
+                <!-- Harvest Detail Card -->
+                <div class="card harvest-card">
+                    <div class="card-header">
+                        <img src="{{ url_for('static', filename='svg-icons/tractor.svg') }}" class="card-icon">
+                        <h2 class="section-title">Harvest Detail</h2>
+                    </div>
+
+                <div class="card-body"> 
+                 <div class="details-grid">
+                    {% if crop.harvest_date %}
+                        <p class="harvest-info">Harvest Date: <strong>{{ crop.harvest_date }}</strong></p>
+                        <p class="harvest-info">Quantity: <strong>{{ crop.total_quantity }} qtl</strong></p>
+                        <p class="harvest-info">Packaging: <strong>{{ crop.packaging_type }}</strong></p>
+                    {% else %}
+
+
+                        <!-- Illustration -->
+                        <div class="harvest-illustration">
+                            <img src="{{ url_for('static', filename='svg-icons/Harvest.svg') }}" alt="Harvest Illustration">
+                        </div>
+                        <h3 class="activity-title1">Ready to Add Your Harvest?</h3>
+                        <p class="no-data-text">
+                            Enter harvest date, quantity, and packing details to manage your crop.
+                        </p>
+                        <a href="{{ url_for('farmer_crop_bp.add_crop_page', crop_id=crop.id) }}">
+                        <button class="details-btn" type="button">Add Details</button>
+                            </a>
+                       {% endif %}
+                </div>
+                </div>
+                </div>
+                <!-- Stock Overview -->
+                <div class="card stock-card">
+                    <div class="card-header">
+                        <img src="{{ url_for('static', filename='svg-icons/Overview.svg') }}" class="card-icon">
+                        <h2 class="section-title">Stock Overview</h2>
+                    </div>
+                    <div class="card-body">
+                    {% if crop.total_quantity == 0 %}
+
+
+                        <div class="stock-illustration">
+                            <img src="{{ url_for('static', filename='svg-icons/Stock.svg') }}" alt="Stock Illustration">
+                        </div>
+                                                <h3 class="activity-title1">No Data to show yet</h3>
+                        <p class="no-data-text">
+                            Update your storage or sale details to generate a complete crop distribution chart.
+                        </p>
+                    {% else %}
+                        <p class="stock-info">Total Quantity Harvested: <strong>{{ crop.total_quantity }} qtl</strong></p>
+                        <p class="stock-info">Sold: <strong>{{ crop.sold_quantity }} qtl</strong></p>
+                    {% endif %}
+                </div>
+                </div>
+            </div>
+
+            <!-- Location Card -->
+            <div class="card location-card">
+                <div class="card-header">
+                    <img src="{{ url_for('static', filename='svg-icons/location.svg') }}" class="card-icon">
+                    <h2 class="section-title">Location</h2>
+                </div>
+
+                <div id="crop-coordinates"
+                    data-coords='{{ coords | tojson }}'
+                    style="display:none;"></div>
+
+                <!-- FLEX WRAPPER -->
+                <div class="location-flex">
+                    <!-- Map -->
+                    <div id="crop-map" class="location-map"></div>
+
+                    <!-- Info -->
+                    <div class="location-info">
+
+                        <p class="label">Total Area</p><p class="value">{{ crop.area_size }} acres</p><br>
+                        <p class="label">Location</p><p class="value">{{ crop.location }}</p>
+                        
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+<!-- RIGHT COLUMN -->
+<div class="right-col">
+
+  <div class="activity-card">
+    <div class="activity-timeline">
+
+      {% set ICONS = {
+        "crop_registered": "svg-icons/Timeline/Crop Registered.svg",
+        "harvesting": "svg-icons/Timeline/Harvesting.svg",
+        "stored_warehouse": "svg-icons/Timeline/Stored in Warehouse.svg",
+        "listed_sale": "svg-icons/Timeline/Listed for Sale.svg",
+        "order_requested": "svg-icons/Timeline/Order Requested.svg",
+        "order_created": "svg-icons/Timeline/Order Created.svg",
+        "dispatched_sold": "svg-icons/Timeline/Dispatched & Sold.svg",
+        "payment_received": "svg-icons/Timeline/Payment Received.svg"
+      } %}
+
+
+
+      {% for a in activities %}
+      <div class="activity-item {% if a.is_done %}done{% else %}pending{% endif %}">
+        <div class="activity-left">
+          <div class="activity-dot"></div>
+          <div class="activity-line"></div>
+        </div>
+
+        <div class="activity-icon-wrap">
+          <img
+            class="activity-illustration"
+            src="{{ url_for('static', filename=ICONS.get(a.key, 'svg-icons/Crop Registered.svg')) }}"
+            alt="{{ a.title }}"
+          />
+        </div>
+
+        <div class="activity-body">
+          <h3 class="activity-title">{{ a.title }}</h3>
+
+          <p class="activity-text">
+            {{ a.desc }}
+            {% if a.link %}
+              <br>
+              <a class="activity-link" href="{{ a.link }}">View Detail</a>
+            {% endif %}
+          </p>
+
+          {% if a.at %}
+            <p class="activity-date">{{ a.at }}</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+
+    </div>
+  </div>
+
+</div>
+
+
+
+
+    </div>
+
+</div>
+
+
+
+
+<script>
+function initMap() {
+    const el = document.getElementById("crop-coordinates");
+    const cropCoordinates = JSON.parse(el.dataset.coords || "[]");
+
+    // Default center if no polygon
+    const defaultCenter = { lat: 20.5937, lng: 78.9629 };
+
+    // Map
+    const map = new google.maps.Map(document.getElementById("crop-map"), {
+        center: defaultCenter,
+        zoom: 5,
+        mapTypeId: 'roadmap' // default layer
+    });
+
+    // Layer selector
+    const mapTypeControlOptions = {
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+            position: google.maps.ControlPosition.TOP_RIGHT,
+            mapTypeIds: ['roadmap', 'satellite']
+        }
+    };
+    map.setOptions(mapTypeControlOptions);
+
+    if (cropCoordinates.length) {
+        const path = cropCoordinates.map(pt => ({ lat: pt.lat, lng: pt.lng }));
+
+        // Polygon
+        const polygon = new google.maps.Polygon({
+            paths: path,
+            strokeColor: "#008000",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "#00FF00",
+            fillOpacity: 0.35
+        });
+        polygon.setMap(map);
+
+        // Fit map to polygon
+        const bounds = new google.maps.LatLngBounds();
+        path.forEach(latlng => bounds.extend(latlng));
+        map.fitBounds(bounds);
+
+        // Calculate centroid
+        let latSum = 0, lngSum = 0;
+        path.forEach(pt => { latSum += pt.lat; lngSum += pt.lng; });
+        const centroid = { lat: latSum / path.length, lng: lngSum / path.length };
+
+        // Marker at centroid
+        const marker = new google.maps.Marker({
+            position: centroid,
+            map: map,
+            title: "Field Center"
+        });
+
+        // Info window
+        const infoWindow = new google.maps.InfoWindow({
+            content: `<b>Field Center</b><br>Lat: ${centroid.lat.toFixed(6)}<br>Lng: ${centroid.lng.toFixed(6)}`
+        });
+        infoWindow.open(map, marker);
+    }
+}
+</script>
+
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDg3eGetNDtVhtw_lfD6Z6O0CfgEgCSaYU&callback=initMap" async defer></script>
+
+
+{% endblock %}

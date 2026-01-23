@@ -1,0 +1,561 @@
+{# templates/AddCrop.html #}
+{% extends "farmer_base.html" %}
+{% block content %}
+
+{# -------------------------------
+   Detect edit route /add/<crop_id>
+   ------------------------------- #}
+{% set IS_PREFILLED = (crop is not none) %}
+
+{# Works even if you forget to pass crop_id:
+   request.view_args exists only for /add/<crop_id> routes #}
+{% set ROUTE_HAS_CROP_ID = (request.view_args is not none and request.view_args.get('crop_id')) %}
+{% set SHOW_RFID_BTN = (ROUTE_HAS_CROP_ID or IS_PREFILLED) %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='addcrop.css') }}?v=9">
+
+<div class="add-crop-page">
+
+  <!-- Header -->
+  <div class="frame-15 add-crop-header">
+    <div class="frame-16">
+      <a href="{{ url_for('farmer_crop_bp.my_crops') }}" class="back-btn">
+        <img src="{{ url_for('static', filename='svg-icons/BackAddCrop.svg') }}" alt="Back">
+      </a>
+      <img src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}" alt="" aria-hidden="true">
+      <h1 class="text-wrapper-4">
+        {% if IS_PREFILLED %}Harvest Registration{% else %}Add New Crop{% endif %}
+      </h1>
+    </div>
+
+    <div class="frame-17">
+      <button class="button-2" type="button" onclick="window.history.back()">
+        <span class="bt-text-2">Cancel</span>
+      </button>
+
+      <button class="button" type="button" id="openSummaryModalBtn">
+        <span class="bt-text">{% if IS_PREFILLED %}Save Harvest{% else %}Save{% endif %}</span>
+        <img class="img-2" src="{{ url_for('static', filename='svg-icons/Plus.svg') }}" alt="" aria-hidden="true" />
+      </button>
+    </div>
+  </div>
+
+  <form
+    id="add-crop-form"
+    method="POST"
+    action="{% if IS_PREFILLED %}{{ url_for('farmer_crop_bp.register_harvest_api') }}{% else %}{{ url_for('farmer_crop_bp.register_crop_api') }}{% endif %}"
+    class="add-crop-form"
+  >
+    <!-- ===== TOP GRID ===== -->
+    <div class="add-crop-grid-top">
+
+      <!-- Crop -->
+      <section class="card add-crop-card card-crop">
+        <div class="add-crop-card-body add-crop-left">
+
+          <div class="crop-image">
+            <img id="crop-thumbnail"
+                 src="{{ url_for('static', filename='icons/harvested.png') }}"
+                 alt="Crop image preview"/>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="cropName">Crop Name</label>
+            <div class="field-input field-input--select">
+              <input id="cropName" name="cropName" type="text"
+                     value="{{ crop.crop_type if crop else '' }}"
+                     {% if IS_PREFILLED %}readonly{% endif %} required />
+              <span class="select-chevron">&#9662;</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="datePlanted">Planting Date</label>
+            <div class="field-input">
+              <input id="datePlanted" name="datePlanted" type="date"
+                     value="{{ crop.date_planted if crop else '' }}"
+                     {% if IS_PREFILLED %}readonly{% endif %} required />
+              <span class="field-suffix">
+                <img src="{{ url_for('static', filename='img/icon-placeholder.svg') }}" alt="" aria-hidden="true" />
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Crop Details -->
+      <section class="card add-crop-card card-details">
+        <div class="card-header">
+          <div class="card-header-left">
+            <img class="card-header-icon" src="{{ url_for('static', filename='svg-icons/AddCropDetails.svg') }}" alt="" aria-hidden="true" />
+            <h2 class="card-title">Crop Details</h2>
+          </div>
+        </div>
+
+        <div class="add-crop-card-body">
+          <div class="add-crop-details-grid">
+
+            <div class="field-group">
+              <label class="field-label" for="cropId">Crop ID</label>
+              <div class="field-input">
+                <input id="cropId" name="cropId" type="text"
+                       value="{{ crop.id if crop else '' }}" readonly />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="cropType">Crop Type</label>
+              <div class="field-input field-input--select">
+                <select id="cropType" name="cropType" {% if IS_PREFILLED %}disabled{% endif %}>
+                  <option value="">Select crop type</option>
+                  <option value="Grain" {% if crop and crop.crop_category == 'Grain' %}selected{% endif %}>Grain</option>
+                  <option value="Pulses" {% if crop and crop.crop_category == 'Pulses' %}selected{% endif %}>Pulses</option>
+                  <option value="Oilseeds" {% if crop and crop.crop_category == 'Oilseeds' %}selected{% endif %}>Oilseeds</option>
+                  <option value="Fruits" {% if crop and crop.crop_category == 'Fruits' %}selected{% endif %}>Fruits</option>
+                  <option value="Vegetables" {% if crop and crop.crop_category == 'Vegetables' %}selected{% endif %}>Vegetables</option>
+                  <option value="Spices & Condiments" {% if crop and crop.crop_category == 'Spices & Condiments' %}selected{% endif %}>Spices & Condiments</option>
+                  <option value="Cash Crops" {% if crop and crop.crop_category == 'Cash Crops' %}selected{% endif %}>Cash Crops</option>
+                </select>
+                <span class="select-chevron">&#9662;</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="farmingType">Farming Type</label>
+              <div class="field-input field-input--select">
+                <select id="farmingType" name="farmingType" {% if IS_PREFILLED %}disabled{% endif %} required>
+                  <option value="">Select farming type</option>
+                  <option value="Organic" {% if crop and crop.farming_type == 'Organic' %}selected{% endif %}>Organic</option>
+                  <option value="Conventional" {% if crop and crop.farming_type == 'Conventional' %}selected{% endif %}>Conventional</option>
+                  <option value="Natural" {% if crop and crop.farming_type == 'Natural' %}selected{% endif %}>Natural</option>
+                  <option value="Integrated" {% if crop and crop.farming_type == 'Integrated' %}selected{% endif %}>Integrated</option>
+                  <option value="Irrigated" {% if crop and crop.farming_type == 'Irrigated' %}selected{% endif %}>Irrigated</option>
+                  <option value="Rainfed" {% if crop and crop.farming_type == 'Rainfed' %}selected{% endif %}>Rainfed</option>
+                  <option value="Greenhouse" {% if crop and crop.farming_type == 'Greenhouse' %}selected{% endif %}>Greenhouse</option>
+                </select>
+                <span class="select-chevron">&#9662;</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="seedType">Seed Type</label>
+              <div class="field-input field-input--select">
+                <select id="seedType" name="seedType" {% if IS_PREFILLED %}disabled{% endif %} required>
+                  <option value="">Select seed type</option>
+                  <option value="Certified Seeds" {% if crop and crop.seed_type == 'Certified Seeds' %}selected{% endif %}>Certified Seeds</option>
+                  <option value="Truthful Labelled (TL) Seed" {% if crop and crop.seed_type == 'Truthful Labelled (TL) Seed' %}selected{% endif %}>Truthful Labelled (TL) Seed</option>
+                  <option value="Foundation Seed" {% if crop and crop.seed_type == 'Foundation Seed' %}selected{% endif %}>Foundation Seed</option>
+                  <option value="Breeder Seed" {% if crop and crop.seed_type == 'Breeder Seed' %}selected{% endif %}>Breeder Seed</option>
+                  <option value="Hybrid Seed" {% if crop and crop.seed_type == 'Hybrid Seed' %}selected{% endif %}>Hybrid Seed</option>
+                  <option value="Organic Seed" {% if crop and crop.seed_type == 'Organic Seed' %}selected{% endif %}>Organic Seed</option>
+                  <option value="Tissue Culture Propagated Material" {% if crop and crop.seed_type == 'Tissue Culture Propagated Material' %}selected{% endif %}>Tissue Culture Propagated Material</option>
+                </select>
+                <span class="select-chevron">&#9662;</span>
+              </div>
+            </div>
+
+            <div class="field-group field-group-full">
+              <label class="field-label" for="farmerName">Farmer Name</label>
+              <div class="field-input">
+                <input id="farmerName" name="farmerName" type="text"
+                       value="{{ crop.farmer_name if crop else session.get('user_name', '') }}"
+                       required />
+              </div>
+            </div>
+
+          </div>
+
+          {% if IS_PREFILLED %}
+            <input type="hidden" name="cropType" value="{{ crop.crop_category if crop else '' }}">
+            <input type="hidden" name="farmingType" value="{{ crop.farming_type if crop else '' }}">
+            <input type="hidden" name="seedType" value="{{ crop.seed_type if crop else '' }}">
+          {% endif %}
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== BOTTOM GRID: Harvest Detail + Location ===== -->
+    <div class="add-crop-grid-bottom">
+
+      <!-- Harvest Detail -->
+      <section class="card add-crop-card card-harvest">
+        <div class="card-header">
+          <div class="card-header-left">
+            <img class="card-header-icon" src="{{ url_for('static', filename='svg-icons/Tractor.svg') }}" alt="" aria-hidden="true" />
+            <h2 class="card-title">Harvest Detail</h2>
+          </div>
+
+          {# ✅ SHOW BUTTON ONLY ON /add/<crop_id> GET #}
+          {% if SHOW_RFID_BTN %}
+            <button type="button" class="button-2 small-button" id="btnGenerateRFID">
+              <span class="bt-text-2">Generate RFID</span>
+            </button>
+          {% endif %}
+        </div>
+
+        <div class="add-crop-card-body">
+          <div class="add-crop-harvest-grid">
+            <div class="field-group field-group-full">
+              <label class="field-label" for="harvestDate">Harvest Date</label>
+              <div class="field-input">
+                <input id="harvestDate" name="harvestDate" type="date"
+                       value="{{ crop.harvest_date if crop else '' }}"
+                       {% if not IS_PREFILLED %}disabled{% endif %}/>
+              </div>
+              {% if not IS_PREFILLED %}
+                <small class="hint">**Harvest can be registered after crop is created.**</small>
+              {% endif %}
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="harvestQuantity">Quantity</label>
+              <div class="field-input field-input-split">
+                <input id="harvestQuantity" name="harvestQuantity" type="number" step="0.01"
+                       value="{{ crop.total_quantity if crop else '' }}"
+                       {% if not IS_PREFILLED %}disabled{% endif %}/>
+                <select id="harvestQtyUnit" name="harvestQtyUnit" class="field-suffix-select"
+                        {% if not IS_PREFILLED %}disabled{% endif %}>
+                  <option value="Kg" selected>Kg</option>
+                  <option value="Quintal">Quintal</option>
+                  <option value="Ton">Ton</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="packagingType">Packing Type</label>
+              <div class="field-input field-input--select">
+                <select id="packagingType" name="packagingType" {% if not IS_PREFILLED %}disabled{% endif %}>
+                  <option value="">Select packing type</option>
+                  <option value="Jute">Jute Bag</option>
+                  <option value="Plastic">Plastic Bag</option>
+                </select>
+                <span class="select-chevron">&#9662;</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="bagCapacity">Each Bag Capacity</label>
+              <div class="field-input field-input-split">
+                <input id="bagCapacity" name="bagCapacity" type="number" step="0.01"
+                       {% if not IS_PREFILLED %}disabled{% endif %}/>
+                <select id="bagCapacityUnit" name="bagCapacityUnit" class="field-suffix-select"
+                        {% if not IS_PREFILLED %}disabled{% endif %}>
+                  <option value="Kg" selected>Kg</option>
+                  <option value="Quintal">Quintal</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <input type="hidden" id="rfidEpcs" name="rfidEpcs" value="[]">
+        </div>
+      </section>
+
+      <!-- Location (unchanged) -->
+      <section class="card add-crop-card card-location">
+        <div class="card-header">
+          <div class="card-header-left">
+            <img class="card-header-icon" src="{{ url_for('static', filename='svg-icons/Location.svg') }}" alt="" aria-hidden="true" />
+            <h2 class="card-title">Location</h2>
+          </div>
+          <button type="button" class="button-2 small-button" id="open-map-modal">
+            <span class="bt-text-2">Plot Farm Area</span>
+          </button>
+        </div>
+
+        <div class="add-crop-card-body">
+          <div class="add-crop-location-body">
+            <div class="field-group field-group-full">
+              <label class="field-label" for="location">Location</label>
+              <div class="field-input">
+                <input id="location" name="location" type="text"
+                       value="{{ crop.location if crop else '' }}" required />
+              </div>
+            </div>
+
+            <div class="location-image"><div id="location-map"></div></div>
+
+            <div class="location-text">
+              <p class="field-label">Latitude and Longitude:</p>
+              <p class="location-main" id="location-latlng">Not set</p>
+
+              <p class="field-label">Total Area:</p>
+              <p class="location-main" id="location-area">Not set</p>
+
+              <p class="field-label">Location:</p>
+              <p class="location-desc" id="location-desc">Plot your farm boundary to calculate area automatically.</p>
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="areaSize" name="areaSize" value="{{ crop.area_size if crop else '' }}" />
+        <input type="hidden" id="coordsField" name="coordinates" value='{{ coords|tojson if coords else "[]" }}' />
+      </section>
+    </div>
+  </form>
+</div>
+
+{# ================= RFID MODAL (ONLY when button exists) ================= #}
+{% if SHOW_RFID_BTN %}
+<div class="rfid-modal" id="rfidModal" aria-hidden="true">
+  <div class="rfid-modal-backdrop" id="rfidBackdrop"></div>
+
+  <div class="rfid-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="rfidTitle">
+    <div class="rfid-modal-content">
+      <div class="rfid-head">
+
+                    <img class="process-card-icon"
+               src="{{ url_for('static', filename='svg-icons/RFID/Barcode.svg') }}"
+               alt="">
+          <h2 class="rfid-title" id="rfidTitle">RFID Registration</h2>
+
+      </div>
+      <div class="rfid-grid">
+        <div class="rfid-field">
+          <label class="rfid-label">Packaging Date</label>
+          <div class="rfid-input"><input id="rfidPackagingDate" type="date" value="{{ crop.harvest_date if crop else '' }}"></div>
+        </div>
+        <div class="rfid-field">
+          <label class="rfid-label">Expiry Date</label>
+          <div class="rfid-input"><input id="rfidExpiryDate" type="date"></div>
+        </div>
+        <div class="rfid-field">
+          <label class="rfid-label">Bag Capacity</label>
+          <div class="rfid-input"><input id="rfidBagCapacity" type="text" placeholder="50 Kg"></div>
+        </div>
+        <div class="rfid-field">
+          <label class="rfid-label">Total Bags</label>
+          <div class="rfid-input"><input id="rfidTotalBags" type="number" min="1" step="1" placeholder="10"></div>
+        </div>
+
+        <div class="rfid-field rfid-actions">
+          <button type="button" class="rfid-btn" id="rfidToggleScanBtn">Start Scanning</button>
+        </div>
+      </div>
+
+
+      <div class="rfid-scanbar">
+        <label class="rfid-label" for="rfidScanInput">Scan EPC</label>
+        <div class="rfid-input">
+          <input
+            id="rfidScanInput"
+            type="text"
+            maxlength="24"
+            placeholder="Scan tag… (24 HEX)"
+            inputmode="text"
+            autocomplete="off"
+          />
+        </div>
+
+      <div class="rfid-table">
+        <div class="rfid-table-head">
+          <div>Scanned EPC</div>
+          <div class="right">Action</div>
+        </div>
+        <div class="rfid-table-body" id="rfidList">
+          <div class="rfid-empty" id="rfidEmptyState">
+            <img class="empty-state-illustration"
+                   src="{{ url_for('static', filename='svg-icons/RFID/Generate RFID.svg') }}" />
+            <p>No EPC scanned yet.</p>
+            <small>Click “Start Scanning” then scan tags.</small>
+          </div>
+        </div>
+
+        <div class="rfid-footer">
+          <span class="rfid-count" id="rfidCount">Scanned 0</span>
+          <button type="button" class="rfid-save" id="rfidRegisterBtn" disabled>Register</button>
+        </div>
+
+        <p class="rfid-error" id="rfidError" style="display:none;"></p>
+        <p class="rfid-success" id="rfidSuccess" style="display:none;"></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{% endif %}
+{# ====================== MAP MODAL ====================== #}
+<div class="modal fade" id="openMapModal" tabindex="-1">
+<div id="map-modal" class="map-modal" aria-hidden="true">
+  <div class="map-modal-backdrop" onclick="closeMapModal()"></div>
+
+  <div class="map-modal-content" role="dialog" aria-modal="true" aria-labelledby="map-modal-title">
+    <main class="map-frame">
+      <article class="map-inner">
+        <figure class="map-rectangle-wrapper">
+          <!-- Search + Current Location Row -->
+<!-- Search + Current Location Row -->
+<div id="map-search-wrapper">
+    <input 
+        id="map-search-input"
+        type="text"
+        placeholder="Search location..."
+    />
+    <button type="button" id="locate-me-btn">
+        📍 My Location
+    </button>
+</div>
+
+          <div id="farm-map-modal" class="farm-map-modal" aria-label="Draw your farm boundary"></div>
+        </figure>
+
+        <div class="map-summary">
+          <div>
+            <p class="field-label">Mapped Area</p>
+            <p class="map-summary-main" id="map-modal-area">Draw polygon to calculate</p>
+          </div>
+          <div>
+            <p class="field-label">Centroid (Lat, Lng)</p>
+            <p class="map-summary-main" id="map-modal-latlng">—</p>
+          </div>
+        </div>
+
+        <nav class="map-actions" role="navigation" aria-label="Map actions">
+          <div class="map-actions-inner">
+  <button type="button" class="map-btn-reset" id="map-modal-reset">
+    <span class="map-btn-text">Reset</span>
+    <img class="map-btn-icon" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}" alt="" aria-hidden="true" />
+  </button>
+
+  <form id="add-crop-form" class="add-crop-form" action="{{ url_for('farm_coord_bp.save_farm_coordinates') }}" method="POST">
+    <button type="button" class="map-btn-continue" id="map-modal-continue">
+      <span class="map-btn-continue-text">Confirm &amp; Apply</span>
+      <img class="map-btn-icon" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}" alt="" aria-hidden="true" />
+    </button>
+  </form>
+</div>
+
+        </nav>
+      </article>
+    </main>
+  </div>
+</div>
+</div>
+
+
+<!-- ================= SUMMARY MODAL ================= -->
+<div class="summary-modal" id="cropSummaryModal" aria-hidden="true">
+  <div class="summary-modal-backdrop" id="cropSummaryBackdrop"></div>
+
+  <div class="summary-modal-dialog" role="dialog" aria-modal="true">
+    <div class="summary-modal-content">
+
+      <!-- Illustration -->
+      <div class="summary-illus">
+        <img src="{{ url_for('static', filename='illustrations/Crop Summary Modal.svg') }}" alt="Summary Illustration">
+      </div>
+
+      <!-- Modal Title -->
+      <h2 class="summary-title">Confirm Crop Details</h2>
+      <p class="summary-subtext">
+        Once saved, crop details cannot be edited.<br>
+        Please review the information carefully before continuing.
+      </p>
+
+      <!-- ---------------- REVIEW STATE ---------------- -->
+      <div id="summaryStateReview">
+        <div class="summary-card">
+
+          <div class="summary-row">
+            <span class="s-label">Crop Name</span>
+            <span class="s-value" id="sumCropType">-</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="s-label">Seed Type</span>
+            <span class="s-value" id="sumSeedType">-</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="s-label">Farming Type</span>
+            <span class="s-value" id="sumFarmingType">-</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="s-label">Planted Area</span>
+            <span class="s-value" id="sumAreaSize">-</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="s-label">Date Planted</span>
+            <span class="s-value" id="sumDatePlanted">-</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="s-label">Harvest Date</span>
+            <span class="s-value" id="sumHarvestDate">-</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="s-label">Harvest Quantity</span>
+            <span class="s-value" id="sumHarvestQty">-</span>
+          </div>
+
+        </div>
+
+        <p class="summary-error" id="summaryError" style="display:none;"></p>
+
+        <div class="summary-actions">
+          <button type="button" class="summary-btn secondary" id="btnEditBack">Edit</button>
+          <button type="button" class="summary-btn primary" id="btnConfirmSave">Confirm & Save</button>
+        </div>
+      </div>
+
+      <!-- ---------------- SUCCESS STATE ---------------- -->
+      <div id="summaryStateSuccess" style="display:none;">
+        <div class="summary-illus">
+          <img src="{{ url_for('static', filename='svg-icons/success.svg') }}" alt="Success">
+        </div>
+        <h2 class="summary-title">Saved Successfully!</h2>
+        <p class="summary-subtext">
+          Your crop details have been saved.
+        </p>
+
+        <div class="summary-actions single">
+          <button type="button" class="summary-btn primary" id="btnCloseSuccess">Close</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+<script type="application/json" id="pageData">
+{
+  "showRfidBtn": {{ (SHOW_RFID_BTN or false) | tojson }},
+  "crop": {
+    "id": {{ ((crop.id if crop else "") or "") | tojson }},
+    "cropType": {{ ((crop.crop_type if crop else "") or "") | tojson }}
+  },
+  "session": {
+    "userId": {{ ((session.get('user_id','') if session else '') or '') | tojson }},
+    "userName": {{ ((session.get('user_name','') if session else '') or '') | tojson }}
+  },
+  "urls": {
+    "rfidRegister": {{ (url_for('rfid_bp.register_rfid') if SHOW_RFID_BTN else "") | tojson }}
+  }
+
+}
+</script>
+
+<script src="{{ url_for('static', filename='js/addcrop.js') }}?v=9"></script>
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDg3eGetNDtVhtw_lfD6Z6O0CfgEgCSaYU&libraries=drawing,places,geometry
+    &callback=initPolygonMap" async defer></script>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+

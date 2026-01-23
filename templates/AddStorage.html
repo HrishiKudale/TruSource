@@ -1,0 +1,316 @@
+{% extends "Warehouses.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='addstorage.css') }}">
+
+<div class="store-warehouse-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-left">
+      <a href="{{ url_for('farmer_storage.list_storage') }}" class="back-btn" style="width:34px;height:34px;">
+        <img src="/static/svg-icons/Warehouses/Back%20Warehouse.svg" style="width:34px;height:34px;">
+      </a>
+
+      <img src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}">
+      <h1 class="text-wrapper-4">Store in Warehouse</h1>
+    </div>
+
+    <!-- IMPORTANT: button type=button (opens modal) -->
+    <button type="button" id="btnOpenStorageSummary" class="send-request-btn">
+      Send Request
+      <img src="{{ url_for('static', filename='svg-icons/plus.svg') }}" class="btn-icon" />
+    </button>
+  </div>
+
+  {% if error %}
+    <p style="color:#c00; margin-bottom:8px;">{{ error }}</p>
+  {% endif %}
+
+  <!-- FORM -->
+  <form id="storeForm"
+        method="POST"
+        action="{{ url_for('farmer_storage.submit_storage_request') }}"
+        class="store-warehouse-form">
+
+    <!-- hidden rows injected by JS -->
+    <div id="storageHiddenRows"></div>
+
+    <div class="store-warehouse-grid">
+
+      <!-- ========== WAREHOUSE DETAILS CARD ========== -->
+      <div class="store-card">
+
+        <div class="store-card-header">
+          <img class="store-card-icon"
+               src="{{ url_for('static', filename='svg-icons/Warehouses/Warehouse Detail.svg') }}">
+          <p class="store-card-title">Warehouse Detail</p>
+        </div>
+
+        <div class="store-card-body warehouse-grid">
+
+          <div class="field-group full-row">
+            <label class="field-label">Warehouse ID</label>
+            <div class="field-input">
+              <input type="text"
+                     id="warehouseIdInput"
+                     name="warehouse_id"
+                     readonly
+                     placeholder="-">
+            </div>
+          </div>
+
+          <div class="field-group full-row">
+            <label class="field-label">Warehouse</label>
+            <div class="field-input field-input--select">
+              <select id="warehouseSelect" name="warehouse_name" required>
+                <option disabled selected>Select warehouse</option>
+                {% for w in warehouses %}
+                  <option
+                    value="{{ w.name or w.userId }}"
+                    data-id="{{ w.warehouseId or w.userId }}">
+                    {{ w.name or w.userId }}
+                  </option>
+                {% endfor %}
+              </select>
+              <div class="select-chevron">⌄</div>
+            </div>
+          </div>
+
+          <div class="field-group full-row">
+            <label class="field-label">Date</label>
+            <div class="field-input">
+              <input type="date" id="storageDate" name="date" required>
+            </div>
+          </div>
+
+          <div class="field-group full-row">
+            <label class="field-label">Storage Duration</label>
+            <div class="field-input field-input--select">
+              <select id="storageDuration" name="storage_duration" required>
+                <option disabled selected>Select duration</option>
+                <option value="7 days">7 days</option>
+                <option value="15 days">15 days</option>
+                <option value="30 days">30 days</option>
+                <option value="90 days">90 days</option>
+              </select>
+              <div class="select-chevron">⌄</div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Payment Mode</label>
+            <div class="field-input field-input--select">
+              <select id="paymentMode" name="payment_mode" required>
+                <option disabled selected>Select mode</option>
+                <option value="Cash">Cash</option>
+                <option value="Online">Online</option>
+              </select>
+              <div class="select-chevron">⌄</div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Amount</label>
+            <div class="field-input">
+              <input type="number" id="amount" name="amount" placeholder="-" min="0" step="0.01">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ========== CROP DETAILS CARD ========== -->
+      <div class="store-card">
+
+        <div class="store-card-header">
+          <img class="store-card-icon"
+               src="{{ url_for('static', filename='svg-icons/Warehouses/Crop Details.svg') }}">
+          <p class="store-card-title">Crop Details</p>
+        </div>
+
+        <div class="store-card-body crop-grid">
+
+          <div class="field-group">
+            <label class="field-label">Crop ID</label>
+            <div class="field-input field-input--select">
+              <select id="cropIdSelect" name="crop_id">
+                <option disabled selected>Select crop ID</option>
+                {% for crop in crops %}
+                  <option
+                    value="{{ crop.id }}"
+                    data-name="{{ crop.crop_type or crop.cropType or crop.name }}">
+                    {{ crop.id }}
+                  </option>
+                {% endfor %}
+              </select>
+              <div class="select-chevron">⌄</div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Crop</label>
+            <div class="field-input field-input--select">
+              <select id="cropNameSelect" name="crop">
+                <option disabled selected>Select crop</option>
+                {% for crop in crops %}
+                  <option
+                    value="{{ crop.crop_type or crop.cropType or crop.name }}"
+                    data-id="{{ crop.id }}">
+                    {{ crop.crop_name or crop.cropName or crop.name }}
+                  </option>
+                {% endfor %}
+              </select>
+              <div class="select-chevron">⌄</div>
+            </div>
+          </div>
+
+          <div class="field-group full-row">
+            <label class="field-label">Quantity</label>
+            <div class="field-input">
+              <input type="number" id="cropQty" name="quantity" placeholder="Enter quantity" min="1">
+              <span class="field-suffix">kg</span>
+            </div>
+          </div>
+
+          <div class="field-group full-row">
+            <label class="field-label">Packaging Type</label>
+            <div class="field-input field-input--select">
+              <select id="packagingType" name="packaging_type">
+                <option disabled selected>Select packaging</option>
+                <option value="Gunny Bag">Gunny Bag</option>
+                <option value="Plastic Bag">Plastic Bag</option>
+                <option value="Box">Box</option>
+              </select>
+              <div class="select-chevron">⌄</div>
+            </div>
+          </div>
+
+          <div class="field-group full-row">
+            <label class="field-label">Number of Bags (optional)</label>
+            <div class="field-input">
+              <input type="number" id="bagCount" name="bags" placeholder="Enter number" min="1">
+            </div>
+          </div>
+
+          <div class="field-group full-row">
+            <label class="field-label">Moisture</label>
+            <div class="field-input">
+              <input type="number" id="moisture" name="moisture" placeholder="Select %" min="0" max="100" step="0.1">
+              <span class="field-suffix">%</span>
+            </div>
+          </div>
+
+        </div>
+
+        <button type="button" class="add-storage-btn" id="btnAddCropRow">
+          + Add Crop to Storage
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- TABLE CARD -->
+    <div class="storage-table-wrapper">
+      <table class="storage-table" id="storageTable">
+        <thead>
+          <tr>
+            <th>Crop ID</th>
+            <th>Crop Name</th>
+            <th>Stored Quantity</th>
+            <th>Packaging Type</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="storageTbody">
+          <!-- rows inserted via JS -->
+        </tbody>
+      </table>
+
+      <div class="storage-empty-state" id="storageEmptyState">
+        <img src="{{ url_for('static', filename='illustrations/Blank Storage.svg') }}">
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<!-- ===================== SUMMARY MODAL ===================== -->
+<div class="summary-modal" id="storageSummaryModal" aria-hidden="true">
+  <div class="summary-modal-backdrop" id="storageSummaryBackdrop"></div>
+
+  <div class="summary-modal-dialog" role="dialog" aria-modal="true">
+    <div class="summary-modal-content">
+
+      <!-- REVIEW STATE -->
+      <div id="storageSummaryReview">
+
+        <div class="summary-illus">
+          <!-- use your warehouse confirm illustration -->
+          <img src="{{ url_for('static', filename='illustrations/Storage Summary Modal.svg') }}" alt="">
+        </div>
+
+        <h3 class="summary-title">Confirm Storage Request</h3>
+
+        <p class="summary-subtext">
+          You are about to send a request to store your crop in the<br> selected warehouse.
+        </p>
+
+        <div class="summary-card">
+          <div class="summary-row">
+            <span class="s-label">Warehouse</span>
+            <span class="s-value" id="sumWarehouse">-</span>
+          </div>
+          <div class="summary-row">
+            <span class="s-label">Crop</span>
+            <span class="s-value" id="sumCrop">-</span>
+          </div>
+          <div class="summary-row">
+            <span class="s-label">Packaging</span>
+            <span class="s-value" id="sumPackaging">-</span>
+          </div>
+          <div class="summary-row">
+            <span class="s-label">Date</span>
+            <span class="s-value" id="sumDate">-</span>
+          </div>
+          <div class="summary-row">
+            <span class="s-label">Storage Period</span>
+            <span class="s-value" id="sumDuration">-</span>
+          </div>
+        </div>
+
+        <p class="summary-error" id="storageSummaryError" style="display:none;"></p>
+
+        <div class="summary-actions">
+          <button class="summary-btn secondary" type="button" id="btnStorageEdit">Edit</button>
+          <button class="summary-btn primary" type="button" id="btnStorageConfirm">Confirm</button>
+        </div>
+
+      </div>
+
+      <!-- SUCCESS STATE (optional; mainly for future use) -->
+      <div id="storageSummarySuccess" style="display:none;">
+        <div class="summary-illus">
+          <img src="{{ url_for('static', filename='illustrations/Success Modal.svg') }}" alt="">
+        </div>
+
+        <h3 class="summary-title">Request Sent</h3>
+
+        <p class="summary-subtext">
+          Your request to store the crop has been successfully sent to the warehouse.
+        </p>
+
+        <div class="summary-actions single">
+          <a class="summary-btn primary" href="{{ url_for('farmer_storage.list_storage') }}">View</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Page JS -->
+<script src="{{ url_for('static', filename='js/addstorage.js') }}"></script>
+
+{% endblock %}

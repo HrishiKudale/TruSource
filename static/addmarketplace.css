@@ -1,0 +1,230 @@
+/* Page wrapper */
+.add-marketplace-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.add-marketplace-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+/* ============================
+   GRID LAYOUTS WITH RATIOS
+============================ */
+.add-marketplace-grid-top {
+  display: grid;
+  grid-template-columns: 2fr 3fr; /* 2:3 ratio */
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.add-marketplace-grid-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 1:1 ratio */
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .add-marketplace-grid-top,
+  .add-marketplace-grid-bottom {
+    grid-template-columns: 1fr; /* Stack */
+  }
+}
+
+/* ============================
+   BASE CARD STYLE (same as AddCrop)
+============================ */
+.add-marketplace-card {
+  background-color: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--grey-100);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+/* Header same as AddCrop */
+.card-header {
+  background-color: var(--grey-50);
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--grey-100);
+}
+
+.card-header-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-header-icon {
+  width: 42px;
+  height: 42px;
+}
+
+.card-title {
+  font-family: var(--body-md-semibold-font-family);
+  font-weight: var(--body-md-semibold-font-weight);
+  font-size: var(--body-lg-semibold-font-size);
+  color: var(--grey-900);
+}
+
+/* Body */
+.add-marketplace-card-body {
+  padding: 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ============================
+   FORMS (same system as AddCrop)
+============================ */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field-label {
+  font-family: var(--body-md-reg-font-family);
+  font-size: 16px;
+  color: var(--grey-950);
+}
+
+.field-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--grey-200);
+  background-color: var(--white);
+}
+
+.field-input input,
+.field-input select {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  font-family: var(--body-sm-reg-font-family);
+  font-size: var(--body-sm-reg-font-size);
+  color: var(--grey-700);
+}
+
+.field-input--select select {
+  appearance: none;
+  padding-right: 40px;
+}
+
+.select-chevron {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 38px;
+  height: 100%;
+  background: var(--grey-100);
+  border-left: 1px solid var(--grey-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 2-column inner grid */
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 768px) {
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================
+   TOGGLE SWITCH (same as AddCrop)
+============================ */
+.switch {
+  position: relative;
+  width: 44px;
+  height: 22px;
+}
+.switch input { display: none; }
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  background: #ccc;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 22px;
+  transition: .3s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  width: 18px;
+  height: 18px;
+  left: 2px; top: 2px;
+  background: white;
+  border-radius: 50%;
+  transition: .3s;
+}
+input:checked + .slider {
+  background: var(--green-700);
+}
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ============================
+   LOGISTICS (radio)
+============================ */
+.logistics-options {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 10px;
+}
+
+.logistics-options label {
+  font-family: var(--body-sm-reg-font-family);
+  color: var(--grey-800);
+}
+.add-marketplace-submit {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.primary-submit-btn {
+  padding: 12px 20px;
+  border-radius: 10px;
+  background: #000;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+}
+
+.primary-submit-btn:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}

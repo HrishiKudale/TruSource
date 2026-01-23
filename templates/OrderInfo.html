@@ -1,0 +1,272 @@
+{% extends "farmer_base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='orderinfo.css') }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<div class="orderinfo-container">
+
+  <!-- Back + Title Row -->
+  <div class="text-wrapper-4">
+    <div class="orderinfo-header">
+      <a href="{{ url_for('farmer_sales_bp.orders_page') }}" class="back-btn">
+        <img src="{{ url_for('static', filename='svg-icons/Back Order.svg') }}" alt="Back">
+      </a>
+
+      <h1 class="order-title">Order #{{ order.orderId if order else 'N/A' }}</h1>
+
+      <span class="status-pill">
+        {{ order.status if order else 'No Status' }}
+      </span>
+    </div>
+  </div>
+
+  {% if order %}
+  <div class="orderinfo-layout">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-col">
+
+      <!-- CARD 1: ORDER DETAILS -->
+      <div class="card order-details-card">
+        <div class="card-header">
+          <img src="{{ url_for('static', filename='svg-icons/Order detail.svg') }}" class="card-icon">
+          <h2 class="section-title">Order Details</h2>
+        </div>
+
+        <div class="details-grid">
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <p class="label">Order ID</p>
+              <p class="value">{{ order.orderId }}</p>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <p class="label">Created On</p>
+              <p class="value">{{ order.createdAt }}</p>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <p class="label">Request ID</p>
+              <p class="value">{{ order.requestId }}</p>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <p class="label">Payment Terms</p>
+              <p class="value">{{ order.paymentTerms }}</p>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <p class="label">Buyer Type</p>
+              <p class="value">{{ order.buyerType }}</p>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <p class="label">Buyer</p>
+              <p class="value">
+                {{ order.buyerId }}
+                {% if order.buyerName and order.buyerName != "-" %}
+                  <br><span style="color:#777; font-size:12px;">{{ order.buyerName }}</span>
+                {% endif %}
+              </p>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <p class="label">Address</p>
+              <p class="value">{{ order.address }}</p>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <p class="label">Contact Person</p>
+              <p class="value">{{ order.contactPerson }}</p>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <p class="label">Contact</p>
+              <p class="value">{{ order.contact }}</p>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <p class="label">Email</p>
+              <p class="value">{{ order.email }}</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CARDS 2 & 3: Crop & Payment Details -->
+      <div class="cards-row">
+
+        <!-- CARD 2: Crop Details -->
+        <div class="card crop-details-card" style="flex:auto;">
+          <div class="card-header">
+            <img src="{{ url_for('static', filename='svg-icons/Crop detail.svg') }}" class="card-icon">
+            <h2 class="section-title">Crop Details</h2>
+          </div>
+
+          <div class="details-grid">
+
+            <div class="detail-row">
+              <div class="detail-item">
+                <p class="label">Crop Name</p>
+                <p class="value">{{ order.cropType }}</p>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-item">
+                <p class="label">Crop ID</p>
+                <p class="value">{{ order.cropId }}</p>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-item">
+                <p class="label">Quantity Ordered</p>
+                <p class="value">{{ order.quantityKg }} kg</p>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-item">
+                <p class="label">Price / kg</p>
+                <p class="value">{{ order.price }}</p>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-item">
+                <p class="label">Pickup From</p>
+                <p class="value">{{ order.pickupFrom }}</p>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-item">
+                <p class="label">Pickup Location ID</p>
+                <p class="value">{{ order.pickupId }}</p>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-item">
+                <p class="label">Pickup Location</p>
+                <p class="value">{{ order.pickupLocation }}</p>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-item">
+                <p class="label">Pickup Date</p>
+                <p class="value">{{ order.pickupDate }}</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CARD 3: Payment Details -->
+        <div class="card payment-details-card" style="flex:1;">
+          <div class="card-header">
+            <img src="{{ url_for('static', filename='svg-icons/Order/Payment detail.svg') }}" class="card-icon">
+            <h2 class="section-title">Payment Details</h2>
+          </div>
+
+          <div class="payment-illustration">
+            <img src="{{ url_for('static', filename='illustrations/Payment Details.svg') }}" alt="Payment Illustration">
+          </div>
+
+          <p class="activity-title1">Payment Pending</p>
+          <p class="no-data-text">Once the buyer sends the payment, it will appear on this page.</p>
+        </div>
+
+      </div>
+
+      <!-- CARDS 4 & 5: Shipment & Delivery (placeholder for now) -->
+      <div class="cards-row">
+
+        <!-- CARD 4: Shipment -->
+        <div class="card shipment-card" style="flex:1;">
+          <div class="card-header">
+            <img src="{{ url_for('static', filename='svg-icons/Order/Shipment Detail.svg') }}" class="card-icon">
+            <h2 class="section-title">Shipment Details</h2>
+          </div>
+          <div class="shipment-illustration">
+            <img src="{{ url_for('static', filename='illustrations/Shipment Details.svg') }}" alt="Shipment Illustration">
+          </div>
+          <p class="activity-title1">Shipment not started</p>
+          <p class="no-data-text">Create a shipment to begin tracking the journey.</p>
+        </div>
+
+        <!-- CARD 5: Delivery -->
+        <div class="card delivery-card" style="flex:1;">
+          <div class="card-header">
+            <img src="{{ url_for('static', filename='svg-icons/Order/Delivery detail.svg') }}" class="card-icon">
+            <h2 class="section-title">Delivery Details</h2>
+          </div>
+          <div class="delivery-illustration">
+            <img src="{{ url_for('static', filename='illustrations/Delivery Details.svg') }}" alt="Delivery Illustration">
+          </div>
+          <p class="activity-title1">Waiting for Delivery Confirmation</p>
+          <p class="no-data-text">The shipment is still in transit or not yet confirmed.</p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-col">
+
+      <!-- Order Status Card -->
+      <div class="activity-card">
+        <div class="activity-card-row">
+          <img src="{{ url_for('static', filename='svg-icons/Order/Order timeline/Order created.svg') }}"
+               class="activity-illustration">
+
+          <div class="activity-texts">
+            <h3 class="activity-title">{{ order.status }}</h3>
+            <p class="activity-text">Request send to buyer.</p>
+            <p class="activity-date">{{ order.createdAt }}</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  {% else %}
+  <!-- EMPTY STATE -->
+  <div class="empty-state-container">
+    <img src="{{ url_for('static', filename='illustrations/Empty order table.svg') }}" alt="No orders">
+    <p class="no-data-text">{{ error or "No order found." }}</p>
+    <a href="{{ url_for('farmer_sales_bp.create_order_page') }}">
+      <button class="button">Create Order</button>
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

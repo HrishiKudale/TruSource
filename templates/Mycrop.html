@@ -1,0 +1,239 @@
+{% extends "farmer_base.html" %}
+
+{% block content %}
+
+<!-- Title + primary actions -->
+<div class="frame-15">
+  <div class="frame-16">
+    <img
+      class="grains"
+      src="{{ url_for('static', filename='svg-icons/Grains.svg') }}"
+      alt=""
+      aria-hidden="true"
+    />
+    <h1 class="text-wrapper-4">My Crop</h1>
+  </div>
+  <div class="frame-17">
+    <a href="{{ url_for('farmer_crop_bp.add_crop_blank') }}" class="button">
+
+      <span class="bt-text">Add New Crop</span>
+      <img class="img-2" src="{{ url_for('static', filename='svg-icons/Plus.svg') }}" />
+    </a>
+
+    <button class="button-2" type="button">
+      <span class="bt-text-2">Export</span>
+      <img
+        class="img-2"
+        src="{{ url_for('static', filename='svg-icons/Export.svg') }}"
+        alt=""
+        aria-hidden="true"
+      />
+    </button>
+  </div>
+</div>
+
+<!-- KPI cards row -->
+<section class="frame-18" aria-label="Crop statistics">
+  <article class="frame-19">
+    <div class="frame-20">
+      <div class="img-wrapper" aria-hidden="true">
+        <img class="img-2" src="{{ url_for('static', filename='svg-icons/Total Crop.svg') }}" alt="" />
+      </div>
+      <h3 class="text-wrapper-5">Total Crop</h3>
+    </div>
+    <p class="text-wrapper-6">{{ total_crops or 0 }}</p>
+  </article>
+
+  <article class="frame-19">
+    <div class="frame-20">
+      <div class="img-wrapper" aria-hidden="true">
+        <img class="img-2" src="{{ url_for('static', filename='svg-icons/Total Area.svg') }}" alt="" />
+      </div>
+      <h3 class="text-wrapper-5">Total Area (In acres)</h3>
+    </div>
+    <p class="text-wrapper-6">{{ total_area_acres or 0 }}</p>
+  </article>
+
+  <article class="frame-19">
+    <div class="frame-20">
+      <div class="img-wrapper" aria-hidden="true">
+        <img class="img-2" src="{{ url_for('static', filename='svg-icons/Harvested.svg') }}" alt="" />
+      </div>
+      <h3 class="text-wrapper-5">Harvested (In Qtl)</h3>
+    </div>
+    <p class="text-wrapper-6">{{ total_harvest_qtl or 0 }}</p>
+  </article>
+
+  <article class="frame-19">
+    <div class="frame-20">
+      <div class="img-wrapper" aria-hidden="true">
+        <img class="img-2" src="{{ url_for('static', filename='svg-icons/Sold.svg') }}" alt="" />
+      </div>
+      <h3 class="text-wrapper-5">Sold (In Qtl)</h3>
+    </div>
+    <p class="text-wrapper-6">{{ total_sold_qtl or 0 }}</p>
+  </article>
+</section>
+
+<!-- Table + filters -->
+<section class="frame-21">
+
+  <!-- Table header: search + filters -->
+  <div class="frame-15" style="margin-bottom:10px;"> <!-- reduced gap -->
+    <div class="frame-22" role="search">
+      <label for="table-search" class="img-3">
+        <img class="vector"
+             src="{{ url_for('static', filename='svg-icons/MagnifyingGlass.svg') }}"
+             alt="" aria-hidden="true" />
+      </label>
+
+      <input type="search" id="table-search" class="text-wrapper-7"
+             placeholder="Search" aria-label="Search crops" />
+    </div>
+
+    <!-- Filter toolbar -->
+    <div class="frame-23" role="toolbar" aria-label="Filter options">
+      {% for label in ["Crop Type", "Farming Type", "Seed Type", "Status", "Buyer"] %}
+      <div class="frame-24">
+        <div class="dropdown-title-wrapper">
+          <span class="text-wrapper-7">{{ label }}</span>
+        </div>
+        <button class="caret-down-wrapper" type="button"
+                aria-label="Open {{ label }} filter" aria-expanded="false">
+          <img class="img-3"
+               src="{{ url_for('static', filename='svg-icons/DownArrow.svg') }}"
+               alt="" aria-hidden="true" />
+        </button>
+      </div>
+      {% endfor %}
+
+      <button class="frame-25" type="button" aria-label="Advanced filters">
+        <img class="img" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}"
+             alt="" aria-hidden="true" />
+      </button>
+
+      <button class="frame-25" type="button" aria-label="Date filter">
+        <img class="img" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}"
+             alt="" aria-hidden="true" />
+      </button>
+    </div>
+  </div>
+
+  <!-- Table wrapper -->
+  <div class="frame-26">
+    <table class="crop-table">
+      <thead>
+        <tr>
+          <th>Crop ID</th>
+          <th>Crop Name</th>
+          <th>Sowing Date</th>
+          <th>Harvest Date</th>
+          <th>Crop Type</th>
+          <th>Farming Type</th>
+          <th>Seed Type</th>
+          <th>Total Qty</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% if crops and crops|length %}
+        {% for crop in crops %}
+        <tr>
+          <td>{{ crop.id }}</td>
+          <td>
+            <a href="{{ url_for('farmer_crop_bp.crop_info_page', crop_id=crop.id) }}" style="text-decoration:none; color:inherit;">
+              {{ crop.crop_name}}
+            </a>
+          </td>
+          <td>{{ crop.date_planted }}</td>
+          <td>{{ crop.harvest_date }}</td>
+          <td>{{ crop.crop_type }}</td>
+          <td>{{ crop.farming_type }}</td>
+          <td>{{ crop.seed_type }}</td>
+          <td>{{ crop.total_quantity }}</td>
+          <td>{{ crop.status }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <!-- EMPTY STATE -->
+    <tr class="empty-state-row">
+       <td colspan="9" class="empty-state-cell">
+        <div class="empty-state-content">
+              <img class="group"
+           src="{{ url_for('static', filename='illustrations/MyCrop.svg') }}"
+           alt="Illustration of farmers planting crops" />
+          <p class="empty-state-subtext">
+          Every great harvest starts <br />with one seed!
+        </p>
+      </div>
+      <a href="{{ url_for('farmer_crop_bp.add_crop_blank') }}" >
+
+        <button class="button-3" type="button">Register Crop</button>
+      </a>
+    </div>
+    </td>
+    </tr>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Styles -->
+<style>
+  .crop-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 10px;
+    font-family: inherit;
+    color: #333;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+
+  .crop-table th, .crop-table td {
+    padding: 18px 15px;
+    text-align: center;
+  }
+
+  .crop-table thead {
+    background-color: #f0f0f0;
+  }
+
+  .crop-table tbody tr {
+    background-color: #ffffff;
+    transition: background 0.3s;
+  }
+
+  .crop-table tbody tr:hover {
+    background-color: #e8f4ff;
+    cursor: pointer;
+  }
+
+  .crop-table th:first-child {
+    border-top-left-radius: 12px;
+  }
+  .crop-table th:last-child {
+    border-top-right-radius: 12px;
+  }
+  .crop-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+  }
+  .crop-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
+  }
+
+  .crop-table a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Reduce vertical gap between KPI cards and table header */
+  .frame-18 {
+    margin-bottom: 15px;
+  }
+</style>
+
+{% endblock %}

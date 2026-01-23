@@ -1,0 +1,598 @@
+# backend/services/farmer/dashboard_services.py
+
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
+
+from backend.mongo import mongo
+from backend.models.farmer.dashboard_models import (
+    DashboardData,
+    KPIBlock,
+    OrdersOverview,
+    ShipmentsOverview,
+    TaskItem,
+    GeoBlock,
+    CropMeta,
+)
+
+# -----------------------------
+# Small helpers for mixed schemas
+# -----------------------------
+def _first(d: Dict[str, Any], keys: List[str], default=None):
+    for k in keys:
+        if k in d and d.get(k) not in (None, ""):
+            return d.get(k)
+    return default
+
+
+def _to_iso(dt_val) -> Optional[str]:
+    if not dt_val:
+        return None
+    if isinstance(dt_val, datetime):
+        # ensure timezone aware
+        if dt_val.tzinfo is None:
+            dt_val = dt_val.replace(tzinfo=timezone.utc)
+        return dt_val.isoformat()
+    if isinstance(dt_val, str):
+        # if already iso-like or date
+        return dt_val
+    return None
+
+
+def _safe_lower(x) -> str:
+    return str(x or "").strip().lower()
+
+
+def _money_label(x) -> str:
+    try:
+        n = float(x)
+        if n.is_integer():
+            return f"₹{int(n):,}"
+        return f"₹{n:,.2f}"
+    except Exception:
+        return str(x or "-")
+
+
+def _qty_label(q, unit="kg") -> str:
+    try:
+        n = float(q)
+        if n.is_integer():
+            return f"{int(n)} {unit}"
+        return f"{n} {unit}"
+    except Exception:
+        return f"{q} {unit}".strip()
+
+
+def _date_floor_iso(date_str: str) -> Optional[datetime]:
+    """
+    Parse YYYY-MM-DD from input date picker.
+    Return datetime at 00:00:00 UTC.
+    """
+    if not date_str:
+        return None
+    try:
+        d = datetime.strptime(date_str, "%Y-%m-%d")
+        return d.replace(tzinfo=timezone.utc)
+    except Exception:
+        return None
+
+
+def _matches_till(doc_dt: Optional[datetime], till_dt: Optional[datetime]) -> bool:
+    if not till_dt:
+        return True
+    if not doc_dt:
+        return True
+    # allow doc_dt <= end-of-day
+    end = till_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+    return doc_dt <= end
+
+
+def _extract_dt(doc: Dict[str, Any]) -> Optional[datetime]:
+    val = _first(doc, ["due_at", "dueAt", "dueDate", "created_at", "createdAt", "requestedAt", "updated_at", "updatedAt"])
+    if isinstance(val, datetime):
+        if val.tzinfo is None:
+            return val.replace(tzinfo=timezone.utc)
+        return val
+    if isinstance(val, str):
+        # best effort
+        try:
+            # supports iso strings
+            v = val.replace("Z", "+00:00")
+            dt = datetime.fromisoformat(v)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt
+        except Exception:
+            return None
+    return None
+
+
+# -----------------------------
+# Status mappings
+# -----------------------------
+ORDER_REQUESTED = {"requested", "placed", "created", "new", "order_created"}
+ORDER_IN_TRANSIT = {"in_transit", "shipped", "dispatched", "out_for_delivery"}
+ORDER_COMPLETED = {"delivered", "completed", "fulfilled", "closed"}
+
+PAYMENT_PENDING = {"pending", "due", "unpaid", "pending_payment"}
+PAYMENT_RECEIVED = {"paid", "received", "success"}
+
+SHIP_REQUESTED = {"requested", "created", "new"}
+SHIP_PENDING = {"pending", "pending_pickup", "awaiting_pickup"}
+SHIP_IN_TRANSIT = {"in_transit", "shipped", "dispatched"}
+SHIP_DELIVERED = {"delivered", "completed"}
+
+
+class DashboardService:
+    """
+    Builds dashboard dict exactly used by farmer_dashboard.js:
+    {
+      kpis:{...},
+      crops:[...],
+      soil:{...},
+      orders:{...},
+      shipments:{...},
+      pending_tasks:[{title,sub,status,due_at,created_at,meta}],
+      warehouse_requests:[...],
+      manufacturer_requests:[...],
+      weather_image_url:"",
+      geo:{lat,lng,address},
+      crop_meta:{...}
+    }
+    """
+
+    @staticmethod
+    def build_dashboard(farmer_id: str, till_date: Optional[str] = None) -> Dict[str, Any]:
+        till_dt = _date_floor_iso(till_date) if till_date else None
+
+        d = DashboardData()
+
+        # -------------
+        # 1) KPIs
+        # -------------
+        active_crops = DashboardService._count_active_crops_best_effort(farmer_id)
+        pending_payments = DashboardService._count_pending_payments(farmer_id)
+        buyer_offers = DashboardService._count_buyer_offers(farmer_id)
+        upcoming_shipments = DashboardService._count_upcoming_shipments(farmer_id)
+
+        d.kpis = KPIBlock(
+            active_crops=active_crops,
+            pending_payments=pending_payments,
+            buyer_offers=buyer_offers,
+            upcoming_shipments=upcoming_shipments,
+        )
+
+        # -------------
+        # 2) Order overview + Shipment overview
+        # -------------
+        d.orders = DashboardService._orders_overview(farmer_id, till_dt)
+        d.shipments = DashboardService._shipments_overview(farmer_id, till_dt)
+
+        # -------------
+        # 3) Right-side lists
+        # -------------
+        d.pending_tasks = DashboardService._pending_tasks(farmer_id, till_dt)
+        d.warehouse_requests = DashboardService._farmer_requests_by_kind(farmer_id, "storage", till_dt)
+        d.manufacturer_requests = DashboardService._farmer_requests_by_kind(farmer_id, "processing", till_dt)
+
+        # -------------
+        # 4) Crop types dropdown (best effort from listing/orders/requests)
+        # -------------
+        d.crops = DashboardService._collect_crop_types(farmer_id) or ["Wheat"]
+
+        # -------------
+        # 5) Soil dummy series (until you wire sensors) - keep for UI to work
+        # -------------
+        d.soil = {
+            "labels": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+            "soil_temp": [5.6, 5.7, 5.65, 5.9, 6.0, 6.35, 5.8],
+            "soil_moisture": [20, 22, 21, 23, 25, 26, 24],
+            "ph": [6.1, 6.1, 6.0, 6.2, 6.2, 6.1, 6.1],
+            "npk": [2, 2, 3, 3, 3, 4, 3],
+        }
+
+        # -------------
+        # 6) Optional: Geo + crop_meta + weather image url (best effort)
+        # -------------
+        geo, crop_meta, weather_url = DashboardService._best_effort_meta(farmer_id)
+        d.geo = geo
+        d.crop_meta = crop_meta
+        d.weather_image_url = weather_url
+
+        return d.to_dict()
+
+    # -----------------------------
+    # KPIs
+    # -----------------------------
+    @staticmethod
+    def _count_active_crops_best_effort(farmer_id: str) -> int:
+        """
+        You asked: Active Crops - register crop (Blockchain).
+        If you have a Mongo collection storing registered crops, add it here.
+        We try common collection names; otherwise fallback = 0.
+        
+        """
+        candidates = [
+            "registered_crops",
+            "register_crop",
+            "blockchain_crops",
+            "crops",
+        ]
+        for col in candidates:
+            try:
+                c = mongo.db[col].count_documents({"farmer_id": farmer_id})
+                if c:
+                    return int(c)
+                # also try farmerId
+                c2 = mongo.db[col].count_documents({"farmerId": farmer_id})
+                if c2:
+                    return int(c2)
+            except Exception:
+                continue
+        return 0
+
+    @staticmethod
+    def _count_pending_payments(farmer_id: str) -> int:
+        col = mongo.db.farmer_orders
+
+        query = {
+            "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}]
+        }
+
+        docs = list(col.find(query, {"payment_status": 1, "paymentStatus": 1, "status": 1, "order_status": 1}))
+        count = 0
+        for o in docs:
+            pay = _safe_lower(_first(o, ["payment_status", "paymentStatus"]))
+            st = _safe_lower(_first(o, ["status", "order_status", "orderStatus"]))
+            if pay in PAYMENT_PENDING or st in PAYMENT_PENDING:
+                count += 1
+        return count
+
+    @staticmethod
+    def _count_buyer_offers(farmer_id: str) -> int:
+        col = mongo.db.marketplace
+        query = {
+            "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
+            # count offers not rejected
+            "status": {"$nin": ["rejected"]}
+        }
+        try:
+            return int(col.count_documents(query))
+        except Exception:
+            return 0
+
+    @staticmethod
+    def _count_upcoming_shipments(farmer_id: str) -> int:
+        col = mongo.db.transporter_request
+        query = {
+            "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
+            "status": {"$in": ["pending", "Pending", "PENDING", "pending_pickup"]}
+        }
+        try:
+            return int(col.count_documents(query))
+        except Exception:
+            return 0
+
+
+    @staticmethod
+    def get_farm_polygons(user_id: str, crop_type: str = None, crop_id: str = None):
+        """
+        Returns polygon(s) for Crop Status map.
+        Collection: farm_coordinates
+        Filter by user_id + optional cropType / crop_id
+        """
+        q = {"user_id": user_id}
+
+        # Optional filter priority: crop_id > crop_type
+        if crop_id:
+            q["crop_id"] = crop_id
+        elif crop_type:
+            q["cropType"] = crop_type
+
+        docs = list(
+            mongo.db.farm_coordinates.find(q).sort("created_at", -1)
+        )
+
+        out = []
+        for d in docs:
+            coords = d.get("coordinates", []) or []
+            # Normalize to lat/lng floats
+            poly = []
+            for p in coords:
+                try:
+                    poly.append({"lat": float(p.get("lat")), "lng": float(p.get("lng"))})
+                except Exception:
+                    pass
+
+            out.append({
+                "id": str(d.get("_id")),
+                "crop_id": d.get("crop_id", ""),
+                "cropType": d.get("cropType", ""),
+                "area_size": d.get("area_size", ""),
+                "date_planted": d.get("date_planted", ""),
+                "created_at": d.get("created_at", ""),
+                "coordinates": poly,
+            })
+
+        return out
+
+
+    # -----------------------------
+    # Overview blocks
+    # -----------------------------
+    @staticmethod
+    def _orders_overview(farmer_id: str, till_dt: Optional[datetime]) -> OrdersOverview:
+        col = mongo.db.farmer_orders
+        docs = list(col.find({"$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}] }))
+
+        out = OrdersOverview()
+
+        for o in docs:
+            dt = _extract_dt(o)
+            if not _matches_till(dt, till_dt):
+                continue
+
+            st = _safe_lower(_first(o, ["status", "order_status", "orderStatus"]))
+            pay = _safe_lower(_first(o, ["payment_status", "paymentStatus"]))
+
+            if st in ORDER_REQUESTED:
+                out.requested += 1
+            elif st in ORDER_IN_TRANSIT:
+                out.in_transit += 1
+            elif st in ORDER_COMPLETED:
+                out.completed += 1
+
+            if pay in PAYMENT_RECEIVED:
+                out.payment_received += 1
+
+        return out
+
+    @staticmethod
+    def _shipments_overview(farmer_id: str, till_dt: Optional[datetime]) -> ShipmentsOverview:
+        col = mongo.db.transporter_request
+        docs = list(col.find({"$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}] }))
+
+        out = ShipmentsOverview()
+
+        for s in docs:
+            dt = _extract_dt(s)
+            if not _matches_till(dt, till_dt):
+                continue
+
+            st = _safe_lower(_first(s, ["status", "shipment_status", "shipmentStatus"]))
+
+            if st in SHIP_REQUESTED:
+                out.requested += 1
+            elif st in SHIP_PENDING:
+                out.pending += 1
+            elif st in SHIP_IN_TRANSIT:
+                out.in_transit += 1
+            elif st in SHIP_DELIVERED:
+                out.delivered += 1
+
+            # Payment bar: use payment_status if exists
+            pay = _safe_lower(_first(s, ["payment_status", "paymentStatus"]))
+            if pay in PAYMENT_RECEIVED:
+                out.payment += 1
+
+        return out
+
+    # -----------------------------
+    # Right-side lists
+    # -----------------------------
+    @staticmethod
+    def _pending_tasks(farmer_id: str, till_dt: Optional[datetime]) -> List[TaskItem]:
+        tasks: List[TaskItem] = []
+
+        # A) Pending payments from farmer_orders
+        for o in mongo.db.farmer_orders.find({"$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}] }):
+            dt = _extract_dt(o)
+            if not _matches_till(dt, till_dt):
+                continue
+
+            pay = _safe_lower(_first(o, ["payment_status", "paymentStatus"]))
+            st = _safe_lower(_first(o, ["status", "order_status", "orderStatus"]))
+
+            if pay in PAYMENT_PENDING or st in PAYMENT_PENDING:
+                order_id = _first(o, ["order_id", "orderId", "invoice_id", "invoiceId"], "-")
+                tasks.append(TaskItem(
+                    title="Payment pending",
+                    sub=f"Order #{order_id}",
+                    status="pending",
+                    due_at=_to_iso(_first(o, ["due_at", "dueAt", "dueDate"])),
+                    created_at=_to_iso(_first(o, ["created_at", "createdAt"])),
+                    meta={"source": "farmer_orders"}
+                ))
+
+            # Shipment creation task if order ready but no shipment id
+            if st in ORDER_REQUESTED:
+                order_id = _first(o, ["order_id", "orderId"], "-")
+                tasks.append(TaskItem(
+                    title="Create shipment for order",
+                    sub=f"Order #{order_id}",
+                    status="requested",
+                    due_at=_to_iso(_first(o, ["created_at", "createdAt"])),
+                    created_at=_to_iso(_first(o, ["created_at", "createdAt"])),
+                    meta={"source": "farmer_orders"}
+                ))
+
+        # B) Marketplace offers (requests)
+        for r in mongo.db.marketplace_requests.find({
+            "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
+            "status": {"$nin": ["rejected"]}
+        }):
+            dt = _extract_dt(r)
+            if not _matches_till(dt, till_dt):
+                continue
+
+            buyer = _first(r, ["buyer_name", "buyerName"], "Buyer")
+            crop = _first(r, ["crop_name", "cropName", "cropType"], "")
+            status = _first(r, ["status"], "requested")
+
+            tasks.append(TaskItem(
+                title="Buyer offer received",
+                sub=f"{buyer}" + (f" • {crop}" if crop else ""),
+                status=status,
+                due_at=_to_iso(_first(r, ["created_at", "createdAt"])),
+                created_at=_to_iso(_first(r, ["created_at", "createdAt"])),
+                meta={"source": "marketplace_requests"}
+            ))
+
+        # C) Transporter requests pending
+        for tr in mongo.db.transporter_request.find({
+            "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
+            "status": {"$in": ["pending", "pending_pickup", "Pending", "PENDING"]}
+        }):
+            dt = _extract_dt(tr)
+            if not _matches_till(dt, till_dt):
+                continue
+
+            ship_id = _first(tr, ["shipment_id", "shipmentId", "request_id", "requestId"], "")
+            tasks.append(TaskItem(
+                title="Upcoming shipment",
+                sub=f"{('Shipment #' + str(ship_id)) if ship_id else 'Transport request pending'}",
+                status="pending",
+                due_at=_to_iso(_first(tr, ["pickup_date", "pickupDate", "created_at", "createdAt"])),
+                created_at=_to_iso(_first(tr, ["created_at", "createdAt"])),
+                meta={"source": "transporter_request"}
+            ))
+
+        # D) Farmer requests pending (storage + processing + others)
+        for fr in mongo.db.farmer_request.find({
+            "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
+        }):
+            dt = _extract_dt(fr)
+            if not _matches_till(dt, till_dt):
+                continue
+
+            status = _safe_lower(_first(fr, ["status"], ""))
+            if status in ("pending", "requested", "approval_pending", "pending_payment"):
+                kind = _safe_lower(_first(fr, ["requestKind", "request_kind"], "request"))
+                crop = _first(fr, ["crop_name", "cropName", "cropType"], "Crop")
+                entity = _first(fr, ["warehouseName", "manufacturerName", "entityName", "to_name", "toName"], "")
+                tasks.append(TaskItem(
+                    title=f"{kind.capitalize()} request",
+                    sub=f"{crop}" + (f" • {entity}" if entity else ""),
+                    status=_first(fr, ["status"], "pending"),
+                    due_at=_to_iso(_first(fr, ["created_at", "createdAt", "requestedAt"])),
+                    created_at=_to_iso(_first(fr, ["created_at", "createdAt"])),
+                    meta={"source": "farmer_request", "requestKind": kind}
+                ))
+
+        # Sort by date desc (best effort)
+        def sort_key(t: TaskItem):
+            v = to_dt(t.due_at) or to_dt(t.created_at) or datetime(1970, 1, 1, tzinfo=timezone.utc)
+            return v
+
+        tasks.sort(key=sort_key, reverse=True)
+        return tasks[:40]  # keep list light for UI
+
+    @staticmethod
+    def _farmer_requests_by_kind(farmer_id: str, kind: str, till_dt: Optional[datetime]) -> List[TaskItem]:
+        out: List[TaskItem] = []
+        kind = _safe_lower(kind)
+
+        docs = list(mongo.db.farmer_request.find({
+            "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
+            "$or": [{"requestKind": kind}, {"request_kind": kind}, {"requestKind": kind.upper()}]
+        }))
+
+        for fr in docs:
+            dt = _extract_dt(fr)
+            if not _matches_till(dt, till_dt):
+                continue
+
+            crop = _first(fr, ["crop_name", "cropName", "cropType"], "Wheat")
+            entity = (
+                _first(fr, ["warehouseName", "warehouse_name"], "") if kind == "storage"
+                else _first(fr, ["manufacturerName", "manufacturer_name"], "")
+            )
+            status = _first(fr, ["status"], "requested")
+
+            out.append(TaskItem(
+                title=crop,
+                sub=(entity or "—"),
+                status=status,
+                due_at=_to_iso(_first(fr, ["created_at", "createdAt", "requestedAt"])),
+                created_at=_to_iso(_first(fr, ["created_at", "createdAt"])),
+                meta={"source": "farmer_request", "requestKind": kind}
+            ))
+
+        # sort latest first
+        out.sort(key=lambda x: (to_dt(x.due_at) or to_dt(x.created_at) or datetime(1970,1,1,tzinfo=timezone.utc)), reverse=True)
+        return out[:40]
+
+    # -----------------------------
+    # Crop list for dropdown
+    # -----------------------------
+    @staticmethod
+    def _collect_crop_types(farmer_id: str) -> List[str]:
+        crops = set()
+
+        # marketplace_requests
+        try:
+            for r in mongo.db.marketplace_requests.find({"$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}]}, {"crop_name": 1, "cropType": 1}):
+                c = _first(r, ["crop_name", "cropType"])
+                if c: crops.add(str(c))
+        except Exception:
+            pass
+
+        # farmer_request
+        try:
+            for fr in mongo.db.farmer_request.find({"$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}]}, {"crop_name": 1, "cropType": 1}):
+                c = _first(fr, ["crop_name", "cropType"])
+                if c: crops.add(str(c))
+        except Exception:
+            pass
+
+        # farmer_orders
+        try:
+            for o in mongo.db.farmer_orders.find({"$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}]}, {"crop_name": 1, "cropType": 1}):
+                c = _first(o, ["crop_name", "cropType"])
+                if c: crops.add(str(c))
+        except Exception:
+            pass
+
+        out = sorted(list(crops))
+        return out
+
+    # -----------------------------
+    # Optional meta (geo/crop_meta/weather url)
+    # -----------------------------
+    @staticmethod
+    def _best_effort_meta(farmer_id: str) -> Tuple[GeoBlock, CropMeta, str]:
+        geo = GeoBlock(lat="19.2046", lng="73.8745", address="")
+        crop_meta = CropMeta(crop_id="", crop_name="Wheat", crop_type="Grain", grade="A", planting_date="", harvest_date="")
+        weather_url = ""  # you can set your static placeholder or a real URL
+
+        # Try pull from latest farmer_request
+        try:
+            fr = mongo.db.farmer_request.find_one(
+                {"$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}]},
+                sort=[("created_at", -1)]
+            )
+            if fr:
+                crop_meta.crop_name = str(_first(fr, ["crop_name", "cropType"], crop_meta.crop_name) or crop_meta.crop_name)
+                crop_meta.crop_id = str(_first(fr, ["crop_id", "cropId"], crop_meta.crop_id) or crop_meta.crop_id)
+                geo.address = str(_first(fr, ["location", "farmLocation", "address"], geo.address) or geo.address)
+
+                lat = _first(fr, ["lat", "latitude"])
+                lng = _first(fr, ["lng", "longitude"])
+                if lat: geo.lat = str(lat)
+                if lng: geo.lng = str(lng)
+        except Exception:
+            pass
+
+        return geo, crop_meta, weather_url
+
+
+def to_dt(val: Optional[str]) -> Optional[datetime]:
+    if not val:
+        return None
+    try:
+        v = val.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(v) if isinstance(val, str) else None
+        if dt and dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None

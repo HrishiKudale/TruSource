@@ -1,0 +1,201 @@
+{% extends "farmer_base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='logistics.css') }}">
+
+<!-- Title + primary actions -->
+<div class="frame-15">
+    <div class="frame-16">
+        <img class="grains" src="{{ url_for('static', filename='svg-icons/Logistics.svg') }}" />
+        <h1 class="text-wrapper-4">Logistics</h1>
+    </div>
+
+    <div class="frame-17">
+        <a href="{{ url_for('farmer_logistics.add_shipment_page') }}" class="button">
+            <span class="bt-text">New Shipment</span>
+            <img src="{{ url_for('static', filename='svg-icons/Plus.svg') }}">
+        </a>
+
+        <button class="button-2">
+            <span class="bt-text-2">Export</span>
+            <img src="{{ url_for('static', filename='svg-icons/Export.svg') }}">
+        </button>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<section class="frame-18">
+
+    <article class="frame-19">
+        <div class="frame-20">
+            <div class="img-wrapper">
+                <img src="{{ url_for('static', filename='svg-icons/ActiveShipments.svg') }}">
+            </div>
+            <h3 class="text-wrapper-5">Active Shipments</h3>
+        </div>
+        <p class="text-wrapper-6">{{ active_shipments or 0 }}</p>
+    </article>
+
+    <article class="frame-19">
+        <div class="frame-20">
+            <div class="img-wrapper">
+                <img src="{{ url_for('static', filename='svg-icons/RequestedShipment.svg') }}">
+            </div>
+            <h3 class="text-wrapper-5">Requested Shipment</h3>
+        </div>
+        <p class="text-wrapper-6">{{ requested_shipments or 0 }}</p>
+    </article>
+
+    <article class="frame-19">
+        <div class="frame-20">
+            <div class="img-wrapper">
+                <img src="{{ url_for('static', filename='svg-icons/PendingPayments.svg') }}">
+            </div>
+            <h3 class="text-wrapper-5">Pending Payments</h3>
+        </div>
+        <p class="text-wrapper-6">{{ pending_payments or 0 }}</p>
+    </article>
+
+</section>
+
+<!-- Filters + Table -->
+<section class="logistics-container">
+
+    <div class="filters-row">
+
+        <!-- Search -->
+        <div class="search-box">
+            <img src="{{ url_for('static', filename='svg-icons/MagnifyingGlass.svg') }}">
+            <input id="table-search" type="search" placeholder="Search Shipments" />
+        </div>
+
+        <div class="filters-right">
+
+            <!-- Storage Type -->
+          <div class="dropdown">
+              <button class="dropdown-btn">
+                  <span>Storage Type</span>
+                  <div class="arrow"></div>
+              </button>
+              <div class="dropdown-menu">
+                  <div>Cold Storage</div>
+                  <div>Dry Storage</div>
+                  <div>Warehouse</div>
+              </div>
+          </div>
+
+          <div class="dropdown">
+              <button class="dropdown-btn">
+                  <span>Location</span>
+                  <div class="arrow"></div>
+              </button>
+              <div class="dropdown-menu">
+                  <div>Mumbai</div>
+                  <div>Bangalore</div>
+                  <div>Hyderabad</div>
+              </div>
+          </div>
+
+
+            <!-- Calendar -->
+            <div class="calendar-btn">
+                <img src="{{ url_for('static', filename='svg-icons/Calendar.svg') }}">
+                <input type="date">
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="table-card">
+
+        <div class="table-scroll">
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>Shipment ID</th>
+                        <th>Crops Name</th>
+                        <th>Quantity</th>
+                        <th>From (Warehouse)</th>
+                        <th>To (Buyer)</th>
+                        <th>Transporter</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% if transporter_request and transporter_request|length %}
+                    {% for s in transporter_request %}
+                    {% set sd = (s.shipment_details[0] if s.shipment_details and s.shipment_details|length else {}) %}
+                    {% set td = (s.transporter_details[0] if s.transporter_details and s.transporter_details|length else {}) %}
+                    {% set items = (s.shipment_items if s.shipment_items else []) %}
+
+                    <tr>
+                        <td>{{ s._id }}</td>
+
+                        <!-- Crop names (from shipment_items) -->
+                        <td>
+                        <a class="shipment-link"
+                            href="{{ url_for('farmer_logistics.shipment_info_page', request_id=s._id) }}"
+                            title="Open shipment details">
+                            {% if items|length %}
+                            {{ items | map(attribute='crop_name') | list | join(', ') }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </a>
+                        </td>
+
+
+                        <!-- Quantity total -->
+                        <td>
+                        {% if items|length %}
+                            {{ items | map(attribute='quantity') | list | join(', ') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                        </td>
+
+                        <!-- From -->
+                        <td>{{ sd.pickup_from or '-' }}</td>
+
+                        <!-- To -->
+                        <td>{{ sd.deliver_to or '-' }}</td>
+
+                        <!-- Transporter -->
+                        <td>
+                        {% if td.transporter_mode == 'personal' %}
+                            {{ td.personal_transporter_name or '-' }}
+                        {% else %}
+                            {{ td.transporter_name or '-' }}
+                        {% endif %}
+                        </td>
+
+                        <!-- Status -->
+                        <td>{{ s.status or 'pending' }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr class="no-data-row"><td colspan="7"></td></tr>
+                {% endif %}
+                </tbody>
+
+            </table>
+
+            {% if not transporter_request or transporter_request|length == 0 %}
+            <div class="empty-state-inside">
+                <img src="{{ url_for('static', filename='illustrations/Empty Transport Table.svg') }}">
+                <h2>No Shipment Activity Yet</h2>
+                <p>Your shipment records will appear here once you schedule or dispatch an order.</p>
+                <a href="{{ url_for('farmer_crop_bp.register_crop_api') }}">
+                    <button class="button-3">New Shipment</button>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

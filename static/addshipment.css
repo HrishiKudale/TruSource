@@ -1,0 +1,930 @@
+/* ============================================================
+   SHIPMENT PAGE LAYOUT
+   ============================================================ */
+
+.shipment-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.shipment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Header (reuse existing design from other pages) */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.send-request-btn {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--green-700);
+  color: var(--white);
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--body-md-semibold-font-family);
+  font-size: var(--body-md-semibold-font-size);
+}
+
+.send-request-btn:hover {
+  background-color: var(--green-800);
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ============================================================
+   SHIPMENT CARDS (bordered)
+   ============================================================ */
+
+.shipment-card,
+.shipment-table-card {
+  background-color: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--grey-100);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Card header */
+.shipment-card-header {
+  background-color: var(--grey-50);
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  border-bottom: 1px solid var(--grey-100);
+}
+
+.shipment-card-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.shipment-card-title {
+  font-family: var(--body-md-semibold-font-family);
+  font-size: 20px;
+  color: var(--grey-900);
+  font-weight: 600;
+}
+
+/* Card body */
+.shipment-card-body {
+  padding: 16px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ============================================================
+   GRID: SHIPMENT DETAILS / TRANSPORTER / PAYMENT
+   ============================================================ */
+
+.shipment-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+}
+
+.shipment-partition {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding-right: 12px;
+  border-right: 1px solid var(--grey-100);
+}
+
+.shipment-partition--right-border-fix {
+  border-right: none;
+  padding-right: 0;
+  padding-left: 12px;
+}
+
+/* Row of 2 fields inside a card */
+.shipment-row-two-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Card row with transporter + payment */
+.shipment-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(320px, 1fr);
+  gap: 10px;
+  width: 100%;
+  align-items: stretch;
+}
+
+@media (max-width: 1100px) {
+  .shipment-details-grid,
+  .shipment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shipment-partition {
+    border-right: none;
+    padding-right: 0;
+    padding-left: 0;
+  }
+}
+
+/* ============================================================
+   FIELDS
+   ============================================================ */
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field-group.full-row {
+  grid-column: 1 / -1;
+}
+
+.field-label {
+  font-family: var(--body-sm-reg-font-family);
+  font-size: 15px;
+  color: var(--grey-950);
+}
+
+/* Clean shared input container */
+.field-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--grey-200);
+  border-radius: 10px;
+  padding: 0 12px;
+  height: 46px;
+  box-sizing: border-box;
+}
+
+.field-input input,
+.field-input textarea,
+.field-input select {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--body-sm-reg-font-family);
+  font-size: var(--body-sm-reg-font-size);
+  color: var(--grey-800);
+  width: 100%;
+}
+
+.field-input textarea {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  height: auto;
+}
+
+/* Select styling */
+.field-input--select select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding-right: 40px;
+}
+
+.field-input--select select option[disabled][selected] {
+  color: var(--grey-400);
+}
+/* ============================================
+   MULTILINE FIELD INPUTS (Location, Notes)
+   ============================================ */
+
+.field-input--multiline {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px;
+  min-height: 100px;
+  border-radius: 10px;
+  border: 1px solid var(--grey-200);
+  background-color: #fff;
+}
+
+.field-input--multiline textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 80px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: var(--body-sm-reg-font-family);
+  font-size: var(--body-sm-reg-font-size);
+  color: var(--grey-800);
+  background: transparent;
+  padding: 0;
+  line-height: 1.4;
+}
+
+/* Right grey arrow button */
+.select-chevron {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 40px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--grey-100);
+  border-left: 1px solid var(--grey-200);
+  border-radius: 0 10px 10px 0;
+  font-size: 12px;
+  color: var(--grey-600);
+  pointer-events: none;
+}
+
+/* Searchable dropdown wrapper */
+.field-input--searchable {
+  padding-left: 10px;
+  padding-right: 10px;
+  gap: 6px;
+}
+
+.field-input--searchable .searchable-input {
+  flex: 0 0 40%;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+.field-input--searchable select {
+  flex: 1;
+}
+
+/* Field suffix (QtI etc.) */
+.field-suffix {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--grey-500);
+  flex-shrink: 0;
+}
+
+/* Helper text below fields */
+.field-helper-text {
+  margin: 0;
+  font-size: 11px;
+  color: var(--grey-500);
+}
+
+/* ============================================================
+   Transporter mode radio
+   ============================================================ */
+
+.transporter-mode-options {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+}
+
+.radio-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding:8px
+}
+
+.radio-option input {
+  display: none;
+}
+
+.radio-bullet {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid var(--grey-300);
+  box-sizing: border-box;
+  position: relative;
+}
+
+.radio-option input:checked + .radio-bullet {
+  border-color: var(--green-700);
+}
+
+.radio-option input:checked + .radio-bullet::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 999px;
+  background-color: var(--green-700);
+}
+
+/* ============================================================
+   Insurance toggle
+   ============================================================ */
+
+.insurance-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-label {
+  font-size: 12px;
+  color: var(--grey-600);
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--grey-300);
+  border-radius: 999px;
+  transition: 0.2s;
+}
+
+.toggle-slider::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  top: 2px;
+  background-color: var(--white);
+  border-radius: 999px;
+  transition: 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--green-700);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.insurance-extra-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* Generic hidden utility */
+.hidden {
+  display: none !important;
+}
+
+/* ============================================================
+   SHIPMENT TABLE
+   ============================================================ */
+
+.shipment-table-card {
+  margin-top: 6px;
+}
+
+.shipment-table-header {
+  justify-content: space-between;
+}
+
+.open-modal-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--grey-300);
+  background-color: var(--white);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.open-modal-btn:hover {
+  background-color: var(--grey-50);
+}
+
+.shipment-table-wrapper {
+  width: 100%;
+  border-top: 1px solid var(--grey-100);
+}
+
+.shipment-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shipment-table thead tr {
+  background-color: var(--grey-50);
+}
+
+.shipment-table th {
+  padding: 12px 14px;
+  font-family: var(--body-sm-semibold-font-family);
+  font-size: var(--body-sm-semibold-font-size);
+  color: var(--grey-800);
+  border-bottom: 1px solid var(--grey-200);
+  text-align: left;
+}
+
+.shipment-table td {
+  padding: 10px 14px;
+  font-family: var(--body-sm-reg-font-family);
+  font-size: var(--body-sm-reg-font-size);
+  color: var(--grey-700);
+  border-bottom: 1px solid var(--grey-100);
+}
+
+.shipment-empty-state {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.table-action-btn {
+  padding: 6px 10px;
+  border: 1px solid var(--grey-300);
+  border-radius: 6px;
+  background-color: var(--white);
+  font-family: var(--body-xs-semibold-font-family, var(--body-sm-reg-font-family));
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.table-action-btn:hover {
+  background-color: var(--grey-50);
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+.shipment-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  font-family: var(--body-sm-reg-font-family);
+}
+
+.shipment-modal.open {
+  display: flex;
+}
+
+.shipment-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+}
+
+.shipment-modal-card {
+  position: relative;
+  z-index: 1110;
+  width: min(750px, 96vw);
+  max-height: 95vh;
+  background-color: var(--white);
+  border-radius: 16px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 26px 24px 20px;
+}
+
+/* Modal header */
+.shipment-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+.shipment-modal-title {
+  margin: 0;
+  font-family: var(--body-lg-semibold-font-family);
+  font-size: 32px;
+  color: var(--grey-950);
+}
+
+.shipment-modal-close {
+  border: none;
+  background: transparent;
+  font-size: 40px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--grey-500);
+}
+
+/* Tabs bar */
+.shipment-modal-tabs-wrapper {
+  width: 100%;
+  background-color: var(--grey-50);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 10px;
+}
+
+.shipment-modal-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.shipment-modal-tab {
+  border: none;
+  border-radius: 8px;
+  padding: 16px 12px;
+  cursor: pointer;
+  background-color: transparent;
+  font-family: var(--body-sm-semibold-font-family);
+  font-size: 16px;
+  color: var(--grey-600);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.shipment-modal-tab.active {
+  background-color: var(--white);
+  color: var(--grey-950);
+}
+
+/* Modal body */
+.shipment-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 4px;
+  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shipment-modal-tabpanel {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shipment-modal-tabpanel.active {
+  display: flex;
+}
+
+/* Inner cards */
+.shipment-modal-card-inner {
+  border-radius: 14px;
+  border: 1px solid var(--grey-100);
+  background-color: #fbfbfb;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.table-card-inner {
+  margin-top: 2px;
+}
+
+/* Bigger input feel */
+.field-input--large {
+  height: 50px;
+}
+
+/* Modal tables */
+.modal-table-wrapper {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--grey-100);
+  background-color: var(--white);
+}
+
+.modal-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.modal-table thead tr {
+  background-color: var(--grey-50);
+}
+
+.modal-table th,
+.modal-table td {
+  font-family: var(--body-sm-reg-font-family);
+  font-size: var(--body-sm-reg-font-size);
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--grey-100);
+}
+
+/* “Add +” button in modal */
+.modal-add-btn-wrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-add-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background-color: #111111;
+  color: #ffffff;
+  font-family: var(--body-sm-semibold-font-family);
+  font-size: var(--body-sm-semibold-font-size);
+  cursor: pointer;
+}
+
+/* Modal footer buttons */
+.shipment-modal-footer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-reset-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--grey-300);
+  background-color: var(--white);
+  cursor: pointer;
+  font-family: var(--body-sm-semibold-font-family);
+  font-size: var(--body-sm-semibold-font-size);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-continue-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--green-700);
+  color: var(--white);
+  cursor: pointer;
+  font-family: var(--body-sm-semibold-font-family);
+  font-size: var(--body-sm-semibold-font-size);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-continue-btn:hover {
+  background-color: var(--green-800);
+}
+
+.icon-arrow-left,
+.icon-arrow-right {
+  font-size: 14px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px) {
+  .shipment-modal-card {
+    width: 96vw;
+    padding: 16px;
+  }
+
+  .shipment-row-two-cols.modal-row {
+    grid-template-columns: 1fr;
+  }
+}
+/* Single searchable dropdown (sd) */
+
+.sd { position: relative; width: 100%; }
+
+/* one single “input box” */
+.sd-control{
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--grey-200);
+  background-color: var(--white);
+
+  cursor: pointer;
+  font-family: var(--body-sm-reg-font-family);
+  font-size: var(--body-sm-reg-font-size);
+  color: var(--grey-900);
+}
+
+/* placeholder text */
+.sd-placeholder{
+  color: var(--grey-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* right grey arrow block like your select-chevron */
+.sd-caret{
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.sd-control::after{
+  content:"";
+  position:absolute;
+  right:0; top:0;
+  width: 44px;
+  height: 100%;
+  background: var(--grey-100);
+  border-left: 1px solid var(--grey-200);
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  pointer-events:none;
+}
+.sd-caret{
+  position: absolute;
+  right: 14px;
+  z-index: 2;
+}
+
+/* Dropdown menu */
+.sd-menu{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  overflow: visible;
+  display: none;
+  z-index: 2000;
+}
+
+.sd.open .sd-menu{ display:block; }
+.sd.open .sd-control{ border-color: var(--grey-300); }
+
+/* search row inside dropdown */
+.sd-search{
+  padding: 10px;
+  background: var(--grey-50);
+  border-bottom: 1px solid var(--grey-200);
+}
+
+.sd-search-input{
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--grey-200);
+  outline: none;
+  background: var(--white);
+  font-family: var(--body-sm-reg-font-family);
+  font-size: var(--body-sm-reg-font-size);
+}
+
+/* options list */
+.sd-options{
+  max-height: 220px;
+  overflow: auto;
+}
+
+.sd-option{
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 12px 12px;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--body-sm-reg-font-family);
+  font-size: var(--body-sm-reg-font-size);
+  color: var(--grey-900);
+}
+
+.sd-option:hover{
+  background: var(--grey-50);
+}
+
+.sd-option-title{
+  display:block;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: ellipsis;
+}
+
+
+/* ===================== SUMMARY MODAL (Shipment) ===================== */
+.summary-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.summary-modal.show { display: flex; }
+
+.summary-modal-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.55);
+}
+
+.summary-modal-dialog {
+  position: relative;
+  width: min(520px, calc(100vw - 28px));
+  margin: 64px auto;
+}
+
+.summary-modal-content {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  padding: 22px 22px 18px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+}
+
+.summary-illus { display:flex; justify-content:center; margin-bottom: 6px; }
+.summary-illus img { max-width: 210px; height:auto; }
+
+.summary-title { margin: 10px 0 6px; text-align:center; font-size: 20px; font-weight: 700; }
+.summary-subtext { margin: 0 0 14px; text-align:center; color:#5f5f5f; font-size: 14px; line-height: 1.35; }
+
+.summary-card {
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 10px 0 14px;
+}
+
+.summary-row {
+  display:flex; align-items:center; justify-content:space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+.summary-row:last-child { border-bottom: none; }
+
+.s-label { color:#6a6a6a; font-size: 14px; }
+.s-value { color:#111; font-size: 14px; font-weight: 600; text-align:right; }
+
+.summary-actions { display:flex; gap: 12px; margin-top: 8px; }
+.summary-actions.single { justify-content:center; }
+
+.summary-btn {
+  flex:1;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-align:center;
+}
+
+.summary-btn.secondary {
+  background:#fff;
+  border-color:#dcdcdc;
+  color:#111;
+}
+
+.summary-btn.primary {
+  background:#15803d;  /* same green */
+  color:#fff;
+}
+
+.summary-error {
+  color: #b00020;
+  font-size: 13px;
+  text-align: center;
+  margin-top: 6px;
+}

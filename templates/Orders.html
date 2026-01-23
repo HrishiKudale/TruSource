@@ -1,0 +1,173 @@
+{% extends "farmer_base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='orders.css') }}">
+
+<div class="orders-page">
+
+  <!-- Title + primary actions -->
+  <div class="frame-15 orders-header">
+    <div class="frame-16">
+      <img class="grains"
+           src="{{ url_for('static', filename='svg-icons/Order/Order&Sales.svg') }}"
+           alt="" aria-hidden="true" />
+      <h1 class="text-wrapper-4">Order & Sales</h1>
+    </div>
+
+    <div class="frame-17">
+      <a href="{{ url_for('farmer_sales_bp.create_order_page') }}" class="button">
+        <span class="bt-text">Create Shipment</span>
+        <img class="img-2" src="{{ url_for('static', filename='svg-icons/Order/whitetruck.svg') }}" alt="" />
+      </a>
+
+      <button class="button-2" type="button">
+        <span class="bt-text-2">Export</span>
+        <img class="img-2" src="{{ url_for('static', filename='svg-icons/Export.svg') }}" alt="" aria-hidden="true" />
+      </button>
+    </div>
+  </div>
+
+
+
+  
+  <!-- KPI cards row -->
+  <section class="frame-18 orders-kpis" aria-label="Order statistics">
+    <article class="frame-19">
+      <div class="frame-20">
+        <div class="img-wrapper" aria-hidden="true">
+          <img class="img-2" src="{{ url_for('static', filename='svg-icons/Order/Total Order.svg') }}" alt="" />
+        </div>
+        <h3 class="text-wrapper-5">Total Active Orders</h3>
+      </div>
+      <p class="text-wrapper-6">{{ total_active_orders or 0 }}</p>
+    </article>
+
+    <article class="frame-19">
+      <div class="frame-20">
+        <div class="img-wrapper" aria-hidden="true">
+          <img class="img-2" src="{{ url_for('static', filename='svg-icons/Order/Pending order.svg') }}" alt="" />
+        </div>
+        <h3 class="text-wrapper-5">Pending Orders</h3>
+      </div>
+      <p class="text-wrapper-6">{{ total_pending_orders or 0 }}</p>
+    </article>
+
+    <article class="frame-19">
+      <div class="frame-20">
+        <div class="img-wrapper" aria-hidden="true">
+          <img class="img-2" src="{{ url_for('static', filename='svg-icons/Order/Delivered.svg') }}" alt="" />
+        </div>
+        <h3 class="text-wrapper-5">Delivered Orders</h3>
+      </div>
+      <p class="text-wrapper-6">{{ total_delivered_orders or 0 }}</p>
+    </article>
+
+    <article class="frame-19">
+      <div class="frame-20">
+        <div class="img-wrapper" aria-hidden="true">
+          <img class="img-2" src="{{ url_for('static', filename='svg-icons/Order/Total revenue.svg') }}" alt="" />
+        </div>
+        <h3 class="text-wrapper-5">Total Revenue</h3>
+      </div>
+      <p class="text-wrapper-6">{{ total_revenue or 0 }}</p>
+    </article>
+  </section>
+
+  <!-- Search + filters -->
+  <section class="frame-21 orders-table-section">
+    <div class="frame-15 orders-toolbar">
+      <div class="frame-22" role="search">
+        <label for="table-search" class="img-3" aria-hidden="true">
+          <img class="vector"
+               src="{{ url_for('static', filename='svg-icons/MagnifyingGlass.svg') }}"
+               alt="" aria-hidden="true" />
+        </label>
+        <input type="search" id="table-search" class="text-wrapper-7"
+               placeholder="Search Orders" aria-label="Search orders" />
+      </div>
+
+      <div class="frame-23" role="toolbar" aria-label="Filter options">
+        <div class="frame-24">
+          <div class="dropdown-title-wrapper">
+            <span class="text-wrapper-7">Buyer Type</span>
+          </div>
+          <button class="caret-down-wrapper" type="button" aria-label="Buyer Type filter">
+            <img class="img-3" src="{{ url_for('static', filename='svg-icons/DownArrow.svg') }}" alt="" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div class="frame-24">
+          <div class="dropdown-title-wrapper">
+            <span class="text-wrapper-7">Order Status</span>
+          </div>
+          <button class="caret-down-wrapper" type="button" aria-label="Order Status filter">
+            <img class="img-3" src="{{ url_for('static', filename='svg-icons/DownArrow.svg') }}" alt="" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table wrapper -->
+    <div class="frame-26 orders-table-wrapper">
+      <table class="order-table" id="ordersTable">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Order Date</th>
+            <th>Pickup / Delivery Date</th>
+            <th>Crop</th>
+            <th>Quantity (Kg)</th>
+            <th>Price</th>
+            <th>Buyer Type</th>
+            <th>Buyer</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% if orders and orders|length > 0 %}
+            {% for order in orders %}
+            <tr class="click-row"
+                data-href="{{ url_for('farmer_sales_bp.orders_info_page', order_id=order.orderId) }}"
+                data-search="{{ (order.orderId ~ ' ' ~ order.cropType ~ ' ' ~ order.buyerType ~ ' ' ~ order.buyerId ~ ' ' ~ order.status)|lower }}">
+              <td>{{ order.orderId }}</td>
+              <td>{{ order.orderDate }}</td>
+              <td>{{ order.pickupDate or "-" }}</td>
+              <td>{{ order.cropType or "-" }}</td>
+              <td>{{ order.quantityKg or 0 }}</td>
+              <td>{{ order.price or 0 }}</td>
+              <td>{{ order.buyerType or "-" }}</td>
+              <td>{{ order.buyerId or "-" }}</td>
+              <td>{{ order.status or "-" }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <!-- ✅ EMPTY STATE MUST BE INSIDE TBODY -->
+            <tr class="empty-state-row">
+              <td colspan="9" class="empty-state-cell">
+                <div class="empty-state-content">
+                  <img class="empty-state-illustration"
+                       src="{{ url_for('static', filename='illustrations/Empty order table.svg') }}"
+                       alt="No orders illustration" />
+
+                  <p class="empty-state-text">No orders yet!</p>
+                  <p class="empty-state-subtext">
+                    Start creating orders to manage your sales.
+                  </p>
+
+                  <a href="{{ url_for('farmer_sales_bp.create_order_page') }}">
+                    <button class="button-3" type="button">Create Order</button>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/order.js') }}"></script>
+{% endblock %}

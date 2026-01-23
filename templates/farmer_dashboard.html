@@ -1,0 +1,384 @@
+{% extends "farmer_base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='farmer_dashboard.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="dash-wrap">
+  <!-- Page Header -->
+  <div class="dash-header">
+    <div class="dash-title">
+      <span class="grid-ico" aria-hidden="true">
+        <!-- grid icon -->
+        <img src="{{ url_for('static', filename='svg-icons/Dashboard/Dashboard.svg') }}" alt="Back">
+      </span>
+      <h1>Dashboard</h1>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- LEFT MAIN -->
+    <div class="dash-left">
+
+      <!-- KPI Row -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-label">Active Crops</div>
+            <span class="kpi-info">i</span>
+          </div>
+          <div class="kpi-value" id="kpiActiveCrops">
+            {{ (dashboard.kpis.active_crops if dashboard and dashboard.kpis else 0) }}
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-label">Pending Payments</div>
+            <span class="kpi-info">i</span>
+          </div>
+          <div class="kpi-value" id="kpiPendingPayments">
+            {{ (dashboard.kpis.pending_payments if dashboard and dashboard.kpis else 0) }}
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-label">Buyer Offers Received</div>
+            <span class="kpi-info">i</span>
+          </div>
+          <div class="kpi-value" id="kpiBuyerOffers">
+            {{ (dashboard.kpis.buyer_offers if dashboard and dashboard.kpis else 0) }}
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-label">Upcoming Shipments</div>
+            <span class="kpi-info">i</span>
+          </div>
+          <div class="kpi-value" id="kpiUpcomingShipments">
+            {{ (dashboard.kpis.upcoming_shipments if dashboard and dashboard.kpis else 0) }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Weather & Crop Health Card -->
+      <div class="card big-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="ico-circle green" aria-hidden="true">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Weather & Crop Health.svg') }}" alt="Back">
+            </span>
+            <div>
+              <div class="card-title">Weather &amp; Crop Health</div>
+            </div>
+          </div>
+
+          <div class="card-head-right">
+            <select id="cropTypeSelect" class="select-pill">
+              {% set crops = (dashboard.crops if dashboard and dashboard.crops else ["Wheat"]) %}
+              {% for c in crops %}
+                <option value="{{ c }}">{{ c }}</option>
+              {% endfor %}
+            </select>
+
+            <div class="segmented" role="tablist" aria-label="Stats Toggle">
+              <button class="seg-btn active" data-tab="soil" type="button">Soil Data</button>
+              <button class="seg-btn" data-tab="weather" type="button">Weather</button>
+              <button class="seg-btn" data-tab="status" type="button">Crop Status</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- SOIL TAB -->
+          <div class="tab-panel active" id="tab-soil">
+            <div class="tab-top">
+              <div class="tab-label">Soil Data</div>
+              <div class="tab-filters">
+                <select class="select-ghost" id="soilMetricSelect">
+                  <option value="soil_temp">Soil Temperature</option>
+                  <option value="soil_moisture">Soil Moisture</option>
+                  <option value="ph">pH</option>
+                  <option value="npk">NPK Level</option>
+                </select>
+
+                <select class="select-ghost" id="soilRangeSelect">
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="chart-wrap">
+              <canvas id="soilLineChart" height="120"; width="950"></canvas>
+            </div>
+
+            <div class="metric-grid">
+              <div class="metric-item">
+                <span class="dot" aria-hidden="true"></span>
+                <div class="metric-name">Soil Temperature</div>
+                <div class="metric-value" id="mSoilTemp">25.7°C</div>
+              </div>
+              <div class="metric-item">
+                <span class="dot" aria-hidden="true"></span>
+                <div class="metric-name">pH</div>
+                <div class="metric-value" id="mPh">6.11</div>
+              </div>
+              <div class="metric-item">
+                <span class="dot" aria-hidden="true"></span>
+                <div class="metric-name">Soil Moisture</div>
+                <div class="metric-value" id="mMoisture">25.7%</div>
+              </div>
+              <div class="metric-item">
+                <span class="dot" aria-hidden="true"></span>
+                <div class="metric-name">Soil EC</div>
+                <div class="metric-value" id="mEc">0.046 ds/m</div>
+              </div>
+
+              <div class="metric-item">
+                <span class="dot" aria-hidden="true"></span>
+                <div class="metric-name">NPK Level</div>
+                <div class="metric-value" id="mNpk">Moderate</div>
+              </div>
+              <div class="metric-item">
+                <span class="dot" aria-hidden="true"></span>
+                <div class="metric-name">Phosphorus</div>
+                <div class="metric-value" id="mP">3.0mg/kg</div>
+              </div>
+              <div class="metric-item">
+                <span class="dot" aria-hidden="true"></span>
+                <div class="metric-name">Nitrogen</div>
+                <div class="metric-value" id="mN">3.0mg/kg</div>
+              </div>
+              <div class="metric-item">
+                <span class="dot" aria-hidden="true"></span>
+                <div class="metric-name">Potassium</div>
+                <div class="metric-value" id="mK">3.0mg/kg</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- WEATHER TAB -->
+          <div class="tab-panel" id="tab-weather">
+            <div class="tab-top">
+              <div class="tab-label">Weather</div>
+            </div>
+
+            <div class="weather-hero">
+              <!-- Replace with your own satellite/weather image -->
+              <img
+                src="{{ (dashboard.weather_image_url if dashboard and dashboard.weather_image_url else url_for('static', filename='img/farm_map_placeholder.jpg')) }}"
+                alt="Weather / Field Map"
+                onerror="this.style.display='none'; document.getElementById('weatherFallback').style.display='flex';"
+              />
+              <div id="weatherFallback" class="weather-fallback" style="display:none;">
+                <div class="muted">No image available</div>
+              </div>
+            </div>
+
+            <div class="info-cards-row">
+              <div class="info-card">
+                <div class="info-label">Geo-Location</div>
+                <div class="info-value">
+                  Latitude: {{ dashboard.geo.lat if dashboard and dashboard.geo else "19.2046" }}° N
+                  Longitude: {{ dashboard.geo.lng if dashboard and dashboard.geo else "73.8745" }}° E
+                </div>
+                <div class="info-sub muted">
+                  {{ dashboard.geo.address if dashboard and dashboard.geo else "Kudoshi, adjacent to the Jagbudi River..." }}
+                </div>
+              </div>
+
+              <div class="info-card">
+                <div class="info-label">Crop</div>
+                <div class="info-grid2">
+                  <div>
+                    <div class="muted small">Crop ID</div>
+                    <div>{{ dashboard.crop_meta.crop_id if dashboard and dashboard.crop_meta else "1002-Wheat" }}</div>
+                  </div>
+                  <div>
+                    <div class="muted small">Crop Name</div>
+                    <div>{{ dashboard.crop_meta.crop_name if dashboard and dashboard.crop_meta else "Wheat" }}</div>
+                  </div>
+                  <div>
+                    <div class="muted small">Crop Type</div>
+                    <div>{{ dashboard.crop_meta.crop_type if dashboard and dashboard.crop_meta else "Grain" }}</div>
+                  </div>
+                  <div>
+                    <div class="muted small">Crop Grade</div>
+                    <div>{{ dashboard.crop_meta.grade if dashboard and dashboard.crop_meta else "A" }}</div>
+                  </div>
+                  <div>
+                    <div class="muted small">Planting Date</div>
+                    <div>{{ dashboard.crop_meta.planting_date if dashboard and dashboard.crop_meta else "12 Mar 2025" }}</div>
+                  </div>
+                  <div>
+                    <div class="muted small">Harvest Date</div>
+                    <div>{{ dashboard.crop_meta.harvest_date if dashboard and dashboard.crop_meta else "20 Dec 2025" }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CROP STATUS TAB -->
+          <div class="tab-panel" id="tab-status">
+            <div class="tab-top">
+              
+            <div id="cropStatusPanel" class="crop-status-panel" style="display:none;">
+              <div class="map-wrap">
+                <div id="farmMap" class="farm-map"></div>
+              </div>
+            </div>
+            </div>
+
+
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom two cards -->
+      <div class="bottom-row">
+        <!-- Order Overview -->
+        <div class="card">
+          <div class="card-head compact">
+            <div class="card-head-left">
+                <img src="{{ url_for('static', filename='svg-icons/Dashboard/Order Overview.svg') }}" alt="Back">
+              </span>
+              <div class="card-title">Order Overview</div>
+            </div>
+
+            <select class="select-ghost" id="orderRangeSelect">
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+
+          <div class="card-body">
+            <div class="donut-wrap">
+              <canvas id="orderDonutChart" height="160" width="160"></canvas>
+              <div class="donut-center">
+                <div class="muted small">Total Order</div>
+                <div class="donut-total" id="orderTotal">0</div>
+              </div>
+            </div>
+
+            <div class="legend-grid">
+              <div class="legend-item"><span class="legend-dot"></span> Requested <span class="legend-val" id="oRequested">0</span></div>
+              <div class="legend-item"><span class="legend-dot"></span> In transit <span class="legend-val" id="oInTransit">0</span></div>
+              <div class="legend-item"><span class="legend-dot"></span> Completed <span class="legend-val" id="oCompleted">0</span></div>
+              <div class="legend-item"><span class="legend-dot"></span> Payment Received <span class="legend-val" id="oPaid">0</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shipment Overview -->
+        <div class="card">
+          <div class="card-head compact">
+            <div class="card-head-left">
+              <span class="ico-circle yellow" aria-hidden="true">
+                <img src="{{ url_for('static', filename='svg-icons/Dashboard/Shipment Overview.svg') }}" alt="Back">
+              </span>
+              <div class="card-title">Shipment Overview</div>
+            </div>
+
+            <select class="select-ghost" id="shipRangeSelect">
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+
+          <div class="card-body">
+            <canvas id="shipBarChart" height="180"></canvas>
+
+            <div class="legend-row">
+              <div class="legend-item"><span class="legend-dot"></span> Requested <span class="legend-val" id="sRequested">0</span></div>
+              <div class="legend-item"><span class="legend-dot"></span> Pending <span class="legend-val" id="sPending">0</span></div>
+              <div class="legend-item"><span class="legend-dot"></span> In transit <span class="legend-val" id="sInTransit">0</span></div>
+              <div class="legend-item"><span class="legend-dot"></span> Delivered <span class="legend-val" id="sDelivered">0</span></div>
+              <div class="legend-item"><span class="legend-dot"></span> Payment <span class="legend-val" id="sPayment">0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="dash-right">
+
+      <!-- Pending Tasks -->
+      <div class="card right-card">
+        <div class="card-head compact">
+          <div class="card-head-left">
+            <span class="ico-circle purple" aria-hidden="true">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Pending Tasks.svg') }}" alt="Back">
+            </span>
+            <div class="card-title">Pending Tasks</div>
+          </div>
+          <input type="date" class="date-pill" id="tasksDate">
+        </div>
+
+        <div class="right-list" id="pendingTasksList"></div>
+      </div>
+
+      <!-- Warehouses -->
+      <div class="card right-card">
+        <div class="card-head compact">
+          <div class="card-head-left">
+            <span class="ico-circle amber" aria-hidden="true">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Warehouse.svg') }}" alt="Back">
+            </span>
+            <div class="card-title">Warehouse</div>
+          </div>
+          <input type="date" class="date-pill" id="warehouseDate">
+        </div>
+
+        <div class="right-list" id="warehouseList"></div>
+      </div>
+
+      <!-- Manufacturer -->
+      <div class="card right-card">
+        <div class="card-head compact">
+          <div class="card-head-left">
+            <span class="ico-circle orange" aria-hidden="true">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Manufacturer.svg') }}" alt="Back">
+            </span>
+            <div class="card-title">Manufacturer</div>
+          </div>
+          <input type="date" class="date-pill" id="mfgDate">
+        </div>
+
+        <div class="right-list" id="manufacturerList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script id="dashboard-json" type="application/json">
+  {{ dashboard|tojson|safe }}
+</script>
+<script>
+  window.__DASHBOARD__ = JSON.parse(document.getElementById("dashboard-json").textContent || "{}");
+</script>
+<script>
+  window.initFarmMap = function () {
+    // Call your code only after Google Maps is ready
+    if (typeof initDashboardFarmMap === "function") {
+      initDashboardFarmMap();
+    }
+  };
+</script>
+
+<script src="{{ url_for('static', filename='js/farmer_dashboard.js') }}"></script>
+<script
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDg3eGetNDtVhtw_lfD6Z6O0CfgEgCSaYU&libraries=geometry&loading=async"
+  async
+  defer
+></script>
+
+{% endblock %}
+

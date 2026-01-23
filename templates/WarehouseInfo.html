@@ -1,0 +1,179 @@
+{% extends "farmer_base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='warehouseinfo.css') }}">
+
+<div class="whinfo-page">
+
+  <div class="whinfo-topbar">
+    <div class="left">
+      <a class="back-btn" href="{{ url_for('farmer_storage.list_storage') }}">
+        <img src="{{ url_for('static', filename='svg-icons/Back Order.svg') }}" alt="Back">
+      </a>
+      <h1 class="whinfo-title">{{ warehouse.warehouseId if warehouse else 'Warehouse' }}</h1>
+    </div>
+  </div>
+
+  {% if error %}
+    <div class="whinfo-error">{{ error }}</div>
+  {% else %}
+
+  <!-- Warehouse Details -->
+  <section class="card">
+    <div class="card-head card-head-grey">
+      <div class="card-head-left">
+        <span class="icon-badge icon-yellow">
+          <img src="{{ url_for('static', filename='svg-icons/Warehouses/Warehouse Detail.svg') }}" alt="">
+        </span>
+        <h2 class="card-title">Warehouse Details</h2>
+      </div>
+    </div>
+
+    <div class="wh-grid">
+      <div class="wh-field">
+        <div class="label">Warehouse</div>
+        <div class="value">{{ warehouse.warehouseName or '-' }}</div>
+      </div>
+
+      <div class="wh-field">
+        <div class="label">Total Capacity</div>
+        <div class="value">{{ warehouse.totalCapacity or '-' }}</div>
+      </div>
+
+      <div class="wh-field">
+        <div class="label">Location</div>
+        <div class="value">{{ warehouse.officeAddress or '-' }}</div>
+      </div>
+
+      <div class="wh-field">
+        <div class="label">Storage Type</div>
+        <div class="value">{{ warehouse.storageType or '-' }}</div>
+      </div>
+
+      <div class="wh-field">
+        <div class="label">Owner</div>
+        <div class="value">{{ warehouse.owner or '-' }}</div>
+      </div>
+
+      <div class="wh-field">
+        <div class="label">Temperature</div>
+        <div class="value">{{ warehouse.temperature or '-' }}</div>
+      </div>
+
+      <div class="wh-field">
+        <div class="label">Contact</div>
+        <div class="value">{{ warehouse.contact or '-' }}</div>
+      </div>
+
+      <div class="wh-field">
+        <div class="label">Your Batches Here</div>
+        <div class="value"><strong>{{ warehouse.batchesActive or 0 }}</strong> active</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stored Crop Details -->
+  <section class="card">
+    <div class="card-head card-head-grey">
+      <div class="card-head-left">
+        <span class="icon-badge icon-green">
+          <img src="{{ url_for('static', filename='svg-icons/Warehouses/Stored Crop Details.svg') }}" alt="">
+        </span>
+        <h2 class="card-title">Stored Crop Details</h2>
+      </div>
+    </div>
+
+    <div class="stored-layout">
+      <!-- Left list -->
+      <aside class="crop-list">
+        <div class="crop-list-header">
+          <div class="crop-list-title">Stored Crop List</div>
+
+          <div class="crop-search">
+            <img src="{{ url_for('static', filename='svg-icons/MagnifyingGlass.svg') }}" alt="">
+            <input id="cropSearch" type="search" placeholder="Search crop..." />
+          </div>
+        </div>
+
+        <div class="crop-items" id="cropItems">
+          {% if crops and crops|length %}
+            {% for c in crops %}
+              <button class="crop-item {% if loop.index0==0 %}active{% endif %}"
+                      type="button"
+                      data-crop='{{ c | tojson | safe }}'>
+                <div class="thumb">
+                  {% if c.imageUrl %}
+                    <img src="{{ c.imageUrl }}" alt="crop">
+                  {% elif c.image_url %}
+                    <img src="{{ c.image_url }}" alt="crop">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='img/icon-placeholder.svg') }}" alt="">
+                  {% endif %}
+                </div>
+                <div class="meta">
+                  <div class="meta-label">Crop Name</div>
+                  <div class="meta-value">{{ c.cropName or c.crop_name or '-' }}</div>
+                </div>
+              </button>
+            {% endfor %}
+          {% else %}
+            <div class="no-crops-left">No stored crops found.</div>
+          {% endif %}
+        </div>
+      </aside>
+
+      <!-- Right details -->
+      <article class="crop-detail" id="cropDetail">
+        <div class="detail-top">
+          <div class="bigthumb">
+            <img id="dImg" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}" alt="">
+          </div>
+          <div>
+            <div class="detail-title">Crop ID</div>
+            <div class="detail-value" id="dCropId">-</div>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-field">
+            <div class="label">Crop Name</div>
+            <div class="value" id="dCropName">-</div>
+          </div>
+
+          <div class="detail-field">
+            <div class="label">Stored On</div>
+            <div class="value" id="dStoredOn">-</div>
+          </div>
+
+          <div class="detail-field">
+            <div class="label">Section</div>
+            <div class="value" id="dSection">-</div>
+          </div>
+
+          <div class="detail-field">
+            <div class="label">Stored Quantity</div>
+            <div class="value" id="dQty">-</div>
+          </div>
+
+          <div class="detail-field">
+            <div class="label">Linked Order</div>
+            <div class="value" id="dOrder">-</div>
+          </div>
+
+          <div class="detail-field">
+            <div class="label">Linked Shipment</div>
+            <div class="value" id="dShipment">-</div>
+          </div>
+        </div>
+
+        {% if not crops or crops|length == 0 %}
+          <div class="no-crops">No stored crops found for this warehouse.</div>
+        {% endif %}
+      </article>
+    </div>
+  </section>
+
+  {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/warehouseinfo.js') }}"></script>
+{% endblock %}

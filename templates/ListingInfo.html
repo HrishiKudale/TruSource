@@ -1,0 +1,312 @@
+{% extends "farmer_base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='listinginfo.css') }}">
+
+{% set page_status = "none" %}
+{% set approved_req = None %}
+
+{% if requests and requests|length > 0 %}
+  {% set page_status = "requested" %}
+{% endif %}
+
+{% for r in requests %}
+  {% if (r.status == "approved" or r.approved_offer) and not approved_req %}
+    {% set approved_req = r %}
+    {% set page_status = "approved" %}
+  {% endif %}
+{% endfor %}
+
+
+<div class="listinginfo-page">
+
+  <!-- Header -->
+  <div class="listinginfo-topbar">
+    <div class="listinginfo-breadcrumb">
+      <a class="listinginfo-back" href="{{ url_for('farmer_marketplace_bp.marketplace_home') }}" aria-label="Back">
+        <img src="{{ url_for('static', filename='svg-icons/Marketplace/Back Marketplace.svg') }}" alt="Back">
+      </a>
+      <span class="listinginfo-sep">›</span>
+      <h1 class="listinginfo-code">{{ listing.code if listing and listing.code else "LST-001" }}</h1>
+    </div>
+  </div>
+
+  {% if error %}
+    <div class="listinginfo-error">{{ error }}</div>
+  {% endif %}
+
+  <div class="listinginfo-grid">
+
+    <!-- LEFT SIDE -->
+    <div class="listinginfo-left">
+
+      <!-- ============ APPROVED ============ -->
+      {% if page_status == "approved" and approved_req %}
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="icon-pill blue">
+              <!-- handshake icon placeholder (replace if you have svg) -->
+              <span>🤝</span>
+            </div>
+            <div class="card-title">Accepted Offer</div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="accepted-grid">
+            <div class="info-block">
+              <div class="label">Buyer Name</div>
+              <div class="value">{{ approved_req.buyer_name }}</div>
+            </div>
+            <div class="info-block">
+              <div class="label">Buyer Type</div>
+              <div class="value">{{ approved_req.buyer_type }}</div>
+            </div>
+
+            <div class="info-block">
+              <div class="label">Proposed Price</div>
+              {% if approved_req.approved_offer %}
+                <div class="value">₹{{ approved_req.approved_offer.price_value }}/{{ approved_req.approved_offer.price_unit }}</div>
+              {% else %}
+                <div class="value">₹{{ approved_req.price_value }}/{{ approved_req.price_unit }}</div>
+              {% endif %}
+            </div>
+
+            <div class="info-block">
+              <div class="label">Total Order Value</div>
+              {% if approved_req.approved_offer %}
+                {% set tv = (approved_req.approved_offer.price_value|float) * (approved_req.approved_offer.qty|float) %}
+                <div class="value">₹{{ "{:,.0f}".format(tv) }}</div>
+              {% else %}
+                <div class="value">-</div>
+              {% endif %}
+            </div>
+
+            <div class="info-block">
+              <div class="label">Location</div>
+              <div class="value">{{ listing.pickup_location if listing else "-" }}</div>
+            </div>
+
+            <div class="info-block">
+              <div class="label">Quantity Ordered</div>
+              {% if approved_req.approved_offer %}
+                <div class="value">{{ approved_req.approved_offer.qty }} {{ approved_req.approved_offer.price_unit }}</div>
+              {% else %}
+                <div class="value">{{ approved_req.requested_qty }} {{ approved_req.price_unit }}</div>
+              {% endif %}
+            </div>
+
+            <div class="info-block">
+              <div class="label">Order ID</div>
+              <div class="value">ORD-{{ approved_req.req_id[-4:] }}</div>
+            </div>
+
+            <div class="info-block">
+              <div class="label">Order Date</div>
+              {% if approved_req.approved_offer and approved_req.approved_offer.approved_at %}
+                <div class="value">{{ approved_req.approved_offer.approved_at }}</div>
+              {% else %}
+                <div class="value">-</div>
+              {% endif %}
+            </div>
+
+            <div class="info-block span-2">
+              <div class="label">Note</div>
+              <div class="value">{{ approved_req.note if approved_req.note else "-" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ============ REQUESTED ============ -->
+      {% if page_status == "requested" %}
+      <div class="requests-grid">
+
+        {% for r in requests %}
+        <div class="request-card">
+          <div class="request-card-top">
+            <div class="buyer-chip">
+              <div class="buyer-icon">🏢</div>
+              <div class="buyer-name">{{ r.buyer_name }}</div>
+            </div>
+          </div>
+
+          <div class="request-card-body">
+            <div class="row">
+              <div class="label">Proposed Price</div>
+              <div class="value">₹{{ r.price_value }}/{{ r.price_unit }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Location</div>
+              <div class="value">{{ listing.pickup_location if listing else "-" }}</div>
+            </div>
+            <div class="row">
+              <div class="label">Quantity Ordered</div>
+              <div class="value">{{ r.requested_qty }} {{ r.price_unit }}</div>
+            </div>
+          </div>
+
+          <div class="request-card-actions">
+            <button
+              class="btn btn-primary"
+              type="button"
+              onclick="acceptRequest('{{ listing.listing_id }}', '{{ r.req_id }}')"
+              {% if r.status == "rejected" or r.status == "approved" %}disabled{% endif %}
+            >
+              Accept
+            </button>
+
+            <button
+              class="btn btn-outline"
+              type="button"
+              onclick="openRequestModal('{{ r.req_id }}')"
+            >
+              View Details
+            </button>
+          </div>
+
+          <!-- hidden details for modal -->
+          <div id="reqdata-{{ r.req_id }}"
+               class="hidden"
+               data-json='{{ r|tojson|safe }}'>
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+      {% endif %}
+
+      <!-- ============ NONE ============ -->
+      {% if page_status == "none" %}
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="icon-pill purple">
+              <span>📨</span>
+            </div>
+            <div class="card-title">Requests for Your Listed Crop</div>
+          </div>
+        </div>
+
+        <div class="card-body empty-state">
+          <img
+            class="empty-illus"
+            src="{{ url_for('static', filename='svg-icons/Marketplace/Requests for Your Listed Crop.svg') }}"
+            alt="No requests"
+            onerror="this.style.display='none'"
+          />
+          <div class="empty-title">No Buyer Offers Received</div>
+          <div class="empty-sub">
+            Buyers haven’t requested this crop yet.<br>
+            Your listing is visible and waiting for the right buyer.
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- RIGHT SIDE (SUMMARY) -->
+    <div class="listinginfo-right">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="icon-pill orange">
+              <span>🗓️</span>
+            </div>
+            <div class="card-title">Summary</div>
+          </div>
+        </div>
+
+        <div class="card-body summary">
+          <div class="summary-grid">
+
+            <div class="summary-item">
+              <div class="label">Crop Name</div>
+              <div class="value">{{ listing.crop_name if listing else "-" }}</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">Listed Quantity</div>
+              <div class="value">{{ listing.listed_qty if listing else "-" }} {{ listing.price_unit if listing else "Kg" }}</div>
+            </div>
+
+            <div class="summary-item">
+              <div class="label">Base Price Set</div>
+              {% if listing and listing.price_value is not none %}
+              <div class="value">₹{{ listing.price_value }}/{{ listing.price_unit }}</div>
+              {% else %}
+              <div class="value">-</div>
+              {% endif %}
+            </div>
+            <div class="summary-item">
+              <div class="label">Listing Duration</div>
+              <div class="value">{{ listing.duration if listing else "-" }}</div>
+            </div>
+
+            <div class="summary-item">
+              <div class="label">Minimum Order Quantity</div>
+              <div class="value">{{ listing.min_qty if listing else "-" }}{{ "Kg" if listing else "" }}</div>
+            </div>
+
+            <div class="summary-item span-2">
+              <div class="label">Location</div>
+              <div class="value">{{ listing.pickup_location if listing else "-" }}</div>
+            </div>
+
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="summary-stack">
+            <div class="stack-row">
+              <div class="label">Target Buyer Type</div>
+              <div class="value">{{ listing.target_buyer_type if listing else "-" }}</div>
+            </div>
+
+            <div class="stack-row">
+              <div class="label">Price</div>
+              <div class="value">{{ "Negotiable" if listing and listing.negotiable else "Fixed" }}</div>
+            </div>
+
+            <div class="stack-row">
+              <div class="label">Payment Method</div>
+              <div class="value">{{ listing.payment_terms if listing else "-" }}</div>
+            </div>
+
+            <div class="stack-row">
+              <div class="label">Delivery</div>
+              <div class="value">{{ listing.delivery if listing else "-" }}</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="requestModal" class="modal hidden">
+  <div class="modal-backdrop" onclick="closeRequestModal()"></div>
+
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">Request Details</div>
+      <button class="modal-close" onclick="closeRequestModal()">✕</button>
+    </div>
+
+    <div class="modal-body" id="modalBody">
+      <!-- filled by JS -->
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeRequestModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/listinginfo.js') }}"></script>
+{% endblock %}

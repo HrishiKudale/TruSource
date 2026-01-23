@@ -1,0 +1,1043 @@
+.add-crop01 {
+  	width: 100%;
+  	position: relative;
+  	background-color: #fff;
+  	overflow: hidden;
+  	display: flex;
+  	align-items: flex-start;
+  	text-align: left;
+  	font-size: 16px;
+  	color: #287276;
+  	font-family: Inter;
+}
+.sidebar {
+  	align-self: stretch;
+  	width: 282px;
+  	background-color: #f6f6f6;
+  	overflow: hidden;
+  	flex-shrink: 0;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+}
+.sidebar-inner {
+  	align-self: stretch;
+  	height: 95px;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	justify-content: center;
+  	padding: 10px 32px;
+  	box-sizing: border-box;
+}
+.rectangle-parent {
+  	align-self: stretch;
+  	display: flex;
+  	align-items: center;
+  	gap: 11px;
+}
+.rectangle-icon {
+  	width: 47px;
+  	position: relative;
+  	max-height: 100%;
+  	object-fit: cover;
+}
+.precision-grow-parent {
+  	width: 135px;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	gap: 1px;
+}
+.precision-grow {
+  	align-self: stretch;
+  	position: relative;
+  	letter-spacing: -0.03em;
+  	line-height: 127%;
+  	text-transform: uppercase;
+  	font-weight: 600;
+}
+.pioneering-the-future {
+  	align-self: stretch;
+  	position: relative;
+  	font-size: 8px;
+  	letter-spacing: -0.03em;
+  	line-height: 127%;
+  	text-transform: uppercase;
+  	color: #88b939;
+}
+.frame-parent {
+  	align-self: stretch;
+  	flex: 1;
+  	overflow: hidden;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	justify-content: space-between;
+  	padding: 24px 20px;
+  	gap: 12px;
+  	color: #6d6d6d;
+}
+.frame-group {
+  	align-self: stretch;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	gap: 28px;
+}
+.frame-container {
+  	align-self: stretch;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	gap: 16px;
+}
+.general-wrapper {
+  	align-self: stretch;
+  	display: flex;
+  	align-items: center;
+  	justify-content: center;
+  	padding: 0px 12px;
+}
+.general {
+  	flex: 1;
+  	position: relative;
+  	letter-spacing: -0.03em;
+  	line-height: 137%;
+}
+.component-1-parent {
+  	align-self: stretch;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	justify-content: center;
+  	gap: 12px;
+  	color: #000;
+}
+.component-1 {
+  	width: 242px;
+  	overflow: hidden;
+  	display: flex;
+  	align-items: center;
+  	padding: 12px;
+  	box-sizing: border-box;
+  	gap: 12px;
+}
+.squaresfour {
+  	height: 20px;
+  	width: 20px;
+  	position: relative;
+  	overflow: hidden;
+  	flex-shrink: 0;
+}
+.vector-icon {
+  	position: absolute;
+  	height: 69%;
+  	width: 69%;
+  	top: 15.63%;
+  	right: 15.37%;
+  	bottom: 15.37%;
+  	left: 15.63%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.dashboard {
+  	position: relative;
+  	letter-spacing: -0.03em;
+  	line-height: 137%;
+}
+.component-2 {
+  	width: 242px;
+  	border-radius: 12px;
+  	background-color: #0f913d;
+  	overflow: hidden;
+  	display: flex;
+  	align-items: center;
+  	padding: 12px;
+  	box-sizing: border-box;
+  	gap: 12px;
+  	cursor: pointer;
+  	color: #fff;
+}
+.add-crop01-vector-icon {
+  	position: absolute;
+  	height: 84%;
+  	width: 69%;
+  	top: 6.26%;
+  	right: 15.37%;
+  	bottom: 9.74%;
+  	left: 15.63%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.component-3 {
+  	width: 242px;
+  	overflow: hidden;
+  	display: flex;
+  	align-items: center;
+  	padding: 12px;
+  	box-sizing: border-box;
+  	gap: 12px;
+  	cursor: pointer;
+}
+.vector-icon2 {
+  	position: absolute;
+  	height: 87.5%;
+  	width: 81.5%;
+  	top: 6.26%;
+  	right: 9.12%;
+  	bottom: 6.24%;
+  	left: 9.38%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.vector-icon3 {
+  	position: absolute;
+  	height: 72%;
+  	width: 94%;
+  	top: 9.38%;
+  	right: 2.87%;
+  	bottom: 18.62%;
+  	left: 3.13%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.vector-icon4 {
+  	position: absolute;
+  	height: 65.5%;
+  	width: 94%;
+  	top: 21.88%;
+  	right: -0.25%;
+  	bottom: 12.63%;
+  	left: 6.25%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.vector-icon5 {
+  	position: absolute;
+  	height: 75%;
+  	width: 81.5%;
+  	top: 12.5%;
+  	right: 9.13%;
+  	bottom: 12.5%;
+  	left: 9.37%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.vector-icon6 {
+  	position: absolute;
+  	height: 72%;
+  	width: 81.5%;
+  	top: 12.5%;
+  	right: 9.12%;
+  	bottom: 15.5%;
+  	left: 9.38%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.dashboard6 {
+  	position: relative;
+  	letter-spacing: -0.03em;
+  	line-height: 137%;
+  	white-space: pre-wrap;
+}
+.frame-child {
+  	align-self: stretch;
+  	height: 0.8px;
+  	position: relative;
+  	border-top: 0.8px solid #e7e7e7;
+  	box-sizing: border-box;
+}
+.vector-icon7 {
+  	position: absolute;
+  	height: 81.5%;
+  	width: 81.5%;
+  	top: 9.38%;
+  	right: 9.13%;
+  	bottom: 9.12%;
+  	left: 9.37%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.vector-icon8 {
+  	position: absolute;
+  	height: 87.5%;
+  	width: 81.5%;
+  	top: 9.38%;
+  	right: 9.12%;
+  	bottom: 3.13%;
+  	left: 9.38%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.vector-icon9 {
+  	position: absolute;
+  	height: 82%;
+  	width: 82%;
+  	top: 9.12%;
+  	right: 8.88%;
+  	bottom: 8.88%;
+  	left: 9.12%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.vector-icon10 {
+  	position: absolute;
+  	height: 75%;
+  	width: 75%;
+  	top: 12.5%;
+  	right: 9.38%;
+  	bottom: 12.5%;
+  	left: 15.63%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.instance-parent {
+  	flex: 1;
+  	background-color: #f6f6f6;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	padding: 0px 12px 12px 0px;
+  	color: #888;
+}
+.add-crop01-frame-parent {
+  	align-self: stretch;
+  	height: 95px;
+  	background-color: #f6f6f6;
+  	overflow: hidden;
+  	flex-shrink: 0;
+  	display: flex;
+  	align-items: flex-start;
+  	justify-content: space-between;
+  	padding: 24px 32px;
+  	box-sizing: border-box;
+  	gap: 20px;
+}
+.magnifyingglass-parent {
+  	align-self: stretch;
+  	width: 529px;
+  	border-radius: 12px;
+  	background-color: #fff;
+  	border: 1px solid #e7e7e7;
+  	box-sizing: border-box;
+  	overflow: hidden;
+  	flex-shrink: 0;
+  	display: flex;
+  	align-items: center;
+  	padding: 15px 13px;
+  	gap: 12px;
+}
+.magnifyingglass-icon {
+  	width: 20px;
+  	position: relative;
+  	max-height: 100%;
+  	flex-shrink: 0;
+}
+.search {
+  	position: relative;
+  	letter-spacing: -0.03em;
+  	line-height: 137%;
+  	flex-shrink: 0;
+}
+.frame-parent2 {
+  	align-self: stretch;
+  	display: flex;
+  	align-items: center;
+  	justify-content: flex-end;
+  	gap: 12px;
+}
+.bell-parent {
+  	align-self: stretch;
+  	width: 46px;
+  	position: relative;
+  	border-radius: 12px;
+  	border: 1px solid #e7e7e7;
+  	box-sizing: border-box;
+  	overflow: hidden;
+  	flex-shrink: 0;
+}
+.bell {
+  	position: absolute;
+  	top: 11.4px;
+  	left: 10.65px;
+  	width: 24px;
+  	height: 24px;
+  	overflow: hidden;
+}
+.vector-icon11 {
+  	position: absolute;
+  	height: 81.25%;
+  	width: 75%;
+  	top: 9.38%;
+  	right: 12.5%;
+  	bottom: 9.38%;
+  	left: 12.5%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.frame-inner {
+  	position: absolute;
+  	height: 17.02%;
+  	width: 17.39%;
+  	top: 23.4%;
+  	right: 26.09%;
+  	bottom: 59.57%;
+  	left: 56.52%;
+  	border-radius: 90px;
+  	background-color: #d82a2a;
+  	overflow: hidden;
+}
+.frame-icon {
+  	align-self: stretch;
+  	width: 46px;
+  	position: relative;
+  	border-radius: 152px;
+  	max-height: 100%;
+  	object-fit: cover;
+}
+.frame-parent3 {
+  	align-self: stretch;
+  	border-radius: 12px;
+  	background-color: #fff;
+  	border: 1px solid #e7e7e7;
+  	overflow: hidden;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	padding: 32px;
+  	gap: 32px;
+  	font-size: 32px;
+  	color: #000;
+}
+.frame-parent4 {
+  	align-self: stretch;
+  	display: flex;
+  	align-items: flex-start;
+  	justify-content: space-between;
+  	gap: 20px;
+}
+.frame-parent5 {
+  	display: flex;
+  	align-items: center;
+  	justify-content: center;
+  	gap: 8px;
+}
+.grains-wrapper {
+  	box-shadow: -4px -1px 8px rgba(0, 0, 0, 0.07) inset;
+  	border-radius: 4px;
+  	background-color: #fff;
+  	border: 0.6px solid #e7e7e7;
+  	display: flex;
+  	align-items: center;
+  	padding: 4px;
+  	cursor: pointer;
+}
+.add-crop01-grains {
+  	height: 26px;
+  	width: 26px;
+  	position: relative;
+  	overflow: hidden;
+  	flex-shrink: 0;
+}
+.vector-icon12 {
+  	position: absolute;
+  	height: 84.23%;
+  	width: 68.85%;
+  	top: 6.26%;
+  	right: 15.53%;
+  	bottom: 9.51%;
+  	left: 15.63%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.caretright-icon {
+  	width: 24px;
+  	position: relative;
+  	max-height: 100%;
+}
+.add-new-crop-wrapper {
+  	display: flex;
+  	align-items: center;
+}
+.add-new-crop {
+  	position: relative;
+  	letter-spacing: -0.03em;
+  	line-height: 127%;
+  	font-weight: 500;
+}
+.button-wrapper {
+  	display: flex;
+  	align-items: center;
+  	justify-content: flex-end;
+  	font-size: 16px;
+  	color: #f6f6f6;
+}
+.button {
+  	border-radius: 8px;
+  	background-color: #b0b0b0;
+  	overflow: hidden;
+  	display: flex;
+  	align-items: center;
+  	justify-content: center;
+  	padding: 8px 18px;
+  	gap: 12px;
+}
+.plus {
+  	height: 24px;
+  	width: 24px;
+  	position: relative;
+  	overflow: hidden;
+  	flex-shrink: 0;
+}
+.vector-icon13 {
+  	position: absolute;
+  	height: 75%;
+  	width: 75%;
+  	top: 12.5%;
+  	right: 12.5%;
+  	bottom: 12.5%;
+  	left: 12.5%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.frame-wrapper {
+  	align-self: stretch;
+  	height: 816px;
+  	display: grid;
+grid-template-rows: repeat(3, auto);
+grid-template-columns: repeat(2, 1fr);
+
+  	justify-content: start;
+  	align-content: start;
+  	column-gap: 16px;
+  	font-size: 20px;
+}
+.frame-parent6 {
+  	width: 100%;
+  	position: absolute;
+  	top: 0px;
+  	left: 0px;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	gap: 10px;
+}
+.frame-parent7 {
+  	align-self: stretch;
+  	height: 350px;
+  	display: grid;
+grid-template-rows: repeat(3, auto);
+grid-template-columns: repeat(2, 1fr);
+
+  	justify-content: start;
+  	align-content: start;
+  	column-gap: 10px;
+  	cursor: pointer;
+}
+.frame-parent8 {
+  	width: 100%;
+  	height: 100%;
+  	position: absolute;
+  	top: 0px;
+  	left: 0px;
+  	box-shadow: 2px 4px 13px rgba(0, 0, 0, 0.04);
+  	border-radius: 12px;
+  	background-color: #fff;
+  	border: 1px solid #e7e7e7;
+  	box-sizing: border-box;
+  	overflow: hidden;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	min-height: 300px;
+}
+.frame-parent9 {
+  	width: 262.5px;
+  	background-color: #f6f6f6;
+  	display: none;
+  	align-items: center;
+  	padding: 12px 16px;
+  	box-sizing: border-box;
+  	gap: 10px;
+}
+.frame-parent10 {
+  	width: 301px;
+  	display: flex;
+  	align-items: center;
+  	gap: 12px;
+  	flex-shrink: 0;
+}
+.grains-container {
+  	border-radius: 60px;
+  	background-color: #e1ffdd;
+  	display: flex;
+  	align-items: center;
+  	padding: 8px;
+}
+.vector-icon14 {
+  	position: absolute;
+  	height: 84.17%;
+  	width: 68.75%;
+  	top: 6.26%;
+  	right: 15.63%;
+  	bottom: 9.57%;
+  	left: 15.63%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.crop-details {
+  	position: relative;
+  	letter-spacing: -0.03em;
+  	line-height: 127%;
+  	font-weight: 600;
+}
+.add-crop01-button {
+  	height: 31.6px;
+  	width: 98.6px;
+  	border-radius: 6px;
+  	background-color: #fff;
+  	border: 0.8px solid #5d5d5d;
+  	box-sizing: border-box;
+  	overflow: hidden;
+  	flex-shrink: 0;
+  	display: none;
+  	align-items: center;
+  	justify-content: center;
+  	padding: 6px 12px;
+}
+.frame-parent11 {
+  	align-self: stretch;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	padding: 16px;
+  	gap: 16px;
+  	font-size: 14px;
+}
+.add-crop01-frame-child {
+  	width: 74px;
+  	position: relative;
+  	border-radius: 8px;
+  	max-height: 100%;
+  	object-fit: cover;
+}
+.dropdown-input {
+  	align-self: stretch;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	gap: 10px;
+}
+.sample-title {
+  	position: relative;
+  	letter-spacing: -0.03em;
+  	line-height: 127%;
+}
+.frame-parent12 {
+  	align-self: stretch;
+  	border-radius: 8px;
+  	background-color: #fff;
+  	border: 1px solid #e7e7e7;
+  	overflow: hidden;
+  	display: flex;
+  	align-items: center;
+  	justify-content: space-between;
+  	gap: 20px;
+  	font-size: 16px;
+  	color: #888;
+}
+.tons-wrapper {
+  	display: flex;
+  	align-items: center;
+  	justify-content: center;
+  	padding: 12px;
+}
+.caretdown-wrapper {
+  	align-self: stretch;
+  	background-color: #e7e7e7;
+  	display: flex;
+  	align-items: center;
+  	padding: 12px;
+}
+.vector-icon15 {
+  	position: absolute;
+  	height: 37.5%;
+  	width: 69%;
+  	top: 34.37%;
+  	right: 15.38%;
+  	bottom: 28.13%;
+  	left: 15.62%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.vector-icon16 {
+  	position: absolute;
+  	height: 81.5%;
+  	width: 75%;
+  	top: 6.25%;
+  	right: 12.5%;
+  	bottom: 12.25%;
+  	left: 12.5%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.frame-parent14 {
+  	width: 100%;
+  	position: absolute;
+  	top: 0px;
+  	left: 273px;
+  	box-shadow: 2px 4px 13px rgba(0, 0, 0, 0.04);
+  	border-radius: 12px;
+  	background-color: #fff;
+  	border: 1px solid #e7e7e7;
+  	box-sizing: border-box;
+  	overflow: hidden;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	min-height: 300px;
+}
+.frame-parent15 {
+  	align-self: stretch;
+  	background-color: #f6f6f6;
+  	display: flex;
+  	align-items: center;
+  	padding: 12px 16px;
+  	gap: 10px;
+}
+.text-field-parent {
+  	align-self: stretch;
+  	display: flex;
+  	align-items: flex-start;
+  	gap: 16px;
+}
+.text-field {
+  	flex: 1;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	gap: 10px;
+}
+.text-field-inner {
+  	align-self: stretch;
+  	border-radius: 8px;
+  	background-color: #f6f6f6;
+  	border: 1px solid #f6f6f6;
+  	overflow: hidden;
+  	display: flex;
+  	align-items: center;
+  	font-size: 16px;
+  	color: #6d6d6d;
+}
+.text-field-wrapper {
+  	align-self: stretch;
+  	display: flex;
+  	align-items: flex-start;
+}
+.text-field-child {
+  	align-self: stretch;
+  	border-radius: 8px;
+  	background-color: #fff;
+  	border: 1px solid #e7e7e7;
+  	overflow: hidden;
+  	display: flex;
+  	align-items: center;
+  	font-size: 16px;
+  	color: #888;
+}
+.frame-parent21 {
+  	align-self: stretch;
+  	height: 456px;
+  	display: grid;
+grid-template-rows: repeat(3, auto);
+grid-template-columns: repeat(2, 1fr);
+
+  	justify-content: start;
+  	align-content: start;
+  	column-gap: 10px;
+  	min-height: 300px;
+}
+.add-crop01-frame-wrapper {
+  	width: 100%;
+  	position: absolute;
+  	top: 0px;
+  	left: 0px;
+  	box-shadow: 2px 4px 13px rgba(0, 0, 0, 0.04);
+  	border-radius: 12px;
+  	background-color: #fff;
+  	border: 1px solid #e7e7e7;
+  	box-sizing: border-box;
+  	overflow: hidden;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	min-height: 300px;
+}
+.frame-wrapper2 {
+  	align-self: stretch;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	justify-content: center;
+}
+.frame-parent22 {
+  	align-self: stretch;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+}
+.frame-parent23 {
+  	align-self: stretch;
+  	background-color: #f6f6f6;
+  	display: flex;
+  	align-items: center;
+  	justify-content: space-between;
+  	padding: 12px 16px;
+  	gap: 20px;
+}
+.frame-parent24 {
+  	width: 301px;
+  	display: flex;
+  	align-items: center;
+  	gap: 12px;
+}
+.tractor-wrapper {
+  	border-radius: 60px;
+  	background-color: #fff1dd;
+  	display: flex;
+  	align-items: center;
+  	padding: 8px;
+}
+.vector-icon21 {
+  	position: absolute;
+  	height: 72.08%;
+  	width: 90.83%;
+  	top: 15.63%;
+  	right: 2.92%;
+  	bottom: 12.29%;
+  	left: 6.25%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.button3 {
+  	border-radius: 6px;
+  	background-color: #000;
+  	overflow: hidden;
+  	display: flex;
+  	align-items: center;
+  	justify-content: center;
+  	padding: 6px 12px;
+  	gap: 8px;
+  	font-size: 14px;
+  	color: #fff;
+}
+.barcode {
+  	height: 18px;
+  	width: 18px;
+  	position: relative;
+  	overflow: hidden;
+  	flex-shrink: 0;
+}
+.vector-icon22 {
+  	position: absolute;
+  	height: 68.89%;
+  	width: 81.11%;
+  	top: 15.63%;
+  	right: 9.51%;
+  	bottom: 15.49%;
+  	left: 9.38%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.frame-parent25 {
+  	align-self: stretch;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	padding: 16px;
+  	gap: 16px;
+  	font-size: 16px;
+}
+.frame-parent26 {
+  	align-self: stretch;
+  	border-radius: 8px;
+  	background-color: #fff;
+  	border: 1px solid #e7e7e7;
+  	overflow: hidden;
+  	display: flex;
+  	align-items: center;
+  	justify-content: space-between;
+  	gap: 20px;
+  	color: #888;
+}
+.tons-parent {
+  	background-color: #e7e7e7;
+  	display: flex;
+  	align-items: center;
+  	padding: 12px;
+  	gap: 6px;
+  	color: #3d3d3d;
+}
+.frame-wrapper3 {
+  	width: 100%;
+  	position: absolute;
+  	top: 0px;
+  	left: 546px;
+  	display: grid;
+grid-template-rows: repeat(3, auto);
+grid-template-columns: repeat(2, 1fr);
+
+  	justify-content: start;
+  	align-content: start;
+  	column-gap: 10px;
+  	min-height: 400px;
+}
+.frame-wrapper4 {
+  	width: 100%;
+  	height: 100%;
+  	position: absolute;
+  	top: 0px;
+  	left: 0px;
+  	box-shadow: 2px 4px 13px rgba(0, 0, 0, 0.04);
+  	border-radius: 12px;
+  	background-color: #fff;
+  	border: 1px solid #e7e7e7;
+  	box-sizing: border-box;
+  	overflow: hidden;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+}
+.frame-wrapper5 {
+  	align-self: stretch;
+  	flex: 1;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	justify-content: center;
+}
+.frame-parent30 {
+  	align-self: stretch;
+  	flex: 1;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+}
+.frame-parent32 {
+  	display: flex;
+  	align-items: center;
+  	gap: 12px;
+}
+.mappin-wrapper {
+  	border-radius: 60px;
+  	background-color: #fff8dd;
+  	display: flex;
+  	align-items: center;
+  	padding: 8px;
+}
+.vector-icon27 {
+  	position: absolute;
+  	height: 87.5%;
+  	width: 68.75%;
+  	top: 6.25%;
+  	right: 15.63%;
+  	bottom: 6.25%;
+  	left: 15.63%;
+  	max-width: 100%;
+  	overflow: hidden;
+  	max-height: 100%;
+}
+.frame-parent33 {
+  	align-self: stretch;
+  	flex: 1;
+  	display: flex;
+  	align-items: flex-start;
+  	padding: 16px;
+  	gap: 24px;
+  	font-size: 16px;
+  	color: #5d5d5d;
+}
+.vector-wrapper {
+  	height: 360px;
+  	width: 252px;
+  	position: relative;
+  	border-radius: 12px;
+  	overflow: hidden;
+  	flex-shrink: 0;
+  	background-size: cover;
+  	background-repeat: no-repeat;
+  	background-position: top;
+}
+.frame-child2 {
+  	position: absolute;
+  	top: 73px;
+  	left: 9px;
+  	width: 266px;
+  	height: 276px;
+  	flex-shrink: 0;
+}
+.frame-parent34 {
+  	flex: 1;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	gap: 16px;
+}
+.latitude-and-longitude-parent {
+  	align-self: stretch;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	gap: 6px;
+}
+.latitude-and-longitude {
+  	width: 100px;
+  	position: relative;
+  	letter-spacing: -0.03em;
+  	line-height: 137%;
+  	display: inline-block;
+}
+.n-7345-e {
+  	position: relative;
+  	font-size: 20px;
+  	letter-spacing: -0.03em;
+  	line-height: 127%;
+  	color: #000;
+}
+.total-area-parent {
+  	align-self: stretch;
+  	display: flex;
+  	flex-direction: column;
+  	align-items: flex-start;
+  	justify-content: center;
+  	gap: 6px;
+}
+.kudoshi-adjacent-to {
+  	align-self: stretch;
+  	position: relative;
+  	font-size: 20px;
+  	letter-spacing: -0.03em;
+  	line-height: 127%;
+  	color: #000;
+}
+

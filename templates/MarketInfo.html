@@ -1,0 +1,234 @@
+{% extends "farmer_base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='marketinfo.css') }}">
+
+<div class="marketinfo-container">
+
+  <!-- Header -->
+  <div class="marketinfo-header">
+    <a href="{{ url_for('farmer_marketplace_bp.marketplace_home') }}" class="back-btn" style="width:34px;height:34px;">
+      <img src="{{ url_for('static', filename='svg-icons/BackAddCrop.svg') }}" alt="Back">
+    </a>
+
+    <img src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}" alt=">">
+
+    <h1 class="page-title">
+      Demand Info
+      {% if demand and demand._id %}
+        <span class="muted">• {{ demand._id }}</span>
+      {% endif %}
+    </h1>
+
+    {% if demand and demand.status %}
+      <span class="status-pill status-{{ demand.status|lower|replace(' ', '-') }}">{{ demand.status }}</span>
+    {% endif %}
+
+    <div class="header-actions">
+      <button class="export-btn" type="button">Export</button>
+    </div>
+  </div>
+
+  <div class="marketinfo-layout">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-col">
+
+      <!-- ===================== CARD 1: BUYER OFFER ===================== -->
+      <div class="card">
+        <div class="card-header">
+          <img src="{{ url_for('static', filename='svg-icons/Marketplace/Buyer Offer.svg') }}" class="card-icon" alt="">
+          <h2 class="section-title">Buyer Offer</h2>
+        </div>
+
+        <div class="card-body">
+          {% if demand %}
+          <div class="details-grid">
+
+            <div class="detail-item">
+              <p class="label">Buyer Type</p>
+              <p class="value">{{ demand.buyer_type or "-" }}</p>
+            </div>
+
+            <div class="detail-item">
+              <p class="label">Buyer Name</p>
+              <p class="value">{{ demand.buyer_name or "-" }}</p>
+            </div>
+
+            <div class="detail-item">
+              <p class="label">Crop Name</p>
+              <p class="value">{{ demand.crop_name or "-" }}</p>
+            </div>
+
+            <div class="detail-item">
+              <p class="label">Crop Variety</p>
+              <p class="value">{{ demand.crop_variety or "-" }}</p>
+            </div>
+
+            <div class="detail-item">
+              <p class="label">Required Quantity</p>
+              <p class="value">
+                {{ demand.quantity or "-" }}
+              </p>
+            </div>
+
+            <div class="detail-item">
+              <p class="label">Offered Price</p>
+              <p class="value">
+                {{ demand.offered_price or "-" }}
+                {% if demand.price_unit %} / {{ demand.price_unit }}{% endif %}
+              </p>
+            </div>
+
+          </div>
+          {% else %}
+            <div class="empty-block">
+              <img src="{{ url_for('static', filename='svg-icons/Marketplace/Empty active demand table.svg') }}" class="empty-illus" alt="">
+              <h3 class="empty-title">No Offer Data</h3>
+              <p class="empty-text">This demand details are not available.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ===================== CARD 3: NEGOTIATE OFFER ===================== -->
+      {% if demand and demand.negotiable is none %}
+        <!-- negotiable missing -->
+        <div class="card fill-card">
+          <div class="card-header">
+            <img src="{{ url_for('static', filename='svg-icons/Marketplace/Negotiate Offer.svg') }}" class="card-icon" alt="">
+            <h2 class="section-title">Negotiate Offer</h2>
+          </div>
+          <div class="card-body">
+            <div class="empty-block">
+              <img src="{{ url_for('static', filename='svg-icons/Marketplace/Negotiate Blank.svg') }}" class="empty-illus" alt="">
+              <h3 class="empty-title">Negotiation Not Available</h3>
+              <p class="empty-text">Negotiable (Yes/No) was not specified in this demand.</p>
+            </div>
+          </div>
+        </div>
+
+      {% elif demand and demand.negotiable %}
+        <!-- negotiable true -->
+        <div class="card fill-card">
+          <div class="card-header">
+            <img src="{{ url_for('static', filename='svg-icons/Marketplace/Negotiate Offer.svg') }}" class="card-icon" alt="">
+            <h2 class="section-title">Negotiate Offer</h2>
+          </div>
+
+          <div class="card-body">
+            <form method="POST"
+                  action="{{ url_for('farmer_marketplace_bp.submit_negotiation', demand_id=demand._id) }}"
+                  class="nego-form">
+
+              <div class="two-col">
+                <div class="field-group">
+                  <label class="label">Propose New Price</label>
+                  <div class="field-row">
+                    <div class="field-input">
+                      <input id="proposedPrice" type="number" name="proposed_price" min="0" step="0.01" placeholder="Enter price">
+                    </div>
+
+                    <div class="field-input unit-select">
+                      <select id="priceUnit" name="price_unit">
+                        <option value="kg">/ kg</option>
+                        <option value="qtl">/ qtl</option>
+                        <option value="ton">/ ton</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label class="label">Total Value</label>
+                  <div class="field-input readonly">
+                    <input type="text" id="totalValue" value="₹ -" readonly>
+                  </div>
+                  <p class="helper-text">Auto-calculated from quantity</p>
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="label">Add Note (Optional)</label>
+                <div class="field-input">
+                  <textarea name="note" placeholder="Write a note to the buyer..."></textarea>
+                </div>
+              </div>
+
+              <div class="actions-row">
+                <button type="submit" class="primary-btn">Send Negotiation</button>
+              </div>
+                <input type="hidden" id="demandQty" value="{{ demand.quantity or '0 kg' }}">
+            </form>
+          </div>
+        </div>
+      {% endif %}
+
+    </div><!-- /left-col -->
+
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-col">
+      <!-- ===================== CARD 2: SUMMARY ===================== -->
+      <div class="card fill-card">
+        <div class="card-header">
+          <img src="{{ url_for('static', filename='svg-icons/Marketplace/Summary.svg') }}" class="card-icon" alt="">
+          <h2 class="section-title">Summary</h2>
+        </div>
+
+        <div class="card-body">
+          {% if buyer %}
+          <div class="summary-grid">
+
+            <div class="summary-row">
+              <p class="label">Address</p>
+              <p class="value">{{ buyer.office_address or buyer.location or "-" }}</p>
+            </div>
+
+            <div class="summary-row">
+              <p class="label">Contact Person</p>
+              <p class="value">{{ buyer.name or "-" }}</p>
+            </div>
+
+            <div class="summary-row">
+              <p class="label">Contact</p>
+              <p class="value">{{ buyer.phone or buyer.mobile or "-" }}</p>
+            </div>
+
+            <div class="summary-row">
+              <p class="label">Email</p>
+              <p class="value">{{ buyer.email or "-" }}</p>
+            </div>
+
+            <div class="summary-row">
+              <p class="label">Offer Validity</p>
+              <p class="value">{{ demand.expiry or "-" }}</p>
+            </div>
+
+            <div class="summary-row">
+              <p class="label">Payment Method</p>
+              <p class="value">{{ demand.payment_terms or "-" }}</p>
+            </div>
+
+            <div class="summary-row">
+              <p class="label">Delivery</p>
+              <p class="value">{{ demand.delivery or "-" }}</p>
+            </div>
+
+          </div>
+          {% else %}
+            <div class="empty-block">
+              <img src="{{ url_for('static', filename='svg-icons/Marketplace/Empty top buyer.svg') }}" class="empty-illus" alt="">
+              <h3 class="empty-title">No Buyer Details</h3>
+              <p class="empty-text">Buyer contact info is not available for this demand.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div><!-- /right-col -->
+
+  </div><!-- /layout -->
+</div><!-- /container -->
+
+<script src="{{ url_for('static', filename='js/marketinfo.js') }}?v=3"></script>
+{% endblock %}

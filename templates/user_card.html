@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Precision Grow ID Card</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #e0f7fa;
+      margin: 0;
+      padding: 60px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card-wrapper {
+      background: #fff;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .id-card {
+      width: 400px;
+      height: 250px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .id-card.front {
+      background: linear-gradient(to right, #43a047, #81c784);
+      color: #fff;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px 5px;
+    }
+
+    .header img.logo {
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+
+    .header-text {
+      text-align: right;
+    }
+
+    .header-text h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .header-text h4 {
+      margin: 0;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .middle {
+      display: flex;
+      padding: 10px 20px 0;
+    }
+
+    .photo {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      overflow: hidden;
+      background: #f1f1f1;
+      margin-right: 15px;
+    }
+
+    .photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .details {
+      flex: 1;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .details p {
+      margin: 4px 0;
+      font-weight: 500;
+    }
+
+    .bottom {
+      padding: 8px 20px 16px;
+      font-size: 11px;
+      font-weight: 500;
+      z-index: 2;
+    }
+
+    .svg-wave {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      z-index: 0;
+    }
+
+    .id-card.back {
+      background: #ffffff;
+      text-align: center;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .qr-code {
+      margin-bottom: 15px;
+    }
+
+    .address {
+      font-size: 10px;
+      color: #333;
+      line-height: 1.4;
+    }
+
+    .contact {
+      font-size: 9px;
+      color: #777;
+      margin-top: 5px;
+    }
+
+    button.download-btn {
+      margin-top: 30px;
+      padding: 10px 25px;
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button.download-btn:hover {
+      background-color: #1b5e20;
+    }
+
+    @media print {
+      button.download-btn {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card-wrapper" id="id-card-container">
+
+  <!-- Front Side -->
+  <div class="id-card front">
+    <div class="header">
+      <img src="/static/images/logo.jpg" alt="Logo" class="logo">
+      <div class="header-text">
+        <h1>Precision Grow</h1>
+        <h4>(A Unit of Tech Visit IT Pvt Ltd)</h4>
+      </div>
+    </div>
+
+    <div class="middle">
+      <div class="photo">
+        <img src="/static/images/Profile.png" alt="Profile">
+      </div>
+      <div class="details">
+        <p><strong>Name:</strong> {{ user.name }}</p>
+        <p><strong>Role:</strong> {{ user.role|capitalize }}</p>
+        <p><strong>Location:</strong> {{ user.location }}</p>
+        <p><strong>Office:</strong> {{ user.officeName }}</p>
+        <p><strong>Phone:</strong> {{ user.phone }}</p>
+        <p><strong>ID:</strong> {{ user.userId }}</p>
+      </div>
+    </div>
+
+    <div class="bottom">
+      Product Traceability Identity Card
+    </div>
+
+    <!-- SVG Wave Background -->
+    <div class="svg-wave">
+      <svg viewBox="0 0 500 80" preserveAspectRatio="none" style="width:100%; height:100%;">
+        <path d="M0.00,30 C150.00,80 349.67,-10 500.00,30 L500.00,80 L0.00,80 Z" style="fill:#ffffff;"></path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Back Side -->
+  <div class="id-card back">
+    <div class="qr-code">
+      <img src="{{ qr_image }}" alt="QR Code" height="100">
+    </div>
+    <div class="address">
+      <strong>Precision Grow</strong><br>
+      (A Unit of Tech Visit IT Pvt Ltd)<br>
+      Unit No 22, Building No. 2(A3), Sector 1,<br>
+      Millennium Business Park, Mahape,<br>
+      Navi Mumbai, 400710
+    </div>
+    <div class="contact">
+      📧 mail@precisiongrow.co.in
+    </div>
+  </div>
+
+</div>
+
+<!-- Download Button -->
+<button class="download-btn" onclick="downloadPDF()">📄 Download ID Card</button>
+
+<script>
+  function downloadPDF() {
+    const element = document.getElementById('id-card-container');
+    const opt = {
+      margin: 0,
+      filename: '{{ user.userId }}_Precision_ID.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1007 @@
+/* =========================================================
+   LAYOUT: APP SHELL
+   ========================================================= */
+
+.my-crop {
+  display: flex;
+  min-height: 100vh;
+  align-items: flex-start;
+  background-color: #ffffff;
+}
+
+/* SIDEBAR */
+.my-crop .sidebar {
+  width: 282px;
+  background-color: var(--grey-50);
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* logo header */
+.my-crop .frame {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+  padding: 25px 32px;
+  width: 100%;
+}
+
+.my-crop .div {
+  display: flex;
+  gap: 11px;
+  width: 100%;
+  align-items: center;
+}
+
+.my-crop .rectangle {
+  width: 47px;
+  height: 47px;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.my-crop .frame-2 {
+  width: 135px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.my-crop .precision-grow {
+  font-family: "Inter-SemiBold", Helvetica;
+  font-weight: 600;
+  color: #287276;
+  font-size: 14px;
+  letter-spacing: -0.42px;
+  line-height: 20.3px;
+}
+
+.my-crop .pioneering-the {
+  font-family: "Inter-Regular", Helvetica;
+  font-weight: 400;
+  color: #88b939;
+  font-size: 8px;
+  letter-spacing: -0.21px;
+  line-height: 10.2px;
+}
+
+/* sidebar nav container */
+.my-crop .frame-3 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px;
+  gap: 60px;
+}
+
+/* section title "General" */
+.my-crop .frame-5 {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.my-crop .div-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  width: 100%;
+}
+
+.my-crop .text-wrapper {
+  flex: 1;
+  font-family: var(--body-md-reg-font-family);
+  font-weight: var(--body-md-reg-font-weight);
+  color: var(--grey-500);
+  font-size: var(--body-md-reg-font-size);
+  letter-spacing: var(--body-md-reg-letter-spacing);
+  line-height: var(--body-md-reg-line-height);
+}
+
+/* reusable UL blocks */
+.my-crop .frame-6 {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.my-crop .frame-6 > li {
+  width: 100%;
+}
+
+/* =========================================================
+   SIDEBAR ITEMS
+   ========================================================= */
+
+/* base LI types from Jinja */
+.my-crop .component {
+  width: 100%;
+}
+
+.my-crop .component-2 {
+  width: 100%;
+}
+
+/* core link */
+.my-crop .component-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  box-sizing: border-box;
+}
+
+/* icon */
+.my-crop .img,
+.my-crop .sidebar-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* default label */
+.my-crop .text-wrapper-2 {
+  font-family: var(--body-md-reg-font-family);
+  font-weight: var(--body-md-reg-font-weight);
+  color: var(--grey-950);
+  font-size: var(--body-md-reg-font-size);
+  letter-spacing: var(--body-md-reg-letter-spacing);
+  line-height: var(--body-md-reg-line-height);
+  white-space: nowrap;
+}
+
+/* active label (Dashboard class) */
+.my-crop .dashboard {
+  font-family: var(--body-md-reg-font-family);
+  font-weight: var(--body-md-reg-font-weight);
+  color: var(--white);
+  font-size: var(--body-md-reg-font-size);
+  letter-spacing: var(--body-md-reg-letter-spacing);
+  line-height: var(--body-md-reg-line-height);
+  white-space: nowrap;
+}
+
+/* green active background (top-level or submenu li.component-2) */
+.my-crop .frame-6 > li.component-2 > .component-link,
+.my-crop .submenu li.component-2 > .component-link {
+  background-color: #16A34A;
+  color: #ffffff;
+}
+
+/* ensure icons turn white on active items */
+.my-crop .frame-6 > li.component-2 .sidebar-icon,
+.my-crop .submenu li.component-2 .sidebar-icon {
+  filter: brightness(0) invert(1);
+}
+
+/* hover state for normal items */
+.my-crop .frame-6 > li:not(.component-2) > .component-link:hover {
+  background-color: #e4f3e7;
+}
+
+/* separator line in footer */
+.my-crop .line-2 {
+  width: 100%;
+  height: 1px;
+}
+
+/* =========================================================
+   DROPDOWNS (STORAGE & PROCESSING, SALES)
+   ========================================================= */
+
+.my-crop .dropdown {
+
+    pointer-events: auto !important;
+}
+
+/* dropdown row behaves like normal item, but clickable */
+.my-crop .dropdown-toggle {
+
+   pointer-events: auto !important;
+}
+
+/* caret icon on the right */
+.my-crop .caret-down {
+  margin-left: auto;
+  width: 14px;
+  height: 14px;
+  transition: transform 0.25s ease;
+}
+
+.my-crop .dropdown.open .caret-down {
+  transform: rotate(180deg);
+}
+
+.my-crop .dropdown.submenu-parent > .component-link,
+.my-crop .dropdown.open > .component-link {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+.my-crop .dropdown.submenu-parent > .component-link .sidebar-icon {
+  filter: none;
+}
+
+/* submenu container */
+.my-crop .submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+
+/* expanded submenu */
+.my-crop .dropdown.open .submenu {
+  max-height: 600px !important;
+}
+/* each submenu item */
+.my-crop .submenu li {
+  width: 100%;
+}
+
+/* submenu link – visually indented */
+.my-crop .submenu .component-link {
+  padding: 8px 16px 8px 40px;
+  border-radius: 8px;
+    pointer-events: auto;
+  cursor: pointer;
+}
+
+/* hover state */
+.my-crop .submenu .component-link:hover {
+  background-color: #d8efdd;
+}
+
+/* explicit active class from Jinja */
+.my-crop .submenu-active > .component-link {
+  background-color: #16A34A;
+  color: #ffffff;
+}
+
+/* =========================================================
+   MAIN CONTENT AREA
+   ========================================================= */
+/* keep existing layout untouched */
+.content-shell {
+  position: relative; /* needed for overlay */
+}
+.content-loader {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.content-loader.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.content-loader.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.content-loader video {
+  width: 180px;
+  height: auto;
+}
+
+
+
+  .frame-wrapper {
+    position: relative; /* ⬅ IMPORTANT */
+  }
+
+
+.my-crop .frame-7 {
+  margin-left: 282px;            /* match sidebar width */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--grey-50);
+}
+
+/* top bar */
+.my-crop .frame-8 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 32px;
+  height: 95px;
+  width: 100%;
+  background-color: var(--grey-50);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* search box */
+.my-crop .frame-9 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  width: 529px;
+  background-color: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--grey-100);
+}
+
+.my-crop .magnifying-glass {
+  width: 20px;
+  height: 20px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.my-crop .text-wrapper-3 {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--body-md-reg-font-family);
+  font-weight: var(--body-md-reg-font-weight);
+  color: var(--grey-400);
+  font-size: var(--body-md-reg-font-size);
+  letter-spacing: var(--body-md-reg-letter-spacing);
+  line-height: var(--body-md-reg-line-height);
+}
+
+.my-crop .text-wrapper-3::placeholder {
+  color: var(--grey-400);
+}
+
+/* top-right icons */
+.my-crop .frame-10 {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.my-crop .frame-11 {
+  border-radius: 12px;
+  border: 1px solid var(--grey-100);
+  aspect-ratio: 1;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.my-crop .bell {
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  width: 24px;
+  height: 24px;
+}
+
+.my-crop .frame-12 {
+  position: absolute;
+  width: 17.39%;
+  height: 17.02%;
+  top: 23.4%;
+  left: 56.52%;
+  background-color: var(--red-600);
+  border-radius: 90px;
+}
+
+.my-crop .frame-13 {
+  border-radius: 152px;
+  aspect-ratio: 1;
+  background-image: url(./img/frame-9.png);
+  background-size: cover;
+  background-position: 50% 50%;
+  border: none;
+  cursor: pointer;
+}
+
+/* main content wrapper card */
+.my-crop .frame-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px;
+  padding: 32px;
+  width: 99%;
+  box-sizing: border-box;
+  background-color: var(--white);
+  border-radius: 12px;
+  font-family:sans-serif;
+}
+
+.my-crop .frame-14 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+}
+
+/* =========================================================
+   DASHBOARD / SHARED CONTENT COMPONENTS
+   (frames inside frame-14)
+   ========================================================= */
+
+.my-crop .frame-15 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.my-crop .frame-16 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.my-crop .grains {
+  width: 34px;
+  height: 34px;
+  aspect-ratio: 1;
+}
+
+.my-crop .text-wrapper-4 {
+  font-family: var(--title-md-md-font-family);
+  font-weight: var(--title-md-md-font-weight);
+  color: var(--grey-950);
+  font-size: var(--title-md-md-font-size);
+  letter-spacing: var(--title-md-md-letter-spacing);
+  line-height: var(--title-md-md-line-height);
+  white-space: nowrap;
+}
+
+.my-crop .frame-17 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* primary button */
+.my-crop .button {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 8px;
+  background-color: var(--green-700);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.my-crop .bt-text {
+  font-family: var(--body-md-md-font-family);
+  font-weight: var(--body-md-md-font-weight);
+  color: var(--grey-50);
+  font-size: var(--body-md-md-font-size);
+  letter-spacing: var(--body-md-md-letter-spacing);
+  line-height: var(--body-md-md-line-height);
+  white-space: nowrap;
+}
+
+.my-crop .img-2 {
+  width: 24px;
+  height: 24px;
+}
+
+/* secondary button */
+.my-crop .button-2 {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 0.8px solid var(--grey-950);
+  cursor: pointer;
+}
+
+.my-crop .bt-text-2 {
+  font-family: var(--body-md-reg-font-family);
+  font-weight: var(--body-md-reg-font-weight);
+  color: var(--grey-950);
+  font-size: var(--body-md-reg-font-size);
+  letter-spacing: var(--body-md-reg-letter-spacing);
+  line-height: var(--body-md-reg-line-height);
+  white-space: nowrap;
+}
+
+/* summary cards row */
+.my-crop .frame-18 {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.my-crop .frame-19 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px;
+  flex: 1;
+  background-color: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--grey-100);
+}
+
+.my-crop .frame-20 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.my-crop .img-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background-color: #e5ffee;
+  border-radius: 80px;
+  border: 0.4px solid #0f913d30;
+}
+
+.my-crop .text-wrapper-5 {
+  font-family: var(--body-md-md-font-family);
+  font-weight: var(--body-md-md-font-weight);
+  color: var(--grey-600);
+  font-size: var(--body-md-md-font-size);
+  letter-spacing: var(--body-md-md-letter-spacing);
+  line-height: var(--body-md-md-line-height);
+  white-space: nowrap;
+}
+
+.my-crop .text-wrapper-6 {
+  font-family: "Inter-Medium", Helvetica;
+  font-weight: 500;
+  color: var(--grey-950);
+  font-size: 42px;
+  letter-spacing: -1.09px;
+  line-height: 53.3px;
+  white-space: nowrap;
+}
+
+/* right-side filter + search in cards */
+.my-crop .frame-21 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 0 0 12px;
+  flex: 1;
+}
+
+.my-crop .frame-22 {
+  display: flex;
+  width: 240px;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background-color: var(--white);
+  border-radius: 8px;
+  border: 1px solid var(--grey-100);
+  overflow: hidden;
+}
+
+.my-crop .img-3 {
+  width: 16px;
+  height: 16px;
+}
+
+.my-crop .text-wrapper-7 {
+  font-family: var(--body-sm-reg-font-family);
+  font-weight: var(--body-sm-reg-font-weight);
+  color: var(--grey-900);
+  font-size: var(--body-sm-reg-font-size);
+  letter-spacing: var(--body-sm-reg-letter-spacing);
+  line-height: var(--body-sm-reg-line-height);
+  white-space: nowrap;
+  border-width: 0px;
+  
+}
+
+.my-crop .frame-23 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.my-crop .frame-24 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--white);
+  border-radius: 7px;
+  overflow: hidden;
+  border: 1px solid var(--grey-100);
+}
+
+.my-crop .dropdown-title-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+.my-crop .caret-down-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 5px;
+  background-color: var(--grey-100);
+  border-color:var(--grey-100);
+}
+
+/* small chips / buttons */
+.my-crop .frame-25 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 7px 8px;
+  background-color: var(--grey-100);
+  border-radius: 7px;
+  border: 1px solid var(--grey-100);
+}
+
+/* main data table container */
+.my-crop .frame-26 {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 10px;
+    font-family: inherit;
+    color: #333;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+
+}
+
+.my-crop .frame-27 {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  overflow-x: scroll;
+}
+
+.my-crop .frame-27::-webkit-scrollbar {
+  width: 0;
+  display: none;
+}
+
+.my-crop .frame-28 {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  flex: 0 0 auto;
+  margin-top: -1px;
+  border-bottom: 1px solid var(--grey-100);
+}
+
+.my-crop .frame-29 {
+  display: flex;
+  min-width: 116px;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  flex: 1;
+  background-color: var(--grey-50);
+}
+
+.my-crop .header {
+  font-family: var(--body-sm-md-font-family);
+  font-weight: var(--body-sm-md-font-weight);
+  color: var(--grey-950);
+  font-size: var(--body-sm-md-font-size);
+  letter-spacing: var(--body-sm-md-letter-spacing);
+  line-height: var(--body-sm-md-line-height);
+  white-space: nowrap;
+}
+
+.my-crop .frame-30 {
+  display: flex;
+  min-width: 140px;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  flex: 1;
+  background-color: var(--grey-50);
+}
+
+.my-crop .header-2 {
+  font-family: var(--body-sm-md-font-family);
+  font-weight: var(--body-sm-md-font-weight);
+  color: var(--grey-950);
+  font-size: var(--body-sm-md-font-size);
+  letter-spacing: var(--body-sm-md-letter-spacing);
+  line-height: var(--body-sm-md-line-height);
+  white-space: nowrap;
+}
+
+.my-crop .header-wrapper {
+  display: inline-flex;
+  min-width: 116px;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  flex: 0 0 auto;
+  margin-right: -32px;
+  background-color: var(--grey-50);
+}
+
+/* empty-state center content */
+.my-crop .frame-31 {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  position: absolute;
+  top: calc(50% - 143px);
+  left: calc(50% - 174px);
+}
+
+.my-crop .frame-32 {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.my-crop .every-great-harvest {
+  font-family: var(--body-md-md-font-family);
+  font-weight: var(--body-md-md-font-weight);
+  color: var(--grey-950);
+  font-size: var(--body-md-md-font-size);
+  text-align: center;
+  letter-spacing: var(--body-md-md-letter-spacing);
+  line-height: var(--body-md-md-line-height);
+}
+
+.my-crop .p {
+  font-family: "Inter-Regular", Helvetica;
+  font-weight: 400;
+  color: var(--grey-900);
+  font-size: 12px;
+  letter-spacing: -0.31px;
+  line-height: 15.2px;
+  white-space: nowrap;
+}
+
+.my-crop .group {
+  width: 198px;
+  height: 145.33px;
+  margin: 50px 20px 20px;
+}
+
+/* CTA in empty state */
+.my-crop .button-3 {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: var(--grey-950);
+  border-radius: 6px;
+  overflow: hidden;
+  color: #ffffff;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.my-crop .bt-text-3 {
+  font-family: var(--body-sm-md-font-family);
+  font-weight: var(--body-sm-md-font-weight);
+  color: var(--grey-50);
+  font-size: var(--body-sm-md-font-size);
+  letter-spacing: var(--body-sm-md-letter-spacing);
+  line-height: var(--body-sm-md-line-height);
+  white-space: nowrap;
+}
+
+.my-crop .plus {
+  width: 18px;
+  height: 18px;
+}
+
+/* =========================================================
+   FOOTER SECTION IN SIDEBAR (Settings / Log out)
+   ========================================================= */
+
+.my-crop .sidebar > .frame-3 > .frame-6:last-of-type {
+  margin-top: auto;
+}
+
+/* =========================================================
+   ADD CROP PAGE — FINAL INTEGRATION
+   ========================================================= */
+
+.add-crop-page .frame-wrapper {
+  margin-top: 0;
+}
+
+/* Form wrapper */
+.add-crop-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+/* Two main grids (top + bottom) */
+.add-crop-grid-top
+.add-crop-grid-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 cards */
+  gap: 16px;
+  width: 100%;
+}
+
+/* Inside each card — ensure consistent content spacing */
+.add-crop-card {
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--grey-100);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Input label */
+.add-crop-label {
+  font-family: var(--body-md-reg-font-family);
+  font-size: var(--body-md-reg-font-size);
+  color: var(--grey-900);
+  margin-bottom: 6px;
+}
+
+/* Input fields */
+.add-crop-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--grey-200);
+  font-family: var(--body-md-reg-font-family);
+  font-size: var(--body-md-reg-font-size);
+  outline: none;
+}
+
+.add-crop-input:focus {
+  border-color: var(--green-600);
+}
+
+/* Textarea */
+.add-crop-textarea {
+  width: 100%;
+  height: 120px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--grey-200);
+  font-family: var(--body-md-reg-font-family);
+  font-size: var(--body-md-reg-font-size);
+  resize: vertical;
+  outline: none;
+}
+
+.add-crop-textarea:focus {
+  border-color: var(--green-600);
+}
+
+/* Section titles */
+.add-crop-title {
+  font-family: var(--title-md-md-font-family);
+  font-size: var(--title-md-md-font-size);
+  color: var(--grey-950);
+  font-weight: var(--title-md-md-font-weight);
+  margin-bottom: 10px;
+}
+
+/* Buttons row */
+.add-crop-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Save button */
+.add-crop-save {
+  all: unset;
+  padding: 10px 22px;
+  border-radius: 8px;
+  background-color: var(--green-700);
+  color: var(--white);
+  font-family: var(--body-md-md-font-family);
+  font-size: var(--body-md-md-font-size);
+  cursor: pointer;
+}
+
+/* Cancel button */
+.add-crop-cancel {
+  all: unset;
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: 1px solid var(--grey-900);
+  color: var(--grey-900);
+  font-family: var(--body-md-reg-font-family);
+  font-size: var(--body-md-reg-font-size);
+  cursor: pointer;
+}
+
+/* =========================================================
+   RESPONSIVE — TABLET + MOBILE
+   ========================================================= */
+
+@media (max-width: 1024px) {
+  .add-crop-grid-top,
+  .add-crop-grid-bottom {
+    grid-template-columns: 1fr; /* stack 2 cards vertically */
+  }
+}
+
+@media (max-width: 600px) {
+  .add-crop-form {
+    gap: 18px;
+  }
+
+  .add-crop-card {
+    padding: 18px;
+  }
+
+  .add-crop-buttons {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .add-crop-save,
+  .add-crop-cancel {
+    width: 100%;
+    text-align: center;
+  }
+}

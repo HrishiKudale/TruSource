@@ -1,0 +1,181 @@
+{% extends "farmer_base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='manufacturer.css') }}">
+
+<!-- TITLE + ACTIONS -->
+<div class="frame-15">
+  <div class="frame-16">
+    <img class="grains"
+         src="{{ url_for('static', filename='svg-icons/Manufacturer/Factory-black.svg') }}"
+         alt="">
+    <h1 class="text-wrapper-4">Processing Overview</h1>
+  </div>
+
+  <div class="frame-17">
+    <a href="{{ url_for('farmer_processing_bp.request_processing_page') }}" class="button">
+      <span class="bt-text">Request Processing</span>
+      <img class="img-2" src="{{ url_for('static', filename='svg-icons/Plus.svg') }}">
+    </a>
+
+    <button class="button-2">
+      <span class="bt-text-2">Export</span>
+      <img class="img-2" src="{{ url_for('static', filename='svg-icons/Export.svg') }}">
+    </button>
+  </div>
+</div>
+
+<section class="frame-21">
+
+  <!-- KPI ROW -->
+  <section class="frame-18" aria-label="Processing Statistics">
+    
+    <!-- Total Requests -->
+    <article class="frame-19">
+      <div class="frame-20">
+        <div class="img-wrapper">
+          <img src="{{ url_for('static', filename='svg-icons/Manufacturer/Total Requests.svg') }}">
+        </div>
+        <h3 class="text-wrapper-5">Total Requests</h3>
+      </div>
+      <p class="text-wrapper-6">{{ (kpis.total_requests or 0) if kpis is defined else 0 }}</p>
+    </article>
+
+    <!-- Active Processing -->
+    <article class="frame-19">
+      <div class="frame-20">
+        <div class="img-wrapper">
+          <img src="{{ url_for('static', filename='svg-icons/Manufacturer/Active Processing.svg') }}">
+        </div>
+        <h3 class="text-wrapper-5">Active Processing</h3>
+      </div>
+      <p class="text-wrapper-6">{{ (kpis.active_processing or 0) if kpis is defined else 0 }}</p>
+    </article>
+
+    <!-- Completed Requests -->
+    <article class="frame-19">
+      <div class="frame-20">
+        <div class="img-wrapper">
+          <img src="{{ url_for('static', filename='svg-icons/Manufacturer/Completed Requests.svg') }}">
+        </div>
+        <h3 class="text-wrapper-5">Completed Requests</h3>
+      </div>
+      <p class="text-wrapper-6">{{ (kpis.completed_requests or 0) if kpis is defined else 0 }}</p>
+    </article>
+
+    <!-- Total Processed Qty -->
+    <article class="frame-19">
+      <div class="frame-20">
+        <div class="img-wrapper">
+          <img src="{{ url_for('static', filename='svg-icons/Manufacturer/Total Processed Qty.svg') }}">
+        </div>
+        <h3 class="text-wrapper-5">Total Processed Qty</h3>
+      </div>
+      <p class="text-wrapper-6">
+        {{ (kpis.total_processed_qty or 0) if kpis is defined else 0 }} qtl
+      </p>
+    </article>
+
+  </section>
+
+  <!-- TABLE SEARCH + FILTERS -->
+  <div class="frame-15" style="margin-bottom:10px;">
+    <div class="frame-22" role="search">
+      <label for="table-search" class="img-3">
+        <img src="{{ url_for('static', filename='svg-icons/MagnifyingGlass.svg') }}">
+      </label>
+
+      <input type="search" id="table-search" class="text-wrapper-7"
+             placeholder="Search processing partners">
+    </div>
+
+    <div class="frame-23">
+      {% for label in ["Crop", "Location"] %}
+      <div class="frame-24">
+        <div class="dropdown-title-wrapper">
+          <span class="text-wrapper-7">{{ label }}</span>
+        </div>
+        <button class="caret-down-wrapper">
+          <img src="{{ url_for('static', filename='svg-icons/DownArrow.svg') }}">
+        </button>
+      </div>
+      {% endfor %}
+
+      <button class="frame-25">
+        <img class="img" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}">
+      </button>
+
+      <button class="frame-25">
+        <img class="img" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}">
+      </button>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <table class="manufacturer-table">
+    <thead>
+      <tr>
+        <th>Manufacturer ID</th>
+        <th>Name</th>
+        <th>Location</th>
+        <th>Crop</th>
+        <th>Total Quantity</th>
+        <th>Last Updated</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+    {% if items %}
+      {% for row in items %}
+        <tr>
+          <td>
+            {% if row.manufacturerId %}
+              <a href="{{ url_for('farmer_processing_bp.manufacturer_info_page',
+                                  manufacturer_id=row.manufacturerId) }}"
+                class="table-link">
+                {{ row.manufacturerId }}
+              </a>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>{{ row.manufacturerName or "—" }}</td>
+          <td>{{ row.location or "—" }}</td>
+          <td>{{ row.cropType or "—" }}</td>
+          <td>{{ row.totalQuantity or 0 }}</td>
+          <td>
+            {% if row.updated_at %}
+              {% if row.updated_at.__class__.__name__ == 'datetime' %}
+                {{ row.updated_at.strftime("%Y-%m-%d") }}
+              {% else %}
+                {{ row.updated_at }}
+              {% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr class="empty-state-row">
+        <td colspan="6">
+          <div class="empty-state-content">
+            <img src="{{ url_for('static', filename='illustrations/Empty Mfg.svg') }}">
+            <div class="empty-state-text">No Processing Partners Added</div>
+            <div class="empty-state-subtext">
+              Send your crop for processing to see manufacturers here.
+            </div>
+            <a href="{{ url_for('farmer_processing_bp.processing_overview') }}">
+              <button class="button-3">Process Crop</button>
+            </a>
+          </div>
+        </td>
+      </tr>
+    {% endif %}
+
+    </tbody>
+  </table>
+
+</section>
+{% endblock content %}

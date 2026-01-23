@@ -1,0 +1,216 @@
+/* MAIN CONTAINER */
+.logistics-container {
+    background: #fff;
+    border-radius: 12px;
+    height: calc(100vh - 290px);
+    display: flex;
+    flex-direction: column;
+}
+
+/* FILTERS */
+.filters-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.filters-right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* SEARCH BOX */
+.search-box {
+    display: flex;
+    align-items: center;
+    background: #f5f5f5;
+    padding: 8px 12px;
+    border-radius: 8px;
+    gap: 8px;
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 200px;
+}
+
+/* DROPDOWN — WHITE TEXT AREA + GREY ARROW BUTTON */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    background: #ffffff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #dddddd;
+    cursor: pointer;
+}
+
+/* Grey right-side arrow button */
+.dropdown-arrow {
+    width: 20px;
+    height: 20px;
+    background: #d9d9d9;
+    border-radius: 6px;
+
+    mask: url('../svg-icons/DownArrow.svg') center/60% no-repeat;
+    -webkit-mask: url('../svg-icons/DownArrow.svg') center/60% no-repeat;
+}
+
+/* DROPDOWN MENU */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 44px;
+    right: 0;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    min-width: 150px;
+    overflow: hidden;
+}
+
+.dropdown-menu div {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.dropdown-menu div:hover {
+    background: #eef3ff;
+}
+
+/* CALENDAR FIELD */
+.calendar-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.calendar-btn input {
+    border: none;
+    background: transparent;
+    outline: none;
+}
+
+/* TABLE CARD */
+.table-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #ececec;
+}
+
+/* Scrollable area */
+.table-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Hide scrollbar */
+.table-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+.table-scroll {
+    scrollbar-width: none;
+}
+
+/* TABLE */
+.order-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* HEADER with rounded top */
+.order-table th {
+    background: #f0f0f0;
+    padding: 18px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+}
+
+.order-table thead tr th:first-child {
+    border-top-left-radius: 12px;
+}
+.order-table thead tr th:last-child {
+    border-top-right-radius: 12px;
+}
+
+/* BODY */
+.order-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f1f1;
+    background: #fff;
+}
+
+.order-table tbody tr:hover {
+    background: #eef6ff;
+}
+
+/* EMPTY STATE (over scroll area) */
+.empty-state-inside {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+    color: #666;
+    gap: 10px;
+}
+
+.empty-state-inside img {
+    width: auto;
+    margin-bottom: 10px;
+}
+
+/* Hidden empty row (avoids space under header) */
+.no-data-row {
+    height: 0 !important;
+    opacity: 0 !important;
+}
+/* Grey arrow button inside dropdown */
+.dropdown-btn .arrow {
+    width: 22px;
+    height: 22px;
+    background: #d9d9d9;
+    border-radius: 6px;
+
+    mask: url('../svg-icons/DownArrow.svg') center/60% no-repeat;
+    -webkit-mask: url('../svg-icons/DownArrow.svg') center/60% no-repeat;
+}
+  .shipment-link{
+    color: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .shipment-link:hover{
+    text-decoration: underline;
+  }

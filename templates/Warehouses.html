@@ -1,0 +1,146 @@
+{% extends "farmer_base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='warehouse.css') }}">
+
+<!-- Title + actions -->
+<div class="frame-15">
+  <div class="frame-16">
+    <img class="grains" src="{{ url_for('static', filename='svg-icons/warehouse.svg') }}" alt="" aria-hidden="true" />
+    <h1 class="text-wrapper-4">Warehouses</h1>
+  </div>
+
+  <div class="frame-17">
+    <a href="{{ url_for('farmer_storage.add_storage_page') }}" class="button">
+      <span class="bt-text">Store Crop</span>
+      <img class="img-2" src="{{ url_for('static', filename='svg-icons/Plus.svg') }}" />
+    </a>
+
+    <button class="button-2" type="button">
+      <span class="bt-text-2">Export</span>
+      <img class="img-2" src="{{ url_for('static', filename='svg-icons/Export.svg') }}" />
+    </button>
+  </div>
+</div>
+
+<!-- KPI cards -->
+<section class="frame-18" aria-label="Warehouse statistics">
+
+  <article class="frame-19">
+    <div class="frame-20">
+      <div class="img-wrapper">
+        <img class="img-2" src="{{ url_for('static', filename='svg-icons/Warehouses/Total Warehouses.svg') }}" />
+      </div>
+      <h3 class="text-wrapper-5">Total Warehouses</h3>
+    </div>
+    <p class="text-wrapper-6">{{ total_warehouses or 0 }}</p>
+  </article>
+
+  <article class="frame-19">
+    <div class="frame-20">
+      <div class="img-wrapper">
+        <img class="img-2" src="{{ url_for('static', filename='svg-icons/Warehouses/Total Capacity.svg') }}" />
+      </div>
+      <h3 class="text-wrapper-5">Total Capacity</h3>
+    </div>
+    <p class="text-wrapper-6">{{ total_capacity or 0 }}</p>
+  </article>
+
+  <article class="frame-19">
+    <div class="frame-20">
+      <div class="img-wrapper">
+        <img class="img-2" src="{{ url_for('static', filename='svg-icons/Warehouses/Shipments Linked.svg') }}" />
+      </div>
+      <h3 class="text-wrapper-5">Shipments Linked</h3>
+    </div>
+    <p class="text-wrapper-6">{{ shipments_linked or 0 }}</p>
+  </article>
+
+  <article class="frame-19">
+    <div class="frame-20">
+      <div class="img-wrapper">
+        <img class="img-2" src="{{ url_for('static', filename='svg-icons/Warehouses/Total Stored.svg') }}" />
+      </div>
+      <h3 class="text-wrapper-5">Total Stored (kg)</h3>
+    </div>
+    <p class="text-wrapper-6">{{ total_stored or 0 }}</p>
+  </article>
+
+</section>
+
+<!-- Table -->
+<section class="frame-21">
+
+  <div class="frame-15" style="margin-bottom:10px;">
+    <div class="frame-22" role="search">
+      <label for="table-search" class="img-3">
+        <img class="vector" src="{{ url_for('static', filename='svg-icons/MagnifyingGlass.svg') }}" />
+      </label>
+      <input type="search" id="table-search" class="text-wrapper-7"
+             placeholder="Search" aria-label="Search storage requests" />
+    </div>
+  </div>
+
+
+    <table class="warehouse-table">
+      <thead>
+        <tr>
+          <th>Request ID</th>
+          <th>Warehouse ID</th>
+          <th>Warehouse Name</th>
+          <th>Location</th>
+          <th>Crop</th>
+          <th>Quantity (kg)</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>Last Updated</th>
+        </tr>
+      </thead>
+
+      <tbody>
+      {% if storage_items and storage_items|length %}
+        {% for item in storage_items %}
+        <tr class="click-row"
+            data-href="{{ url_for('farmer_storage.warehouse_info_page', warehouse_id=item.warehouseId) }}">
+          <td>{{ item._id }}</td>
+          <td>{{ item.warehouseId }}</td>
+          <td>{{ item.warehouseName }}</td>
+          <td>{{ item.location }}</td>
+          <td>{{ item.cropType }}</td>
+          <td>{{ item.harvestQuantity }}</td>
+          <td>{{ item.storageDuration }}</td>
+          <td>{{ item.status }}</td>
+          <td>
+            {% if item.lastUpdated %}
+            
+              {{ item.lastUpdated }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr class="empty-state-row">
+          <td colspan="9" class="empty-state-cell">
+            <div class="empty-state-content">
+              <img class="empty-state-illustration"
+                   src="{{ url_for('static', filename='illustrations/No Warehouse.svg') }}" />
+              <p class="empty-state-text">No Storage Requests Found</p>
+              <p class="empty-state-subtext">
+                Once you send crops for storage, the requests will show up here.
+              </p>
+              <a href="{{ url_for('farmer_storage.add_storage_page') }}">
+                <button class="button-3" type="button">Store Crop</button>
+              </a>
+            </div>
+          </td>
+        </tr>
+      {% endif %}
+      </tbody>
+    </table>
+
+
+</section>
+
+<script src="{{ url_for('static', filename='js/warehouse.js') }}"></script>
+{% endblock %}

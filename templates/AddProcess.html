@@ -1,0 +1,269 @@
+{% extends "farmer_base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='addprocess.css') }}">
+
+<div class="process-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-left">
+      <a href="{{ url_for('farmer_processing_bp.processing_overview') }}" class="back-btn" aria-label="Back">
+        <img src="{{ url_for('static', filename='svg-icons/Manufacturer/Back Manufacturer.svg') }}" alt="Back">
+      </a>
+      <img src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}" alt="" aria-hidden="true">
+      <h1 class="text-wrapper-4">Processing Request</h1>
+    </div>
+
+    <!-- IMPORTANT: modal opener -->
+    <button type="button" id="openProcessSummaryBtn" class="send-request-btn">
+      Send Request
+      <img src="{{ url_for('static', filename='svg-icons/plus.svg') }}" class="btn-icon" alt="" aria-hidden="true">
+    </button>
+  </div>
+
+  <!-- FORM -->
+  <form id="processingForm"
+        method="POST"
+        action="{{ url_for('farmer_processing_bp.submit_request') }}"
+        class="process-form">
+
+    <div class="process-grid">
+
+      <!-- CARD 1: Manufacturer Detail -->
+      <section class="process-card">
+        <div class="process-card-header">
+          <img class="process-card-icon"
+               src="{{ url_for('static', filename='svg-icons/Manufacturer/Manufacturer Detail.svg') }}"
+               alt="">
+          <h2 class="process-card-title">Manufacturer Detail</h2>
+        </div>
+
+        <div class="process-card-body process-grid-2">
+
+          <div class="field-group full-row">
+            <label class="field-label">Manufacturer ID</label>
+            <div class="field-input">
+              <!-- Backend reads this -->
+              <input id="manufacturerId"
+                     name="manufacturer_id"
+                     type="text"
+                     readonly
+                     placeholder="Auto-filled">
+            </div>
+          </div>
+
+          <div class="field-group full-row">
+            <label class="field-label">Manufacturer</label>
+            <div class="field-input field-input--select">
+              <select id="manufacturerSelect" name="manufacturer_name" required>
+                <option value="" selected disabled>Select manufacturer</option>
+
+                {% for m in manufacturers or [] %}
+                  {# your route returns: userId, manufacturerId, name, location #}
+                  <option value="{{ m.name }}"
+                          data-id="{{ m.manufacturerId or m.userId }}"
+                          data-location="{{ m.location or '' }}">
+                    {{ m.name }}
+                  </option>
+                {% endfor %}
+              </select>
+              <span class="select-chevron">⌄</span>
+            </div>
+          </div>
+
+          <div class="field-group full-row">
+            <label class="field-label">Date</label>
+            <div class="field-input">
+              <input id="requestDate" type="date" name="request_date" required>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Payment Mode</label>
+            <div class="field-input field-input--select">
+              <select id="paymentMode" name="payment_mode" required>
+                <option value="" selected disabled>Select payment mode</option>
+                <option value="Cash">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+              </select>
+              <span class="select-chevron">⌄</span>
+            </div>
+          </div>
+
+          <div class="field-group full-row">
+            <label class="field-label">Note</label>
+            <div class="field-input">
+              <textarea id="noteField"
+                        name="note"
+                        rows="3"
+                        placeholder="Write a note to manufacturer"></textarea>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- CARD 2: Crop Details -->
+      <section class="process-card">
+        <div class="process-card-header">
+          <img class="process-card-icon"
+               src="{{ url_for('static', filename='svg-icons/Manufacturer/Crop Details.svg') }}"
+               alt="">
+          <h2 class="process-card-title">Crop Details</h2>
+        </div>
+
+        <div class="process-card-body process-grid-2">
+
+          <div class="field-group">
+            <label class="field-label">Crop ID</label>
+            <div class="field-input field-input--select">
+              <select id="cropIdSelect">
+                <option value="" selected disabled>Select crop ID</option>
+                {% for c in crops or [] %}
+                  {% set cid = c.cropId or c.id or c._id %}
+                  {% set ctype = c.cropType or c.crop_type or c.cropName or c.name %}
+                  <option value="{{ cid }}" data-croptype="{{ ctype }}">{{ cid }}</option>
+                {% endfor %}
+              </select>
+              <span class="select-chevron">⌄</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Crop</label>
+            <div class="field-input field-input--select">
+              <select id="cropTypeSelect">
+                <option value="" selected disabled>Select crop</option>
+                {% for c in crops or [] %}
+                  {% set cid = c.cropId or c.id or c._id %}
+                  {% set ctype = c.cropType or c.crop_type or c.cropName %}
+                  <option value="{{ ctype }}" data-cropid="{{ cid }}">{{ ctype }}</option>
+                {% endfor %}
+              </select>
+              <span class="select-chevron">⌄</span>
+            </div>
+          </div>
+
+          <div class="field-group full-row">
+            <label class="field-label">Processing Type</label>
+            <div class="field-input field-input--select">
+              <select id="processingType" required>
+                <option value="" selected disabled>Select processing type</option>
+                <option value="Cleaning">Cleaning</option>
+                <option value="Grading">Grading</option>
+                <option value="Milling">Milling</option>
+                <option value="Polishing">Polishing</option>
+                <option value="Other">Other</option>
+              </select>
+              <span class="select-chevron">⌄</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Quantity (Kg)</label>
+            <div class="field-input">
+              <input id="qtyKg" type="number" min="1" placeholder="Enter quantity" required>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Price (₹)</label>
+            <div class="field-input">
+              <input id="priceValue" type="number" min="0" placeholder="Enter price">
+            </div>
+          </div>
+
+        </div>
+
+        <button type="button" class="add-row-btn" id="addProcessingRow">Add</button>
+      </section>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="process-table-wrapper">
+      <table class="process-table" id="processingTable">
+        <thead>
+          <tr>
+            <th>Crop ID</th>
+            <th>Crop</th>
+            <th>Processing Type</th>
+            <th>Quantity</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+
+        <tbody id="processingTableBody">
+          <tr id="processingEmptyRow">
+            <td colspan="5">
+              <div class="process-empty-state">
+                <img src="{{ url_for('static', filename='illustrations/Process Request Empty.svg') }}" alt="">
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </form>
+</div>
+
+<!-- ===================== SUMMARY MODAL ===================== -->
+<div class="summary-modal" id="processSummaryModal" aria-hidden="true">
+  <div class="summary-modal-backdrop" id="processSummaryBackdrop"></div>
+
+  <div class="summary-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="processSummaryTitle">
+    <div class="summary-modal-content">
+
+      <div class="summary-illus">
+        <img src="{{ url_for('static', filename='illustrations/Process_Summary_Modal.svg') }}" alt="">
+      </div>
+
+      <!-- REVIEW -->
+      <div id="processStateReview">
+        <h2 class="summary-title" id="processSummaryTitle">Confirm Processing Request</h2>
+
+        <p class="summary-subtext">
+          You are about to send a request to store your crop in the<br>
+          selected manufacturer
+        </p>
+
+        <p class="summary-error" id="processSummaryError" style="display:none;"></p>
+
+        <div class="summary-card">
+          <div class="summary-row"><span class="s-label">Manufacturer</span><span class="s-value" id="sumManufacturer">-</span></div>
+          <div class="summary-row"><span class="s-label">Crop</span><span class="s-value" id="sumCropType">-</span></div>
+          <div class="summary-row"><span class="s-label">Quantity</span><span class="s-value" id="sumQuantity">-</span></div>
+          <div class="summary-row"><span class="s-label">Date</span><span class="s-value" id="sumDate">-</span></div>
+          <div class="summary-row"><span class="s-label">Total Order Value</span><span class="s-value" id="sumTotalValue">-</span></div>
+          <div class="summary-row"><span class="s-label">Payment Method</span><span class="s-value" id="sumPayment">-</span></div>
+        </div>
+
+        <div class="summary-actions">
+          <button type="button" class="summary-btn secondary" id="btnProcessEdit">Go Back & Edit</button>
+          <button type="button" class="summary-btn primary" id="btnProcessConfirm">Confirm & Save</button>
+        </div>
+      </div>
+
+      <!-- SUCCESS -->
+      <div id="processStateSuccess" style="display:none;">
+        <h2 class="summary-title">Request Sent Successfully</h2>
+        <p class="summary-subtext">Your processing request has been successfully saved,<br>and sent to the Manufacturer</p>
+
+        <div class="summary-actions single">
+          <a class="summary-btn primary" href="{{ url_for('farmer_processing_bp.processing_overview') }}">
+            View Requests
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- IMPORTANT: JS must be separate file and loaded with defer -->
+<script src="{{ url_for('static', filename='js/addprocess.js') }}?v=1" defer></script>
+
+{% endblock %}

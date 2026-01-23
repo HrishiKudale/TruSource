@@ -1,0 +1,352 @@
+/* =========================
+   PAGE LAYOUT
+========================= */
+.process-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.back-btn img { width: 34px; height: 34px; }
+
+.send-request-btn {
+  padding: 10px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--green-700);
+  color: var(--white);
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--body-md-semibold-font-family);
+}
+.send-request-btn:hover { background-color: var(--green-800); }
+.btn-icon { width: 16px; height: 16px; }
+
+.process-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.process-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(340px, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .process-grid { grid-template-columns: 1fr; }
+}
+
+/* =========================
+   CARDS
+========================= */
+.process-card {
+  background: var(--white);
+  border: 1px solid var(--grey-100);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.process-card-header {
+  background: var(--grey-50);
+  border-bottom: 1px solid var(--grey-100);
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.process-card-icon { width: 40px; height: 40px; }
+.process-card-title {
+  margin: 0;
+  font-family: var(--body-md-semibold-font-family);
+  font-size: var(--body-lg-semibold-font-size);
+  color: var(--grey-900);
+}
+
+.process-card-body {
+  padding: 14px 18px 16px;
+}
+
+.process-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 14px;
+}
+
+.process-grid-2 .full-row { grid-column: 1 / -1; }
+
+@media (max-width: 768px) {
+  .process-grid-2 { grid-template-columns: 1fr; }
+}
+
+/* =========================
+   FIELDS
+========================= */
+.field-group { display: flex; flex-direction: column; gap: 8px; }
+.field-label {
+  font-family: var(--body-sm-reg-font-family);
+  color: var(--grey-700);
+}
+
+.field-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--grey-200);
+  background: var(--white);
+}
+
+.field-input input,
+.field-input select,
+.field-input textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--body-sm-reg-font-family);
+}
+
+.field-input textarea { resize: vertical; }
+
+.field-input--select select {
+  appearance: none;
+  padding-right: 42px;
+}
+
+.select-chevron {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 40px;
+  height: 100%;
+  background: var(--grey-100);
+  border-left: 1px solid var(--grey-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* =========================
+   ADD ROW BUTTON
+========================= */
+.add-row-btn {
+  margin: 8px 0 16px 18px;
+  width: fit-content;
+  padding: 8px 14px;
+  background: var(--green-700);
+  color: var(--white);
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+.add-row-btn:hover { background: var(--green-800); }
+
+/* =========================
+   TABLE
+========================= */
+.process-table-wrapper {
+  background: var(--white);
+  border: 1px solid var(--grey-100);
+  border-radius: 16px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.process-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.process-table thead tr { background: var(--grey-50); }
+
+.process-table th {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--grey-200);
+  text-align: left;
+  font-family: var(--body-md-semibold-font-family);
+  color: var(--grey-800);
+}
+
+.process-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--grey-100);
+  color: var(--grey-700);
+}
+
+/* Empty row */
+.process-empty-state {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+/* =========================
+   SUMMARY MODAL (YOUR DESIGN)
+========================= */
+.summary-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.summary-modal.is-open { display: flex; }
+
+.summary-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+}
+
+.summary-modal-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(640px, calc(100% - 24px));
+}
+
+.summary-modal-content {
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+  width: fit-content;
+}
+
+.summary-illus {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.summary-illus img { width: 120px; height: auto; }
+
+.summary-title {
+  margin: 0;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.summary-subtext {
+  margin: 10px 18px 16px;
+  text-align: center;
+  color: #555;
+  line-height: 1.5;
+}
+
+.summary-card {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.s-label { color: #777; font-size: 16px; }
+.s-value {
+  color: #111;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  max-width: 60%;
+  word-break: break-word;
+}
+
+.summary-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.summary-actions.single { justify-content: center; }
+
+.summary-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.summary-btn.secondary {
+  background: #fff;
+  border: 1px solid #111;
+  color: #111;
+}
+
+.summary-btn.primary {
+  background: #16a34a;
+  color: #fff;
+}
+
+.summary-error {
+  margin: 10px 0 0;
+  text-align: center;
+  color: #b00020;
+  font-size: 13px;
+}
+/* ✅ Card header strip proper radius + grey bg */
+.card {
+  overflow: hidden; /* IMPORTANT so header corners clip */
+}
+
+.card-header{
+  background: var(--grey-50);
+  border-bottom: 1px solid var(--grey-100);
+  padding: 12px 14px;
+  margin: -18px;          /* matches .card padding */
+  margin-bottom: 14px;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+}
+
+.card-header-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* ✅ inputs default WHITE */
+.field input,
+.field select{
+  background: #fff;            /* default white */
+}
+
+/* ✅ only prefilled become grey */
+.is-prefilled{
+  background: #f6f6f6 !important;
+}

@@ -1,0 +1,1159 @@
+@import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
+
+* {
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+/* a blue color as a generic focus style */
+button:focus-visible {
+  outline: 2px solid #4a90e2 !important;
+  outline: -webkit-focus-ring-color auto 5px !important;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* ===========================
+   MY CROP PAGE LAYOUT
+   =========================== */
+
+.my-crop {
+  display: flex;
+  min-height: 100vh;
+  align-items: flex-start;
+  position: relative;
+  background-color: #ffffff;
+}
+
+/* Sidebar (if you ever reuse it here) */
+.my-crop .sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 282px;
+  align-items: flex-start;
+  position: relative;
+  align-self: stretch;
+  background-color: var(--grey-50);
+}
+
+.my-crop .frame {
+  display: flex;
+  flex-direction: column;
+  height: 95px;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 32px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+}
+
+.my-crop .div {
+  display: flex;
+  gap: 11px;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+  align-items: center;
+  position: relative;
+}
+
+.my-crop .rectangle {
+  position: relative;
+  width: 47px;
+  height: 47px;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.my-crop .frame-2 {
+  width: 135px;
+  gap: 1px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+}
+
+.my-crop .precision-grow {
+  position: relative;
+  align-self: stretch;
+  margin-top: -1px;
+  font-family: "Inter-SemiBold", Helvetica;
+  font-weight: 600;
+  color: #287276;
+  font-size: 16px;
+  letter-spacing: -0.42px;
+  line-height: 20.3px;
+}
+
+.my-crop .pioneering-the {
+  position: relative;
+  align-self: stretch;
+  font-family: "Inter-Regular", Helvetica;
+  font-weight: 400;
+  color: #88b939;
+  font-size: 8px;
+  letter-spacing: -0.21px;
+  line-height: 10.2px;
+}
+
+.my-crop .frame-3 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 20px;
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+  width: 100%;
+  flex-grow: 1;
+}
+
+.my-crop .frame-4 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 28px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.my-crop .frame-5 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.my-crop .div-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 12px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.my-crop .text-wrapper {
+  position: relative;
+  flex: 1;
+  margin-top: -1px;
+  font-family: var(--body-md-reg-font-family);
+  font-weight: var(--body-md-reg-font-weight);
+  color: var(--grey-500);
+  font-size: var(--body-md-reg-font-size);
+  letter-spacing: var(--body-md-reg-letter-spacing);
+  line-height: var(--body-md-reg-line-height);
+  font-style: var(--body-md-reg-font-style);
+}
+
+/* Navigation list in sidebar */
+.my-crop .frame-6 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.my-crop .component {
+  display: flex;
+  width: 242px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.my-crop .component-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.my-crop .img {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  aspect-ratio: 1;
+}
+
+.my-crop .text-wrapper-2 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: var(--body-md-reg-font-family);
+  font-weight: var(--body-md-reg-font-weight);
+  color: var(--grey-950);
+  font-size: var(--body-md-reg-font-size);
+  letter-spacing: var(--body-md-reg-letter-spacing);
+  line-height: var(--body-md-reg-line-height);
+  white-space: nowrap;
+  font-style: var(--body-md-reg-font-style);
+}
+
+/* Active menu item */
+.my-crop .component-2 {
+  display: flex;
+  width: 242px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  position: relative;
+  flex: 0 0 auto;
+  background-color: var(--green-700);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.my-crop .dashboard {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: var(--body-md-reg-font-family);
+  font-weight: var(--body-md-reg-font-weight);
+  color: var(--white);
+  font-size: var(--body-md-reg-font-size);
+  letter-spacing: var(--body-md-reg-letter-spacing);
+  line-height: var(--body-md-reg-line-height);
+  white-space: nowrap;
+  font-style: var(--body-md-reg-font-style);
+}
+
+.my-crop .line {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  height: 1px;
+}
+
+.my-crop .line-2 {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  height: 1px;
+  margin-top: -0.8px;
+}
+
+/* Main area container */
+.my-crop .frame-7 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 12px 12px 0;
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+  flex-grow: 1;
+  background-color: var(--grey-50);
+}
+
+/* Top search + profile bar */
+.my-crop .frame-8 {
+  display: flex;
+  height: 95px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 32px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  background-color: var(--grey-50);
+}
+
+.my-crop .frame-9 {
+  display: flex;
+  width: 529px;
+  height: 47px;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 13px;
+  position: relative;
+  align-self: stretch;
+  background-color: var(--white);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid;
+  border-color: var(--grey-100);
+}
+
+/* Main search icon */
+.my-crop .magnifying-glass {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  margin-top: -1.5px;
+  margin-bottom: -1.5px;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.my-crop .vector {
+  position: absolute;
+  width: 81.34%;
+  height: 81.34%;
+  top: 9.29%;
+  left: 9.29%;
+}
+
+/* Main search input */
+.my-crop .text-wrapper-3 {
+  position: relative;
+  width: 100%;
+  margin-top: -3.5px;
+  margin-bottom: -1.5px;
+  font-family: var(--body-md-reg-font-family);
+  font-weight: var(--body-md-reg-font-weight);
+  color: var(--grey-400);
+  font-size: var(--body-md-reg-font-size);
+  letter-spacing: var(--body-md-reg-letter-spacing);
+  line-height: var(--body-md-reg-line-height);
+  white-space: nowrap;
+  font-style: var(--body-md-reg-font-style);
+  border: none;
+  background: transparent;
+  outline: none;
+}
+
+.my-crop .text-wrapper-3::placeholder {
+  color: var(--grey-400);
+}
+
+.my-crop .frame-10 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  position: relative;
+  align-self: stretch;
+  flex: 0 0 auto;
+}
+
+/* Notification button */
+.my-crop .frame-11 {
+  position: relative;
+  align-self: stretch;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid;
+  border-color: var(--grey-100);
+  aspect-ratio: 1;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.my-crop .bell {
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  width: 24px;
+  height: 24px;
+  aspect-ratio: 1;
+}
+
+.my-crop .frame-12 {
+  position: absolute;
+  width: 17.39%;
+  height: 17.02%;
+  top: 23.4%;
+  left: 56.52%;
+  background-color: var(--red-600);
+  border-radius: 90px;
+}
+
+/* Avatar button */
+.my-crop .frame-13 {
+  position: relative;
+  align-self: stretch;
+  border-radius: 152px;
+  aspect-ratio: 1;
+  background-image: url(./img/frame-9.png);
+  background-size: cover;
+  background-position: 50% 50%;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Main white card wrapper */
+.my-crop .frame-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px;
+  padding: 32px;
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+  width: 100%;
+  flex-grow: 1;
+  background-color: var(--white);
+  border-radius: 12px;
+  border: 1px solid;
+  border-color: var(--grey-100);
+}
+
+.my-crop .frame-14 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px;
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+  width: 100%;
+  flex-grow: 1;
+}
+
+/* Title row */
+.my-crop .frame-15 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.my-crop .frame-16 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.my-crop .grains {
+  width: 34px;
+  height: 34px;
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.my-crop .text-wrapper-4 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: var(--title-md-md-font-family);
+  font-weight: var(--title-md-md-font-weight);
+  color: var(--grey-950);
+  font-size: var(--title-md-md-font-size);
+  letter-spacing: var(--title-md-md-letter-spacing);
+  line-height: var(--title-md-md-line-height);
+  white-space: nowrap;
+  font-style: var(--title-md-md-font-style);
+}
+
+/* Title actions */
+.my-crop .frame-17 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* Primary button: Add New Crop */
+.my-crop .button {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 18px;
+  position: relative;
+  flex: 0 0 auto;
+  background-color: var(--green-700);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.my-crop .bt-text {
+  position: relative;
+  width: fit-content;
+  font-family: var(--body-md-md-font-family);
+  font-weight: var(--body-md-md-font-weight);
+  color: var(--grey-50);
+  font-size: var(--body-md-md-font-size);
+  letter-spacing: var(--body-md-md-letter-spacing);
+  line-height: var(--body-md-md-line-height);
+  white-space: nowrap;
+  font-style: var(--body-md-md-font-style);
+}
+
+.my-crop .img-2 {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  aspect-ratio: 1;
+}
+
+/* Secondary button: Export */
+.my-crop .button-2 {
+  all: unset;
+  box-sizing: border-box;
+  gap: 12px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 0.8px solid;
+  border-color: var(--grey-950);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.my-crop .bt-text-2 {
+  font-family: var(--body-md-reg-font-family);
+  font-weight: var(--body-md-reg-font-weight);
+  color: var(--grey-950);
+  font-size: var(--body-md-reg-font-size);
+  letter-spacing: var(--body-md-reg-letter-spacing);
+  line-height: var(--body-md-reg-line-height);
+  position: relative;
+  width: fit-content;
+  white-space: nowrap;
+  font-style: var(--body-md-reg-font-style);
+}
+
+/* KPI row */
+.my-crop .frame-18 {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.my-crop .frame-19 {
+  gap: 10px;
+  padding: 12px;
+  flex: 1;
+  flex-grow: 1;
+  background-color: var(--white);
+  border-radius: 12px;
+  border: 1px solid;
+  border-color: var(--grey-100);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+}
+
+.my-crop .frame-20 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.my-crop .img-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  position: relative;
+  flex: 0 0 auto;
+  background-color: #e5ffee;
+  border-radius: 80px;
+  border: 0.4px solid;
+  border-color: #0f913d30;
+}
+
+.my-crop .text-wrapper-5 {
+  position: relative;
+  width: fit-content;
+  font-family: var(--body-md-md-font-family);
+  font-weight: var(--body-md-md-font-weight);
+  color: var(--grey-600);
+  font-size: var(--body-md-md-font-size);
+  letter-spacing: var(--body-md-md-letter-spacing);
+  line-height: var(--body-md-md-line-height);
+  white-space: nowrap;
+  font-style: var(--body-md-md-font-style);
+}
+
+.my-crop .text-wrapper-6 {
+  position: relative;
+  width: fit-content;
+  font-family: "Inter-Medium", Helvetica;
+  font-weight: 500;
+  color: var(--grey-950);
+  font-size: 42px;
+  letter-spacing: -1.09px;
+  line-height: 53.3px;
+  white-space: nowrap;
+}
+
+/* Table + filters section */
+.my-crop .frame-21 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 0 0 12px;
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+  width: 100%;
+  flex-grow: 1;
+}
+
+/* Table search bar */
+.my-crop .frame-22 {
+  display: flex;
+  width: 240px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  position: relative;
+  background-color: var(--white);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid;
+  border-color: var(--grey-100);
+}
+
+.my-crop .img-3 {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  aspect-ratio: 1;
+}
+
+.my-crop .text-wrapper-7 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: var(--body-sm-reg-font-family);
+  font-weight: var(--body-sm-reg-font-weight);
+  color: var(--grey-900);
+  font-size: var(--body-sm-reg-font-size);
+  letter-spacing: var(--body-sm-reg-letter-spacing);
+  line-height: var(--body-sm-reg-line-height);
+  white-space: nowrap;
+  font-style: var(--body-sm-reg-font-style);
+}
+
+/* Table search input element */
+.my-crop .frame-22 input[type="search"] {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-family: var(--body-sm-reg-font-family);
+  font-weight: var(--body-sm-reg-font-weight);
+  color: var(--grey-900);
+  font-size: var(--body-sm-reg-font-size);
+  letter-spacing: var(--body-sm-reg-letter-spacing);
+  line-height: var(--body-sm-reg-line-height);
+}
+
+.my-crop .frame-22 input[type="search"]::placeholder {
+  color: var(--grey-900);
+}
+
+/* Filter toolbar */
+.my-crop .frame-23 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.my-crop .frame-24 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex: 0 0 auto;
+  background-color: var(--white);
+  border-radius: 7px;
+  overflow: hidden;
+  border: 1px solid;
+  border-color: var(--grey-100);
+}
+
+.my-crop .dropdown-title-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.my-crop .caret-down-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  position: relative;
+  flex: 0 0 auto;
+  background-color: var(--grey-100);
+  border: none;
+  cursor: pointer;
+}
+
+.my-crop .frame-25 {
+  display: inline-flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 7px 8px;
+  flex: 0 0 auto;
+  background-color: var(--grey-100);
+  border-radius: 7px;
+  border: 1px solid;
+  align-items: center;
+  position: relative;
+  border-color: var(--grey-100);
+  cursor: pointer;
+}
+
+/* ============================================
+   CLEAN TABLE STRUCTURE — My Crop Table
+================================================ */
+
+/* Table outer shell */
+.my-crop .frame-26 {
+    width: 100%;
+    background: #fff;
+    border-radius: 10px;
+    padding: 0;
+    border: 1px solid var(--grey-100);
+}
+
+/* Scrollable wrapper */
+.my-crop .frame-27 {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Table row (header + body) */
+.my-crop .table-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 56px;
+    border-bottom: 1px solid var(--grey-100);
+}
+
+/* ============================================
+   TABLE HEADER FIX
+=============================================== */
+
+/* Header row styling */
+.my-crop .table-header {
+    background: var(--grey-100);
+    font-weight: 600;
+}
+
+/* Header cells */
+.my-crop .table-header .table-cell {
+    background: var(--grey-100); /* ensures uniform grey */
+    font-weight: 600;
+}
+
+/* ============================================
+   PERFECT TABLE — Grey Header, White Rows, Hover Grey
+   KEEP YOUR HTML STRUCTURE AS IS
+================================================ */
+
+/* Outer container */
+.my-crop .frame-26 {
+    width: 100%;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid var(--grey-100);
+    overflow: hidden;
+}
+
+/* Scroll wrapper */
+.my-crop .frame-27 {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Every table row (header + body) */
+.my-crop .frame-28 {
+    display: flex;
+    align-items: center;
+    min-height: 56px;
+    border-bottom: 1px solid var(--grey-100);
+    background: white;      /* default row background */
+    transition: background 0.2s ease;
+}
+
+/* On hover body rows only */
+.my-crop .frame-28:hover:not(.table-header) {
+    background: var(--grey-50);
+}
+
+/* ============================================
+   HEADER ROW (MAKE GREY & CONSISTENT)
+================================================ */
+
+.my-crop .table-header {
+    background: var(--grey-100) !important;
+    font-weight: 600;
+}
+
+/* All header cells */
+.my-crop .table-header .frame-29,
+.my-crop .table-header .frame-30,
+.my-crop .table-header .header-wrapper {
+    background: var(--grey-100) !important;
+}
+
+/* ============================================
+   TABLE CELLS
+================================================ */
+
+.my-crop .frame-29,
+.my-crop .frame-30,
+.my-crop .header-wrapper {
+    flex: 1;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;       /* ensure white rows */
+    white-space: nowrap;
+}
+
+/* BUTTON HEADER TEXT */
+.my-crop .frame-29 .header,
+.my-crop .frame-30 .header,
+.my-crop .header-wrapper .header {
+    font-family: var(--body-sm-md-font-family);
+    font-size: var(--body-sm-md-font-size);
+    color: var(--grey-900);
+    font-weight: 600;
+}
+
+/* Make sort header buttons clean */
+.my-crop .frame-29 button,
+.my-crop .frame-30 button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 600;
+    color: inherit;
+}
+
+/* Ensure body cells are NOT colored grey */
+.my-crop .frame-29:not(.table-header),
+.my-crop .frame-30:not(.table-header),
+.my-crop .header-wrapper:not(.table-header) {
+    background: white !important;
+}
+
+/* ============================================
+   CLEAN LINK INSIDE TABLE
+================================================ */
+.my-crop .frame-29 a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Hover underline only on crop name link */
+.my-crop .frame-29 a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================
+   OPTIONAL: FIX COLUMN WIDTHS IF NEEDED
+================================================ */
+.my-crop .frame-29 { min-width: 140px; }
+.my-crop .frame-30 { min-width: 160px; }
+.my-crop .header-wrapper { min-width: 120px; }
+
+
+/* Empty state CTA button */
+.my-crop .button-3 {
+  all: unset;
+  box-sizing: border-box;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: var(--grey-950);
+  border-radius: 6px;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.my-crop .bt-text-3 {
+  margin-top: -1px;
+  font-family: var(--body-sm-md-font-family);
+  font-weight: var(--body-sm-md-font-weight);
+  color: var(--grey-50);
+  font-size: var(--body-sm-md-font-size);
+  letter-spacing: var(--body-sm-md-letter-spacing);
+  line-height: var(--body-sm-md-line-height);
+  position: relative;
+  width: fit-content;
+  white-space: nowrap;
+  font-style: var(--body-sm-md-font-style);
+}
+
+.my-crop .plus {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  aspect-ratio: 1;
+}
+
+/* ===========================
+   THEME & TOKENS (FROM Figma)
+   =========================== */
+
+:root {
+  --white: rgba(255, 255, 255, 1);
+  --grey-50: rgba(246, 246, 246, 1);
+  --grey-100: rgba(231, 231, 231, 1);
+  --grey-200: rgba(209, 209, 209, 1);
+  --grey-300: rgba(176, 176, 176, 1);
+  --grey-400: rgba(136, 136, 136, 1);
+  --grey-500: rgba(109, 109, 109, 1);
+  --grey-600: rgba(93, 93, 93, 1);
+  --grey-700: rgba(79, 79, 79, 1);
+  --grey-800: rgba(69, 69, 69, 1);
+  --grey-900: rgba(61, 61, 61, 1);
+  --grey-950: rgba(0, 0, 0, 1);
+  --red-50: rgba(254, 242, 242, 1);
+  --red-100: rgba(253, 227, 227, 1);
+  --red-200: rgba(253, 203, 203, 1);
+  --red-300: rgba(250, 167, 167, 1);
+  --red-400: rgba(245, 116, 116, 1);
+  --red-500: rgba(236, 71, 71, 1);
+  --red-600: rgba(216, 42, 42, 1);
+  --red-700: rgba(182, 31, 31, 1);
+  --red-800: rgba(158, 31, 31, 1);
+  --red-900: rgba(125, 31, 31, 1);
+  --red-950: rgba(68, 11, 11, 1);
+  --green-50: rgba(239, 254, 244, 1);
+  --green-100: rgba(218, 254, 229, 1);
+  --green-200: rgba(183, 251, 206, 1);
+  --green-300: rgba(127, 246, 168, 1);
+  --green-400: rgba(64, 232, 122, 1);
+  --green-500: rgba(23, 208, 87, 1);
+  --green-600: rgba(13, 172, 69, 1);
+  --green-700: rgba(15, 145, 61, 1);
+  --green-800: rgba(17, 106, 49, 1);
+  --green-900: rgba(16, 87, 43, 1);
+  --green-950: rgba(2, 49, 21, 1);
+
+  --body-md-bold-font-family: "Inter", Helvetica;
+  --body-md-bold-font-weight: 700;
+  --body-md-bold-font-size: 16px;
+  --body-md-bold-letter-spacing: -0.416px;
+  --body-md-bold-line-height: 127%;
+  --body-md-bold-font-style: normal;
+
+  --body-md-semibold-font-family: "Inter", Helvetica;
+  --body-md-semibold-font-weight: 600;
+  --body-md-semibold-font-size: 16px;
+  --body-md-semibold-letter-spacing: -0.416px;
+  --body-md-semibold-line-height: 127%;
+  --body-md-semibold-font-style: normal;
+
+  --body-md-md-font-family: "Inter", Helvetica;
+  --body-md-md-font-weight: 500;
+  --body-md-md-font-size: 16px;
+  --body-md-md-letter-spacing: -0.416px;
+  --body-md-md-line-height: 127%;
+  --body-md-md-font-style: normal;
+
+  --body-md-reg-font-family: "Inter", Helvetica;
+  --body-md-reg-font-weight: 400;
+  --body-md-reg-font-size: 16px;
+  --body-md-reg-letter-spacing: -0.416px;
+  --body-md-reg-line-height: 137%;
+  --body-md-reg-font-style: normal;
+
+  --body-sm-semibold-font-family: "Inter", Helvetica;
+  --body-sm-semibold-font-weight: 600;
+  --body-sm-semibold-font-size: 14px;
+  --body-sm-semibold-letter-spacing: -0.364px;
+  --body-sm-semibold-line-height: 127%;
+  --body-sm-semibold-font-style: normal;
+
+  --body-sm-md-font-family: "Inter", Helvetica;
+  --body-sm-md-font-weight: 500;
+  --body-sm-md-font-size: 14px;
+  --body-sm-md-letter-spacing: -0.364px;
+  --body-sm-md-line-height: 127%;
+  --body-sm-md-font-style: normal;
+
+  --body-sm-reg-font-family: "Inter", Helvetica;
+  --body-sm-reg-font-weight: 400;
+  --body-sm-reg-font-size: 14px;
+  --body-sm-reg-letter-spacing: -0.364px;
+  --body-sm-reg-line-height: 127%;
+  --body-sm-reg-font-style: normal;
+
+  --body-lg-bold-font-family: "Inter", Helvetica;
+  --body-lg-bold-font-weight: 700;
+  --body-lg-bold-font-size: 20px;
+  --body-lg-bold-letter-spacing: -0.52px;
+  --body-lg-bold-line-height: 127%;
+  --body-lg-bold-font-style: normal;
+
+  --body-lg-semibold-font-family: "Inter", Helvetica;
+  --body-lg-semibold-font-weight: 600;
+  --body-lg-semibold-font-size: 20px;
+  --body-lg-semibold-letter-spacing: -0.52px;
+  --body-lg-semibold-line-height: 127%;
+  --body-lg-semibold-font-style: normal;
+
+  --body-lg-md-font-family: "Inter", Helvetica;
+  --body-lg-md-font-weight: 500;
+  --body-lg-md-font-size: 20px;
+  --body-lg-md-letter-spacing: -0.52px;
+  --body-lg-md-line-height: 127%;
+  --body-lg-md-font-style: normal;
+
+  --body-lg-reg-font-family: "Inter", Helvetica;
+  --body-lg-reg-font-weight: 400;
+  --body-lg-reg-font-size: 20px;
+  --body-lg-reg-letter-spacing: -0.52px;
+  --body-lg-reg-line-height: 127%;
+  --body-lg-reg-font-style: normal;
+
+  --caption-semibold-font-family: "Inter", Helvetica;
+  --caption-semibold-font-weight: 500;
+  --caption-semibold-font-size: 10px;
+  --caption-semibold-letter-spacing: -0.26px;
+  --caption-semibold-line-height: 127%;
+  --caption-semibold-font-style: normal;
+
+  --caption-reg-font-family: "Inter", Helvetica;
+  --caption-reg-font-weight: 400;
+  --caption-reg-font-size: 10px;
+  --caption-reg-letter-spacing: -0.26px;
+  --caption-reg-line-height: 127%;
+  --caption-reg-font-style: normal;
+
+  --caption-md-sm-font-family: "Inter", Helvetica;
+  --caption-md-sm-font-weight: 500;
+  --caption-md-sm-font-size: 8px;
+  --caption-md-sm-letter-spacing: -0.208px;
+  --caption-md-sm-line-height: 127%;
+  --caption-md-sm-font-style: normal;
+
+  --title-sm-reg-font-family: "Inter", Helvetica;
+  --title-sm-reg-font-weight: 400;
+  --title-sm-reg-font-size: 24px;
+  --title-sm-reg-letter-spacing: -0.624px;
+  --title-sm-reg-line-height: 127%;
+  --title-sm-reg-font-style: normal;
+
+  --title-sm-md-font-family: "Inter", Helvetica;
+  --title-sm-md-font-weight: 500;
+  --title-sm-md-font-size: 24px;
+  --title-sm-md-letter-spacing: -0.624px;
+  --title-sm-md-line-height: 127%;
+  --title-sm-md-font-style: normal;
+
+  --title-sm-semibold-font-family: "Inter", Helvetica;
+  --title-sm-semibold-font-weight: 600;
+  --title-sm-semibold-font-size: 24px;
+  --title-sm-semibold-letter-spacing: -0.624px;
+  --title-sm-semibold-line-height: 127%;
+  --title-sm-semibold-font-style: normal;
+
+  --title-md-reg-font-family: "Inter", Helvetica;
+  --title-md-reg-font-weight: 400;
+  --title-md-reg-font-size: 32px;
+  --title-md-reg-letter-spacing: -0.832px;
+  --title-md-reg-line-height: 127%;
+  --title-md-reg-font-style: normal;
+
+  --title-md-md-font-family: "Inter", Helvetica;
+  --title-md-md-font-weight: 500;
+  --title-md-md-font-size: 32px;
+  --title-md-md-letter-spacing: -0.832px;
+  --title-md-md-line-height: 127%;
+  --title-md-md-font-style: normal;
+
+  --title-md-semibold-font-family: "Inter", Helvetica;
+  --title-md-semibold-font-weight: 600;
+  --title-md-semibold-font-size: 32px;
+  --title-md-semibold-letter-spacing: -0.832px;
+  --title-md-semibold-line-height: 127%;
+  --title-md-semibold-font-style: normal;
+
+  --collection-1-BG: rgba(255, 255, 255, 1);
+}
+
+/*
+To enable a theme in your HTML, simply add one of the following data attributes
+to an HTML element, like so:
+
+<body data-collection-1-mode="light">
+  <!-- the rest of your content -->
+</body>
+
+You can apply the theme on any DOM node, not just the `body`.
+*/
+
+[data-collection-1-mode="light"] {
+  --collection-1-BG: rgba(255, 255, 255, 1);
+}
+
+[data-collection-1-mode="dark"] {
+  --collection-1-BG: rgba(0, 0, 0, 1);
+}

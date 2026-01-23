@@ -1,0 +1,496 @@
+/* ===============================
+   GLOBAL LAYOUT
+================================*/
+.cropinfo-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+}
+
+.cropinfo-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 0;
+}
+
+.back-btn img {
+    width: 34px;
+    cursor: pointer;
+}
+
+.crop-title {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0;
+}
+.card-body {
+    padding: 16px 18px;
+}
+
+.status-pill {
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+
+}
+
+.status-planted {
+    background: #d5f3da;
+    color: #1a8f3d;
+}
+
+.status-harvested {
+    background: #fff0cd;
+    color: #a36c00;
+}
+
+.header-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 12px;
+}
+
+.header-actions button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #d8d8d8;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+}
+
+.header-actions img {
+    width: 18px;
+}
+
+
+/* ===============================
+   MAIN SPLIT LAYOUT
+================================*/
+.cropinfo-layout {
+    display: grid;
+    grid-template-columns: 2.3fr 1fr;
+    gap: 16px;
+    width: 100%;
+}
+.harvest-stock-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+
+.left-col,
+.right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+
+/* ===============================
+   CARD BASE STYLE
+================================*/
+.card {
+    background: #ffffff;
+    border-radius: 14px;
+
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid #f0f0f0;
+    
+}
+
+.label{
+        font-size: 14px;
+    color: #888;
+    margin-bottom: 8px;
+
+}
+
+.value{
+        font-size: 16px;
+    font-weight: 500;
+}
+
+.section-title {
+    margin: 0;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start !important;
+    gap: 10px;
+    padding: 12px 18px;
+    background-color: #f0f0f0;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.card-header h2.section-title {
+    margin: 0 !important;
+}
+
+.card-icon {
+    width: 40px;
+}
+
+
+/* ===============================
+   MAIN CROP DETAILS CARD
+================================*/
+
+.crop-info-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;   /* Left card smaller, right card larger */
+    gap: 24px;
+}
+
+.crop-main-card {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+}
+
+.crop-main-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.crop-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 10px;
+    object-fit: cover;
+    margin-bottom: 12px;
+}
+
+.crop-name {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 6px 0;
+}
+
+.plant-date-label {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.plant-date {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+
+/* RIGHT SIDE OF MAIN CARD */
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 30px;
+    column-gap: 20px;
+}
+
+.detail-item .label {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.detail-item .value {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+
+/* ===============================
+   HARVEST CARD
+================================*/
+.harvest-card .no-data-text {
+    color: #444;
+    margin-top: 8px;
+    line-height: 2.;
+    text-align: center;
+    font-size: 14px;
+}
+
+.harvest-illustration img {
+    width: 190px;
+    display: block;
+    margin: 0 auto 16px;
+
+}
+
+.details-btn {
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: #000000;
+    color: white;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    display: block;
+    margin: 8px auto;
+}
+
+.harvest-info {
+    font-size: 15px;
+    margin: 6px 0;
+}
+
+
+/* ===============================
+   STOCK CARD
+================================*/
+.stock-card .no-data-text {
+    text-align: center;
+    color: #555;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.stock-illustration img {
+    width: 200px;
+    display: block;
+    margin: 0 auto 16px;
+    margin-top: 20px;
+
+}
+
+.stock-info {
+    font-size: 15px;
+    margin-bottom: 6px;
+}
+
+
+/* ===============================
+   LOCATION CARD
+================================*/
+
+
+/* Flexbox layout: map left, info right */
+.location-flex {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+/* Map Left Side */
+.location-map {
+    flex: 1;               /* Larger area */
+    height: 300px;
+    border-radius: 10px;
+    margin-bottom: 0;      /* Remove old margin */
+}
+
+/* Info Right Side */
+.location-info {
+    flex: 1;
+}
+
+.location-info p {
+    margin: 4px 0;
+    font-size: 15px;
+}
+
+/* Responsive: stack on small screens */
+@media (max-width: 768px) {
+    .location-flex {
+        flex-direction: column;
+    }
+}
+
+.center-label {
+    background-color: white;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: bold;
+    color: black;
+    border: 1px solid green;
+}
+
+
+/* Activity Card Row: horizontal layout */
+.activity-card-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+}
+
+.activity-illustration {
+    width: 90px;
+}
+
+.activity-texts {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 14px;
+
+}
+
+.activity-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    margin-bottom: 6px;
+}
+
+.activity-title1 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    margin-bottom: 6px;
+    text-align: center;
+}
+.activity-text {
+    color: #444;
+    margin-bottom: 4px;
+}
+
+.activity-date {
+    font-size: 13px;
+    color: #777;
+}
+
+
+.activity-date {
+    font-size: 13px;
+    color: #777;
+    margin-top: 0px;
+}
+
+
+/* ===============================
+   RESPONSIVE
+================================*/
+@media (max-width: 1200px) {
+    .cropinfo-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .right-col {
+        order: -1;
+    }
+}
+
+/* Right column card */
+.activity-card{
+  background:#fff;
+
+  border-radius:16px;
+  padding:16px;
+}
+
+.activity-timeline{
+  display:flex;
+  flex-direction:column;
+  gap:38px;
+}
+
+/* each row */
+.activity-item{
+  display:grid;
+  grid-template-columns: 18px 54px 1fr;
+  gap:14px;
+  align-items:flex-start;
+  position:relative;
+}
+
+/* left dotted rail */
+.activity-left{
+  position:relative;
+  width:18px;
+  display:flex;
+  justify-content:center;
+}
+
+.activity-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#d9d9d9;
+  margin-top:8px;
+  z-index:2;
+}
+
+.activity-line{
+  position:absolute;
+  top:18px;
+  bottom:-18px;
+  width:2px;
+  background-image: linear-gradient(#d9d9d9 50%, rgba(0,0,0,0) 0%);
+  background-size: 2px 8px;
+  background-repeat: repeat-y;
+}
+
+/* last item no line */
+.activity-item:last-child .activity-line{
+  display:none;
+}
+
+/* icon */
+.activity-icon-wrap{
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  background:#f6f7f9;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.activity-illustration{
+  width: 45px;
+  height:45px;
+  object-fit:contain;
+}
+
+/* text */
+.activity-title{
+  margin:0;
+  font-size:16px;
+  font-weight:700;
+  color:#111;
+}
+
+.activity-text{
+  margin:6px 0 0;
+  font-size:13px;
+  color:#666;
+  line-height:1.4;
+}
+
+.activity-date{
+  margin:6px 0 0;
+  font-size:12px;
+  color:#9a9a9a;
+}
+
+.activity-link{
+  display:inline-block;
+  margin-top:4px;
+  font-size:13px;
+  color:#138a36;
+  font-weight:600;
+  text-decoration:none;
+}
+.activity-link:hover{ text-decoration:underline; }
+
+/* done vs pending visuals */
+.activity-item.done .activity-dot{ background:#138a36; }
+.activity-item.pending .activity-dot{ background:#d9d9d9; opacity:.7; }

@@ -1,0 +1,116 @@
+<!-- ===================== PRICING INFO MODAL ===================== -->
+<div class="pricing-info-modal" id="pricingInfoModal" aria-hidden="true">
+  <div class="pricing-info-backdrop" id="pricingInfoBackdrop"></div>
+<style>
+  .pim-hero{
+  width: 100%;
+  height: 360px;           /* ✅ REQUIRED (otherwise background won't show) */
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #f3f4f6; /* fallback gray */
+  display: block;
+}
+</style>
+  <div class="pricing-info-dialog" role="dialog" aria-modal="true">
+    <div class="pricing-info-card">
+
+      <button type="button" class="pricing-info-close" id="pricingInfoClose">×</button>
+
+      <div class="pricing-info-grid">
+
+        <!-- LEFT: Image + thumbs + description -->
+        <div class="pim-left">
+               <div class="pim-hero"
+                    id="pimHero"
+                    data-fallback-warehouse="{{ url_for('static', filename='svg-icons/Pricing/Pricing_Warehouse.svg') }}"
+                    data-fallback-manufacturer="{{ url_for('static', filename='svg-icons/Pricing/Pricing_Processing.svg') }}"
+                    data-fallback-transporter="{{ url_for('static', filename='svg-icons/Pricing/Pricing_Logistics.svg') }}">
+                </div>
+
+
+          <div class="pim-thumbs" id="pimThumbs">
+            <div class="pim-thumb"></div>
+            <div class="pim-thumb"></div>
+            <div class="pim-thumb"></div>
+          </div>
+
+          <div class="pim-block">
+            <div class="pim-label">Description</div>
+            <div class="pim-desc" id="pimDesc">-</div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Main info + features + options/meta -->
+        <div class="pim-right">
+
+          <div class="pim-title" id="pimName">-</div>
+          <div class="pim-sub">
+            <div class="pim-label">Location</div>
+            <div class="pim-value" id="pimLocation">-</div>
+          </div>
+
+          <div class="pim-features">
+            <div class="pim-label">Features</div>
+
+            <div class="pim-feature-card" id="pimFeatureCard">
+              <!-- filled by JS -->
+            </div>
+          </div>
+
+          <div class="pim-options" id="pimOptionsWrap" style="display:none;">
+            <div class="pim-label">Storage Options</div>
+            <div class="pim-option-card" id="pimOptionsCard"></div>
+          </div>
+
+          <div class="pim-meta">
+            <div class="pim-meta-item">
+              <span class="meta-ic">🏢</span>
+              <div>
+                <div class="pim-label">Establishment Year</div>
+                <div class="pim-value" id="pimYear">-</div>
+              </div>
+            </div>
+
+            <div class="pim-meta-item">
+              <span class="meta-ic">🧾</span>
+              <div>
+                <div class="pim-label">GST Number</div>
+                <div class="pim-value" id="pimGst">-</div>
+              </div>
+            </div>
+
+            <div class="pim-meta-item">
+              <span class="meta-ic">👤</span>
+              <div>
+                <div class="pim-label">Contact Person</div>
+                <div class="pim-value" id="pimContactPerson">-</div>
+              </div>
+            </div>
+
+            <div class="pim-meta-item">
+              <span class="meta-ic">📞</span>
+              <div>
+                <div class="pim-label">Phone</div>
+                <div class="pim-value" id="pimPhone">-</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Bottom table -->
+      <div class="pim-table-wrap">
+        <table class="pim-table" id="pimTable">
+          <thead id="pimThead"></thead>
+          <tbody id="pimTbody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/pricing.js') }}"></script>
+
+</div>

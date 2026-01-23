@@ -1,0 +1,328 @@
+/* ===============================
+   GLOBAL LAYOUT (matches CropInfo vibe)
+================================*/
+.shipmentinfo-container{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:24px;
+}
+
+.shipmentinfo-header{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:10px 0;
+}
+
+.back-btn img{
+  width:34px;
+  cursor:pointer;
+}
+
+.shipment-title{
+  font-size:28px;
+  font-weight:600;
+  margin:0;
+}
+
+/* Status pill */
+.status-pill{
+  padding:6px 14px;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:500;
+  text-transform:capitalize;
+}
+
+.status-pending{
+  background:#fff0cd;
+  color:#a36c00;
+}
+
+/* actions */
+.header-actions{
+  margin-left:auto;
+  display:flex;
+  gap:12px;
+}
+
+.header-actions button{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  border:1px solid #d8d8d8;
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:14px;
+  background:#fff;
+  cursor:pointer;
+}
+
+/* ===============================
+   TWO COLUMN LAYOUT
+================================*/
+.shipmentinfo-layout{
+  display:grid;
+  grid-template-columns:2.3fr 1fr;
+  gap:16px;
+  width:100%;
+}
+
+.left-col,
+.right-col{
+  display:flex;
+  flex-direction:column;
+  gap:24px;
+}
+
+/* ===============================
+   CARD BASE STYLE
+================================*/
+.card{
+  background:#fff;
+  border-radius:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  border:1px solid #f0f0f0;
+  overflow:hidden;
+}
+
+.card-body{
+  padding:16px 18px;
+}
+
+.card-header{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  padding:12px 18px;
+  background:#f0f0f0;
+}
+
+.card-icon{
+  width:40px;
+}
+
+.section-title{
+  margin:0;
+  font-weight:600;
+  font-size:18px;
+}
+
+.label{
+  font-size:14px;
+  color:#888;
+  margin-bottom:6px;
+}
+
+.value{
+  font-size:16px;
+  font-weight:500;
+  margin:0;
+}
+
+/* ===============================
+   ROWS / GRIDS
+================================*/
+.top-row{
+  display:grid;
+  grid-template-columns:1fr 3fr;
+  gap:24px;
+}
+
+.mid-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:24px;
+}
+
+.card-small .card-body .info-block{
+  margin-bottom:14px;
+}
+
+.details-grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px 20px;
+}
+
+.detail-item.full{
+  grid-column:1 / -1;
+}
+
+/* empty illustration block */
+.empty-illustration{
+  text-align:center;
+  padding:10px 0;
+}
+
+.empty-illustration img{
+  width:220px;
+  display:block;
+  margin:0 auto 10px;
+}
+
+.empty-title{
+  font-size:16px;
+  font-weight:600;
+  margin:0;
+}
+
+.empty-text{
+  font-size:14px;
+  color:#555;
+  margin-top:8px;
+}
+
+/* ===============================
+   DOCUMENT LIST
+================================*/
+.doc-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+
+.doc-table{
+  border:1px solid #eee;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.doc-row{
+  display:grid;
+  grid-template-columns:1fr 120px;
+  padding:10px 12px;
+  border-bottom:1px solid #f2f2f2;
+  font-size:14px;
+}
+
+.doc-row:last-child{ border-bottom:none; }
+
+.doc-head{
+  background:#fafafa;
+  font-weight:600;
+}
+
+.doc-status{
+  justify-self:end;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+}
+
+.doc-status.ok{
+  background:#d5f3da;
+  color:#1a8f3d;
+}
+
+.doc-status.pending{
+  background:#fff0cd;
+  color:#a36c00;
+}
+
+/* ===============================
+   LINKED ORDERS TABLE
+================================*/
+.table-tools{
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:12px;
+}
+
+.search-mini{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid #eee;
+  border-radius:10px;
+  padding:10px 12px;
+  width:100%;
+  max-width:320px;
+  background:#fff;
+}
+
+.search-mini img{
+  width:18px;
+  opacity:.7;
+}
+
+.search-mini input{
+  border:none;
+  outline:none;
+  width:100%;
+  font-size:14px;
+}
+
+.table-wrap{
+  width:100%;
+  overflow:auto;
+  border:1px solid #eee;
+  border-radius:12px;
+}
+
+.linked-table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:520px;
+}
+
+.linked-table th,
+.linked-table td{
+  padding:12px 14px;
+  border-bottom:1px solid #f2f2f2;
+  text-align:left;
+  font-size:14px;
+}
+
+.linked-table th{
+  background:#fafafa;
+  font-weight:700;
+}
+
+/* ===============================
+   RIGHT COLUMN ACTIVITY (CropInfo-like)
+================================*/
+.activity-card-row{
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.activity-illustration{
+  width:90px;
+}
+
+.activity-texts{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  font-size:14px;
+}
+
+.activity-title{
+  font-size:18px;
+  font-weight:600;
+  margin:0 0 6px 0;
+}
+
+.activity-text{
+  color:#444;
+  margin:0 0 4px 0;
+}
+
+.activity-date{
+  font-size:13px;
+  color:#777;
+  margin:0;
+}
+
+/* responsive */
+@media (max-width:1200px){
+  .shipmentinfo-layout{ grid-template-columns:1fr; }
+  .top-row{ grid-template-columns:1fr; }
+  .mid-row{ grid-template-columns:1fr; }
+}

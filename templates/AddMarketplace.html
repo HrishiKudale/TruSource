@@ -1,0 +1,384 @@
+{% extends "farmer_base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='addmarketplace.css') }}">
+
+<style>
+/* -------- PRICE FIELD CSS (NEW) -------- */
+.price-input-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.price-input {
+  width: 70%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 15px;
+}
+.price-unit-select {
+  width: 30%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+}
+</style>
+
+<div class="add-marketplace-page">
+
+  <!-- ✅ FORM ADDED (required for submit) -->
+  <form class="add-marketplace-form"
+        id="marketplaceForm"
+        method="POST"
+        action="{{ url_for('farmer_marketplace_bp.create_marketplace_listing') }}">
+
+    <!-- Title row -->
+    <div class="frame-15 add-crop-header">
+      <div class="frame-16">
+        <a href="{{ url_for('farmer_marketplace_bp.marketplace_home') }}"
+           class="back-btn"
+           style="width:36px;height:36px;">
+          <img src="{{ url_for('static', filename='svg-icons/Marketplace/Back Marketplace.svg') }}" alt="Back">
+        </a>
+        <img src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}">
+        <h1 class="text-wrapper-4">List Crop in Market</h1>
+      </div>
+
+      <!-- optional top publish button if you want -->
+      <!-- <button type="submit" class="primary-submit-btn">Publish</button> -->
+    </div>
+
+    {% if error %}
+      <div style="padding:12px;border:1px solid #fca5a5;background:#fff1f2;color:#991b1b;border-radius:12px;">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <!-- =========================================================
+         ROW 1 — CARD1 (2fr) + CARD2 (3fr)
+    ========================================================== -->
+    <div class="add-marketplace-grid-top">
+
+      <!-- CARD 1 : Left preview -->
+      <div class="add-marketplace-card card-crop-market">
+        <div class="add-marketplace-card-body">
+
+          <div class="field-group">
+            <label class="field-label">Crop Type</label>
+            <div class="field-input field-input--select">
+              <!-- ✅ for preview only -->
+              <select id="cropTypePreview">
+                <option value="">Select crop</option>
+              </select>
+              <div class="select-chevron">⌄</div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Available Quantity</label>
+            <div class="field-input">
+              <input type="text" id="availableQty" placeholder="Auto-filled" readonly />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CARD 2 : Crop Details -->
+      <div class="add-marketplace-card card-crop-details">
+
+        <div class="card-header">
+          <div class="card-header-left">
+            <img src="{{ url_for('static', filename='svg-icons/Marketplace/Crop Details.svg') }}"
+                 class="card-header-icon" />
+            <span class="card-title">Crop Details</span>
+          </div>
+        </div>
+
+        <div class="add-marketplace-card-body">
+
+          <div class="details-grid">
+
+            <!-- ✅ name="cropId" required -->
+            <div class="field-group">
+              <label class="field-label">Crop ID</label>
+              <div class="field-input field-input--select">
+                <select id="cropIdSelect" name="cropId" required>
+                  <option disabled selected value="">Select crop ID</option>
+                  {% for c in crops %}
+                    <option
+                      value="{{ c.id }}"
+                      data-crop-type="{{ c.crop_type }}"
+                      data-available="{{ c.available_quantity or c.quantity or '' }}"
+                    >
+                      {{ c.id }}
+                    </option>
+                  {% endfor %}
+                </select>
+                <div class="select-chevron">⌄</div>
+              </div>
+            </div>
+
+            <!-- ✅ name="cropType" required -->
+            <div class="field-group">
+              <label class="field-label">Crop</label>
+              <div class="field-input field-input--select">
+                <select id="cropNameSelect" name="cropType" required>
+                  <option disabled selected value="">Select crop</option>
+                  {% for c in crops %}
+                    <option
+                      value="{{ c.crop_type }}"
+                      data-crop-id="{{ c.id }}"
+                      data-available="{{ c.available_quantity or c.quantity or '' }}"
+                    >
+                      {{ c.crop_type }}
+                    </option>
+                  {% endfor %}
+                </select>
+                <div class="select-chevron">⌄</div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="details-grid">
+
+            <div class="field-group">
+              <label class="field-label">Quantity</label>
+              <div class="field-input">
+                <input type="number" id="qtyInput" name="quantity" placeholder="Enter quantity" min="1" required />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Minimum Order Quantity</label>
+              <div class="field-input">
+                <input type="number" id="minOrderQty" name="minOrderQty" placeholder="Enter min qty" min="1" required />
+              </div>
+            </div>
+
+          </div>
+
+          <div class="details-grid">
+
+            <!-- Price -->
+            <div class="field-group">
+              <label class="field-label">Price</label>
+
+              <div class="price-input-container">
+                <input
+                  type="number"
+                  id="priceInput"
+                  name="price"
+                  class="price-input"
+                  placeholder="Enter price"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+
+                <select id="priceUnit" name="priceUnit" class="price-unit-select" required>
+                  <option value="per_kg">per kg</option>
+                  <option value="per_quintal">per quintal</option>
+                  <option value="per_ton">per ton</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Total Value -->
+            <div class="field-group">
+              <label class="field-label">Total Value</label>
+              <div class="field-input">
+                <input type="text" id="totalValue" name="totalValue" placeholder="Auto-calculated" readonly />
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Negotiable -->
+          <div class="toggle-row">
+            <label class="switch">
+              <!-- ✅ name="isNegotiable" -->
+              <input type="checkbox" id="negotiableToggle" name="isNegotiable" />
+              <span class="slider round"></span>
+            </label>
+            <label class="field-label" style="margin:0;">Price Negotiable</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         ROW 2 — CARD3 (1fr) + CARD4 (1fr)
+    ========================================================== -->
+    <div class="add-marketplace-grid-bottom">
+
+      <!-- CARD 3 -->
+      <div class="add-marketplace-card card-market-target">
+
+        <div class="card-header">
+          <div class="card-header-left">
+            <img src="{{ url_for('static', filename='svg-icons/Marketplace/Market Target.svg') }}"
+                 class="card-header-icon" />
+            <span class="card-title">Market Target</span>
+          </div>
+        </div>
+
+        <div class="add-marketplace-card-body">
+
+          <div class="details-grid">
+
+            <div class="field-group">
+              <label class="field-label">Target Buyer Type</label>
+              <div class="field-input field-input--select">
+                <select id="buyerType" name="targetBuyerType" required>
+                  <option disabled selected value="">Select buyer type</option>
+                  <option value="Distributor">Distributor</option>
+                  <option value="Manufacturer">Manufacturer</option>
+                  <option value="Warehouse">Warehouse</option>
+                  <option value="Retailer">Retailer</option>
+                </select>
+                <div class="select-chevron">⌄</div>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Listing Duration</label>
+              <div class="field-input field-input--select">
+                <select id="listingDuration" name="listingDuration" required>
+                  <option disabled selected value="">Select</option>
+                  <option value="7">7 Days</option>
+                  <option value="15">15 Days</option>
+                  <option value="30">30 Days</option>
+                </select>
+                <div class="select-chevron">⌄</div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Payment Terms</label>
+            <div class="field-input field-input--select">
+              <select id="paymentTerms" name="paymentTerms" required>
+                <option disabled selected value="">Select payment method</option>
+              </select>
+              <div class="select-chevron">⌄</div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Delivery / Logistics</label>
+
+            <div class="logistics-options">
+              <label>
+                <input type="radio" name="deliveryMode" value="CIF" required />
+                Cost, Insurance, and Freight (CIF)
+              </label>
+              <label>
+                <input type="radio" name="deliveryMode" value="FOB" required />
+                Free on Board (FOB)
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 4 -->
+      <div class="add-marketplace-card card-pickup-location">
+
+        <div class="card-header">
+          <div class="card-header-left">
+            <img src="{{ url_for('static', filename='svg-icons/Marketplace/Pickup Location.svg') }}"
+                 class="card-header-icon" />
+            <span class="card-title">Pickup Location</span>
+          </div>
+        </div>
+
+        <div class="add-marketplace-card-body">
+
+          <div class="details-grid">
+
+            <!-- ✅ name="pickupFromType" -->
+            <div class="field-group">
+              <label class="field-label">Pickup From</label>
+              <div class="field-input field-input--select">
+                <select id="pickupFrom" name="pickupFromType" required>
+                  <option disabled selected value="">Select</option>
+                  {% for p in pickup_entities %}
+                    <option
+                      value="{{ p.entityType }}"
+                      data-id="{{ p.entityId }}"
+                      data-name="{{ p.name }}"
+                      data-location="{{ p.location }}"
+                    >
+                      {{ p.entityType }}
+                    </option>
+                  {% endfor %}
+                </select>
+                <div class="select-chevron">⌄</div>
+              </div>
+            </div>
+
+            <!-- ✅ name="pickupFromId" -->
+            <div class="field-group">
+              <label class="field-label">ID</label>
+              <div class="field-input field-input--select">
+                <select id="pickupID" name="pickupFromId" required>
+                  <option disabled selected value="">Select ID</option>
+                  {% for p in pickup_entities %}
+                    <option
+                      value="{{ p.entityId }}"
+                      data-type="{{ p.entityType }}"
+                      data-name="{{ p.name }}"
+                      data-location="{{ p.location }}"
+                    >
+                      {{ p.entityId }}
+                    </option>
+                  {% endfor %}
+                </select>
+                <div class="select-chevron">⌄</div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Name</label>
+            <div class="field-input">
+              <input type="text" id="pickupName" name="pickupName" placeholder="Auto-filled" readonly />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Location</label>
+            <div class="field-input">
+              <input type="text" id="pickupLocation" name="pickupLocation" placeholder="Auto-filled" readonly />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= SUBMIT ACTION ================= -->
+    <div class="add-marketplace-submit">
+      <button type="submit" id="submitMarketplaceBtn" class="primary-submit-btn">
+        Publish
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<!-- ✅ DATA BRIDGE (optional prefill support) -->
+<script id="prefillCrop" type="application/json">
+  {{ (crop or {}) | tojson }}
+</script>
+
+<script src="{{ url_for('static', filename='js/addmarketplace.js') }}"></script>
+{% endblock %}

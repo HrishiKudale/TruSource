@@ -1,0 +1,817 @@
+{% extends "farmer_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='addshipment.css') }}">
+
+<div class="shipment-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-left">
+        <a href="{{ url_for('farmer_logistics.list_shipments') }}" class="back-btn"style="width: 36px; height: 36px;">
+            <img src="{{ url_for('static', filename='svg-icons/Logistics/Back Logistics.svg') }}" alt="Back">
+        </a>
+        <img src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}">
+
+      <h1 class="text-wrapper-4">Add New Shipment</h1>
+    </div>
+      <button type="button" id="btnOpenShipmentSummary" class="send-request-btn">
+        Create Shipment
+        <img src="{{ url_for('static', filename='svg-icons/plus.svg') }}" class="btn-icon" />
+      </button>
+
+  </div>
+
+  <!-- MAIN FORM -->
+  <form id="shipmentForm"
+        method="POST"
+        action="{{ url_for('farmer_logistics.create_shipment') }}"
+        class="shipment-form">
+
+<!-- =========================
+     CARD 1: SHIPMENT DETAILS
+     ========================= -->
+<div class="shipment-card">
+
+  <div class="shipment-card-header">
+    <img class="shipment-card-icon"
+         src="{{ url_for('static', filename='svg-icons/Logistics/Shipment Details.svg') }}">
+    <p class="shipment-card-title">Shipment Details</p>
+  </div>
+
+  <div class="shipment-card-body shipment-details-grid">
+
+    <!-- LEFT PARTITION = PICKUP -->
+    <div class="shipment-partition">
+
+      <!-- Pickup from + ID (same row) -->
+      <div class="shipment-row-two-cols">
+
+        <!-- Pickup From (searchable dropdown) -->
+        <div class="field-group">
+          <label class="field-label">Pickup from</label>
+
+          <div class="sd-wrap">
+            <div class="sd" data-name="pickup_from" id="pickupFromSD">
+              <button type="button" class="sd-control" aria-haspopup="listbox" aria-expanded="false">
+                <span class="sd-placeholder">Select pickup</span>
+                <img class="sd-caret"
+                     src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                     alt="dropdown">
+              </button>
+
+              <div class="sd-menu" role="listbox">
+                <div class="sd-search">
+                  <input type="text" class="sd-search-input" placeholder="Search pickup..." autocomplete="off">
+                </div>
+
+                <div class="sd-options">
+                  {% for p in pickup_entities or [] %}
+                    <button type="button"
+                            class="sd-option"
+                            role="option"
+                            data-value="{{ p.name }}"
+                            data-id="{{ p.entityId or p._id }}"
+                            data-location="{{ p.location or '' }}">
+                      <span class="sd-option-title">{{ p.name }}</span>
+                    </button>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- submitted values -->
+
+              <input type="hidden" name="pickup_from" class="sd-hidden">
+              <input type="hidden" name="pickup_id" class="sd-hidden-id" id="pickupIdHidden">
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Pickup ID (searchable dropdown) -->
+        <div class="field-group">
+          <label class="field-label">ID</label>
+
+          <div class="sd-wrap">
+            <div class="sd" data-name="pickup_id_select" id="pickupIdSD">
+              <button type="button" class="sd-control" aria-haspopup="listbox" aria-expanded="false">
+                <span class="sd-placeholder">Select ID</span>
+                <img class="sd-caret"
+                     src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                     alt="dropdown">
+              </button>
+
+              <div class="sd-menu" role="listbox">
+                <div class="sd-search">
+                  <input type="text" class="sd-search-input" placeholder="Search ID..." autocomplete="off">
+                </div>
+
+                <div class="sd-options">
+                  {% for p in pickup_entities or [] %}
+                    <button type="button"
+                            class="sd-option"
+                            role="option"
+                            data-value="{{ p.entityId or p._id }}"
+                            data-name="{{ p.name }}"
+                            data-location="{{ p.location or '' }}">
+                      <span class="sd-option-title">{{ p.entityId or p._id }}</span>
+                    </button>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- submitted value -->
+              <input type="hidden" name="pickup_id" class="sd-hidden" id="pickupIdHidden2">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Pickup Name -->
+      <div class="field-group">
+        <label class="field-label">Name</label>
+        <div class="field-input">
+          <input id="pickupNameInput" type="text" name="pickup_name" placeholder="Enter name">
+        </div>
+      </div>
+
+      <!-- Pickup Location -->
+      <div class="field-group">
+        <label class="field-label">Location</label>
+        <div class="field-input field-input--multiline">
+          <textarea id="pickupLocationInput" name="pickup_location" placeholder="Enter location"></textarea>
+        </div>
+      </div>
+
+    </div><!-- /pickup partition -->
+
+
+    <!-- RIGHT PARTITION = DELIVERY -->
+    <div class="shipment-partition shipment-partition--right-border-fix">
+
+      <!-- Deliver to + ID (same row) -->
+      <div class="shipment-row-two-cols">
+
+        <!-- Deliver To (searchable dropdown) -->
+        <div class="field-group">
+          <label class="field-label">Deliver to</label>
+
+          <div class="sd-wrap">
+            <div class="sd" data-name="deliver_to" id="deliverToSD">
+              <button type="button" class="sd-control" aria-haspopup="listbox" aria-expanded="false">
+                <span class="sd-placeholder">Select destination</span>
+                <img class="sd-caret"
+                     src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                     alt="dropdown">
+              </button>
+
+              <div class="sd-menu" role="listbox">
+                <div class="sd-search">
+                  <input type="text" class="sd-search-input" placeholder="Search destination..." autocomplete="off">
+                </div>
+
+                <div class="sd-options">
+                  {% for d in delivery_entities or [] %}
+                    <button type="button"
+                            class="sd-option"
+                            role="option"
+                            data-value="{{ d.name}}"
+                            data-id="{{ d.entityId or d._id }}"
+                            data-location="{{ d.location or '' }}">
+                      <span class="sd-option-title">{{ d.name }}</span>
+                    </button>
+                  {% endfor %}
+                </div>
+              </div>
+
+                <!-- submitted values -->
+                <input type="hidden" name="deliver_to" class="sd-hidden">
+                <input type="hidden" name="deliver_id" class="sd-hidden-id" id="deliverIdHidden">
+            </div>
+          </div>
+        </div>
+
+        <!-- Deliver ID (searchable dropdown) -->
+        <div class="field-group">
+          <label class="field-label">ID</label>
+
+          <div class="sd-wrap">
+            <div class="sd" data-name="deliver_id_select" id="deliverIdSD">
+              <button type="button" class="sd-control" aria-haspopup="listbox" aria-expanded="false">
+                <span class="sd-placeholder">Select ID</span>
+                <img class="sd-caret"
+                     src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                     alt="dropdown">
+              </button>
+
+              <div class="sd-menu" role="listbox">
+                <div class="sd-search">
+                  <input type="text" class="sd-search-input" placeholder="Search ID..." autocomplete="off">
+                </div>
+
+                <div class="sd-options">
+                  {% for d in delivery_entities or [] %}
+                    <button type="button"
+                            class="sd-option"
+                            role="option"
+                            data-value="{{ d.entityId or d._id }}"
+                            data-name="{{ d.name }}"
+                            data-location="{{ d.location or '' }}">
+                      <span class="sd-option-title">{{ d.entityId or d._id }}</span>
+                    </button>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- submitted value -->
+              <input type="hidden" name="deliver_id" class="sd-hidden" id="deliverIdHidden2">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Deliver Name -->
+      <div class="field-group">
+        <label class="field-label">Name</label>
+        <div class="field-input">
+          <input id="deliverNameInput" type="text" name="deliver_name" placeholder="Enter name">
+        </div>
+      </div>
+
+      <!-- Deliver Location -->
+      <div class="field-group">
+        <label class="field-label">Location</label>
+        <div class="field-input field-input--multiline">
+          <textarea id="deliverLocationInput" name="deliver_location" placeholder="Enter location"></textarea>
+        </div>
+      </div>
+
+    </div><!-- /delivery partition -->
+
+  </div><!-- /card body -->
+</div>
+
+
+<!-- =========================
+     CARD 2 + CARD 3 ROW
+     ========================= -->
+<div class="shipment-grid">
+
+  <!-- CARD 2: TRANSPORTER DETAILS -->
+  <div class="shipment-card">
+
+    <div class="shipment-card-header">
+      <img class="shipment-card-icon"
+           src="{{ url_for('static', filename='svg-icons/Logistics/Transporter Details.svg') }}">
+      <p class="shipment-card-title">Transporter Details</p>
+    </div>
+
+    <div class="shipment-card-body transporter-grid">
+
+      <!-- Bullet selection -->
+      <div class="field-group full-row">
+        <label class="field-label">Select Transporter Mode</label>
+        <div class="transporter-mode-options">
+          <label class="radio-option">
+            <input type="radio" name="transporter_mode" value="platform" checked>
+            <span class="radio-bullet"></span>
+            <span>Platform Logistics</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="transporter_mode" value="personal">
+            <span class="radio-bullet"></span>
+            <span>Add Personal Transporter</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Platform Logistics: Transporter (single-container searchable dropdown) -->
+      <div class="field-group full-row transporter-platform-only">
+        <label class="field-label">Transporter</label>
+
+        <div class="sd-wrap"><!-- IMPORTANT WRAPPER -->
+          <div class="sd" data-name="transporter_name">
+            <button type="button" class="sd-control" aria-haspopup="listbox" aria-expanded="false">
+              <span class="sd-placeholder">Select transporter</span>
+              <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+            </button>
+
+            <div class="sd-menu" role="listbox">
+              <div class="sd-search">
+                <input type="text" class="sd-search-input" placeholder="Search transporter..." autocomplete="off">
+              </div>
+
+              <div class="sd-options">
+                {% for t in transporter_details or [] %}
+                  <button type="button"
+                          class="sd-option"
+                          role="option"
+                          data-value="{{ t.name }}"
+                          data-id="{{ t.entityId or t._id }}">
+                    <span class="sd-option-title">{{ t.name }}</span>
+                  </button>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- submitted values -->
+            <input type="hidden" name="transporter_name" class="sd-hidden">
+            <input type="hidden" name="transporter_id" class="sd-hidden-id">
+          </div>
+        </div>
+      </div>
+
+      <!-- Personal Transporter -->
+      <div class="field-group full-row transporter-personal-only hidden">
+        <label class="field-label">Personal Transporter</label>
+        <div class="field-input">
+          <input type="text" name="personal_transporter_name" placeholder="Enter transporter name">
+        </div>
+      </div>
+
+      <!-- Vehicle Type (single-container searchable dropdown) -->
+      <div class="field-group full-row">
+        <label class="field-label">Select Vehicle Type</label>
+
+        <div class="sd-wrap"><!-- IMPORTANT WRAPPER -->
+          <div class="sd" data-name="vehicle_type">
+            <button type="button" class="sd-control" aria-haspopup="listbox" aria-expanded="false">
+              <span class="sd-placeholder">Select vehicle</span>
+              <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+            </button>
+
+            <div class="sd-menu" role="listbox">
+              <div class="sd-search">
+                <input type="text" class="sd-search-input" placeholder="Search vehicle type..." autocomplete="off">
+              </div>
+
+              <div class="sd-options">
+                {% for v in vehicles or [] %}
+                  <button type="button"
+                          class="sd-option"
+                          role="option"
+                          data-value="{{ v.type or v.name }}">
+                    <span class="sd-option-title">{{ v.type or v.name }}</span>
+                  </button>
+                {% endfor %}
+              </div>
+            </div>
+
+            <input type="hidden" name="vehicle_type" class="sd-hidden">
+          </div>
+        </div>
+      </div>
+
+      <!-- Pickup Date + Delivery Date -->
+      <div class="shipment-row-two-cols full-row">
+        <div class="field-group">
+          <label class="field-label">Pickup Date (optional)</label>
+          <div class="field-input">
+            <input type="date" name="pickup_date">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Delivery Date</label>
+          <div class="field-input">
+            <input type="date" name="delivery_date">
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.shipment-card-body -->
+  </div><!-- /.shipment-card -->
+
+
+
+      <!-- CARD 3: PAYMENT DETAILS -->
+      <div class="shipment-card">
+
+        <div class="shipment-card-header">
+          <img class="shipment-card-icon"
+               src="{{ url_for('static', filename='svg-icons/Logistics/Payment Details.svg') }}">
+          <p class="shipment-card-title">Payment Details</p>
+        </div>
+
+        <div class="shipment-card-body payment-grid">
+
+          <!-- Payment Terms -->
+          <div class="field-group full-row">
+            <label class="field-label">Payment Terms</label>
+            <div class="field-input field-input--select">
+              <select name="payment_terms" required>
+                <option disabled selected value="">Select payment method</option>
+                <option value="Advance">Advance</option>
+                <option value="On Delivery">On Delivery</option>
+                <option value="Credit 7 Days">Credit 7 Days</option>
+                <option value="Credit 15 Days">Credit 15 Days</option>
+                <option value="Other">Other</option>
+              </select>
+              <div class="select-chevron">
+                <img src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}" alt="dropdown">
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Insurance Slider -->
+          <div class="field-group full-row">
+            <label class="field-label">Request Shipment Insurance</label>
+            <div class="insurance-toggle-row">
+              <span class="toggle-label">No</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="insuranceToggle" name="insurance_requested">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-label">Yes</span>
+            </div>
+          </div>
+
+          <!-- Insurance Extra Fields (hidden until slider ON) -->
+          <div id="insuranceFields" class="insurance-extra-fields hidden">
+
+            <div class="field-group">
+              <label class="field-label">Declared Value</label>
+              <div class="field-input">
+                <input type="number"
+                       name="declared_value"
+                       min="0"
+                       step="0.01"
+                       placeholder="Enter declared value">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Coverage Note</label>
+              <div class="field-input">
+                <input type="text"
+                       name="coverage_note"
+                       placeholder="Coverage description">
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Note for Transporter -->
+                <div class="field-input field-input--multiline">
+                  <textarea name="transporter_note"
+                            placeholder="Write a note to the transporter"></textarea>
+                </div>
+
+
+
+        </div>
+      </div>
+
+    </div> <!-- /shipment-grid (Card2+3) -->
+
+
+    <!-- =========================
+         CARD 4: SHIPMENT ITEMS TABLE
+         ========================= -->
+    <div class="shipment-table-card">
+      <div class="shipment-card-header shipment-table-header">
+        <p class="shipment-card-title">Shipment Items</p>
+        <button type="button" class="open-modal-btn" id="openShipmentModalBtn">
+          Add from Orders / Crops
+        </button>
+      </div>
+
+      <div class="shipment-table-wrapper">
+        <table class="shipment-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Order Date</th>
+              <th>Crop Name</th>
+              <th>Quantity</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="shipmentItemsTableBody">
+            {% if shipment_items %}
+              {% for it in shipment_items %}
+                <tr>
+                  <td>
+                    {{ it.orderId }}
+                    <input type="hidden" name="items_order_id[]" value="{{ it.orderId }}">
+                  </td>
+                  <td>
+                    {{ it.orderDate }}
+                    <input type="hidden" name="items_order_date[]" value="{{ it.orderDate }}">
+                  </td>
+                  <td>
+                    {{ it.cropName }}
+                    <input type="hidden" name="items_crop_id[]" value="{{ it.cropId or '' }}">
+                    <input type="hidden" name="items_crop_name[]" value="{{ it.cropName }}">
+                  </td>
+                  <td>
+                    {{ it.quantity }}
+                    <input type="hidden" name="items_quantity[]" value="{{ it.quantity }}">
+                  </td>
+                  <td>
+                    <button type="button" class="table-action-btn table-remove-row">Remove</button>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr id="shipmentItemsEmptyRow">
+                <td colspan="5">
+                  <div class="shipment-empty-state">
+                    <img src="{{ url_for('static', filename='illustrations/Shipment Empty.svg') }}">
+                  </div>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<!-- =========================
+     CARD 5: POPUP MODAL (ON LOAD)
+     ========================= -->
+<div id="addShipmentModal" class="shipment-modal">
+  <div class="shipment-modal-backdrop"></div>
+
+  <div class="shipment-modal-card">
+    <!-- Header row -->
+    <div class="shipment-modal-header">
+      <h2 class="shipment-modal-title">Add New Shipment</h2>
+      <button type="button" class="shipment-modal-close" id="closeShipmentModal">
+        &times;
+      </button>
+    </div>
+
+    <!-- Tabs strip -->
+    <div class="shipment-modal-tabs-wrapper">
+      <div class="shipment-modal-tabs">
+        <button type="button"
+                class="shipment-modal-tab active"
+                data-tab="selectOrderTab">
+          Select Order
+        </button>
+        <button type="button"
+                class="shipment-modal-tab"
+                data-tab="selectCropTab">
+          Select Crop
+        </button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="shipment-modal-body">
+
+      <!-- TAB 1: SELECT ORDER -->
+      <div id="selectOrderTab" class="shipment-modal-tabpanel active">
+
+        <!-- Order selector card -->
+        <div class="shipment-modal-card-inner">
+          <div class="field-group full-row">
+            <label class="field-label">Order ID</label>
+            <div class="field-input field-input--select field-input--large">
+                <select id="modalOrderSelect">
+                  <option disabled selected value="">Select order id</option>
+                  {% for o in orders or [] %}
+                    <option value="{{ o.orderId }}"
+                            data-date="{{ o.orderDate }}"
+                            data-crop="{{ o.cropType }}"
+                            data-crop-id="{{ o.cropId }}"
+                            data-quantity="{{ o.quantityKg }}">
+                      {{ o.orderId }}
+                    </option>
+                  {% endfor %}
+                </select>
+              <div class="select-chevron">
+                <img src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}" alt="dropdown">
+              </div>
+
+            </div>
+          </div>
+
+          <div class="modal-add-btn-wrapper">
+            <button type="button" id="modalAddOrderBtn" class="modal-add-btn">
+              Add&nbsp;&nbsp;+
+            </button>
+          </div>
+        </div>
+
+        <!-- Orders table card -->
+        <div class="shipment-modal-card-inner table-card-inner">
+          <div class="modal-table-wrapper">
+            <table class="modal-table">
+              <thead>
+                <tr>
+                  <th>Order ID &#8597;</th>
+                  <th>Crop Name</th>
+                  <th>Quantity &#8597;</th>
+                </tr>
+              </thead>
+              <tbody id="modalOrderTableBody">
+                <tr id="modalOrderEmptyRow">
+                  <td colspan="3">
+                    <div class="shipment-empty-state">
+                      <span>No orders added yet.</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div> <!-- /selectOrderTab -->
+
+
+      <!-- TAB 2: SELECT CROP -->
+      <div id="selectCropTab" class="shipment-modal-tabpanel">
+
+        <!-- Crop selector card -->
+        <div class="shipment-modal-card-inner">
+          <div class="shipment-row-two-cols full-row modal-row">
+            <!-- Crop ID -->
+            <div class="field-group">
+              <label class="field-label">Crop ID</label>
+              <div class="field-input field-input--select field-input--large">
+                  <select id="modalCropIdSelect">
+                    <option disabled selected value="">Select crop id</option>
+                    {% for c in crops or [] %}
+                      <option value="{{ c.cropId }}"
+                              data-name="{{ c.cropType }}"
+                              data-available="{{ c.harvestQuantity }}">
+                        {{ c.cropId }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                <div class="select-chevron">
+                  <img src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}" alt="dropdown">
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Quantity -->
+            <div class="field-group">
+              <label class="field-label">Quantity</label>
+              <div class="field-input field-input--large">
+                <input type="number"
+                       id="modalCropQuantityInput"
+                       min="0"
+                       step="0.01"
+                       placeholder="Enter quantity">
+                <span class="field-suffix">QtI</span>
+              </div>
+              <p class="field-helper-text" id="modalCropAvailableHint"></p>
+            </div>
+          </div>
+
+          <div class="modal-add-btn-wrapper">
+            <button type="button" id="modalAddCropBtn" class="modal-add-btn">
+              Add&nbsp;&nbsp;+
+            </button>
+          </div>
+        </div>
+
+        <!-- Crops table card -->
+        <div class="shipment-modal-card-inner table-card-inner">
+          <div class="modal-table-wrapper">
+            <table class="modal-table">
+              <thead>
+                <tr>
+                  <th>Crop ID</th>
+                  <th>Crop Name</th>
+                  <th>Quantity</th>
+                </tr>
+              </thead>
+              <tbody id="modalCropTableBody">
+                <tr id="modalCropEmptyRow">
+                  <td colspan="3">
+                    <div class="shipment-empty-state">
+                      <span>No crops added yet.</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div> <!-- /selectCropTab -->
+
+    </div> <!-- /shipment-modal-body -->
+
+    <!-- Footer buttons -->
+    <div class="shipment-modal-footer">
+      <button type="button" id="modalResetBtn" class="modal-reset-btn">
+        <span class="icon-arrow-left">&#8592;</span>
+        Reset
+      </button>
+
+      <button type="button" id="modalDoneBtn" class="modal-continue-btn">
+        Continue
+        <span class="icon-arrow-right">&#8594;</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+<!-- ===================== SHIPMENT SUMMARY MODAL ===================== -->
+<div class="summary-modal" id="shipmentSummaryModal" aria-hidden="true">
+  <div class="summary-modal-backdrop" id="shipmentSummaryBackdrop"></div>
+
+  <div class="summary-modal-dialog" role="dialog" aria-modal="true">
+    <div class="summary-modal-content">
+
+      <!-- REVIEW STATE -->
+      <div id="shipmentSummaryReview">
+
+        <div class="summary-illus">
+          <img src="{{ url_for('static', filename='illustrations/Shipment Summary Modal.svg') }}" alt="">
+        </div>
+
+        <h3 class="summary-title">Confirm Shipment Request</h3>
+
+        <p class="summary-subtext">
+          You are about to create a shipment.<br>
+          Please review carefully before continuing.
+        </p>
+
+        <div class="summary-card">
+          <div class="summary-row">
+            <span class="s-label">Transporter</span>
+            <span class="s-value" id="sumTransporter">-</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="s-label">Pickup Date</span>
+            <span class="s-value" id="sumPickupDate">-</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="s-label">Delivery Date</span>
+            <span class="s-value" id="sumDeliveryDate">-</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="s-label">Total Orders</span>
+            <span class="s-value" id="sumTotalOrders">-</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="s-label">Final Price</span>
+            <span class="s-value" id="sumFinalPrice">-</span>
+          </div>
+        </div>
+
+        <p class="summary-error" id="shipmentSummaryError" style="display:none;"></p>
+
+        <div class="summary-actions">
+          <button class="summary-btn secondary" type="button" id="btnShipmentEdit">
+            Go Back & Edit
+          </button>
+          <button class="summary-btn primary" type="button" id="btnShipmentConfirm">
+            Confirm & Create
+          </button>
+        </div>
+
+      </div>
+
+      <!-- SUCCESS STATE -->
+      <div id="shipmentSummarySuccess" style="display:none;">
+
+        <div class="summary-illus">
+          <img src="{{ url_for('static', filename='illustrations/Success Modal.svg') }}" alt="">
+        </div>
+
+        <h3 class="summary-title">Shipment Created</h3>
+
+        <p class="summary-subtext">
+          Your shipment has been successfully created and linked to the selected order/crop.
+          The transporter will be notified to proceed with pickup.
+        </p>
+
+        <div class="summary-actions single">
+          <a class="summary-btn primary" href="{{ url_for('farmer_logistics.list_shipments') }}">
+            View
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/addshipment.js') }}"></script>
+
+{% endblock %}

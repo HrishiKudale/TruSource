@@ -1,0 +1,249 @@
+/* static/css/traceability.css */
+.tr-page{
+  font-family:  sans-serif;
+  color:#111;
+}
+
+.tr-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom: 32px;
+}
+.tr-title{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.tr-title h1{ font-size:32px; margin:0; font-weight:500; }
+.tr-icon{
+  width:28px;height:28px;border-radius:8px;
+  display:grid;place-items:center;
+  background:#f2f2f2;
+}
+
+.tr-actions{ display:flex; gap:10px; }
+.btn-outline{
+  border:1px solid #d6d6d6;
+  background:#fff;
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer;
+}
+.btn-primary{
+  background:#118a3c;
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer;
+}
+.btn-ico{ margin-left:6px; opacity:.9; }
+
+.tr-search{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-bottom: 28px;
+}
+.search-box{
+  flex: 0 0 360px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:#fff;
+  border:1px solid #e6e6e6;
+  border-radius:10px;
+  padding:10px 12px;
+}
+.search-box input{
+  width:100%;
+  border:none;
+  outline:none;
+  font-size:14px;
+}
+.btn-dark{
+  background:#111;
+  color:#fff;
+  border:none;
+  padding:10px 18px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.tr-grid{
+  display:grid;
+  grid-template-columns: 2fr 1.1fr; /* 2:3-ish look from screenshot */
+  gap:18px;
+  align-items:start;
+}
+
+.card{
+  background:#fff;
+  border:1px solid #ececec;
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.card-head{
+  background:#f5f5f5;
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.head-left{ display:flex; gap:10px; align-items:center; }
+.head-ico{
+  width:28px;height:28px;border-radius:10px;
+  display:grid;place-items:center;
+  background:#e9eefc;
+}
+.head-title{ font-weight:700; font-size: 18px; }
+
+.head-right{ display:flex; align-items:center; gap:10px; }
+.crop-chip{
+  font-size:12px;
+  border:1px solid #e5e5e5;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#fff;
+}
+.icon-btn{
+  border:1px solid #e5e5e5;
+  background:#fff;
+  width:32px;height:32px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.timeline{ padding: 1px 22px; }
+
+.t-item{
+  display:grid;
+  grid-template-columns: 42px 1fr 30px;
+  gap:12px;
+  padding: 30px 0;
+}
+.t-left{
+  position:relative;
+  display:flex;
+  justify-content:center;
+}
+.t-dot {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.t-dot-icon{
+  width: 55px;
+  height: 55px;
+  object-fit: contain;
+  display:block;
+}
+
+
+.t-line{
+  position:absolute;
+  top:50px;
+  bottom:-52px;
+  width:2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #d9d9d9,
+    #d9d9d9 5px,
+    transparent 5px,
+    transparent 10px
+  );
+}
+.t-card{
+
+  border-radius:10px;
+  padding:1px 12px;
+}
+.t-title-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:6px;
+}
+.t-title{
+  font-weight:500;
+  font-size:16px;
+  margin-bottom: 5px;
+}
+.t-sub{
+  font-size:12px;
+  color:#666;
+}
+.t-details{
+  display:none;
+  margin-top:10px;
+  background:#fff;
+  border:1px solid #ececec;
+  border-radius:10px;
+  padding:10px;
+  font-size:12px;
+  color:#222;
+}
+.t-details .row{ margin:4px 0; }
+.t-chevron{
+  cursor:pointer;
+  user-select:none;
+  color:#555;
+}
+
+.tr-msg{
+  padding: 10px 14px;
+  border-top:1px solid #eee;
+  color:#b00020;
+  font-size:13px;
+}
+
+.doc-card{ padding-bottom: 10px; }
+.doc-head{
+  padding: 14px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.doc-ico{
+  width:32px;height:32px;border-radius:12px;
+  background:#fff2df;
+  display:grid;place-items:center;
+}
+.doc-title{ font-weight:700; }
+
+.doc-table{ padding: 0 14px; }
+.doc-row{
+  display:grid;
+  grid-template-columns: 1fr 120px;
+  align-items:center;
+  padding: 10px 0;
+  border-top:1px solid #eee;
+  font-size:13px;
+}
+.doc-row-head{
+  border-top:none;
+  font-weight:700;
+  color:#666;
+}
+.right{ display:flex; justify-content:flex-end; gap:8px; }
+
+.doc-action{
+  width:32px;height:32px;
+  border-radius:10px;
+  border:1px solid #e6e6e6;
+  background:#fff;
+  cursor:pointer;
+  display:grid;place-items:center;
+}
+.trace-icon img{
+  width:32px;
+  height:32px;
+  object-fit:contain;
+}

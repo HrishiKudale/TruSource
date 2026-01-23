@@ -1,0 +1,72 @@
+{% extends "farmer_base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='pricing.css') }}">
+
+<div class="pricing-page">
+
+  <!-- Header -->
+  <div class="pricing-header">
+    <div class="pricing-title">
+      
+      <img class="grains" src="{{ url_for('static', filename='svg-icons/Pricing/Pricing.svg') }}" /><h1>Pricing</h1>
+    </div>
+
+    <button type="button" class="pricing-export-btn" id="btnPricingExport">
+      Export
+      <span class="export-ic">⤴</span>
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="pricing-tabs">
+    <button type="button" class="pricing-tab active" data-tab="warehouse">Warehouse</button>
+    <button type="button" class="pricing-tab" data-tab="manufacturer">Manufacturer</button>
+    <button type="button" class="pricing-tab" data-tab="transporter">Transporter</button>
+  </div>
+
+  <div class="pricing-divider"></div>
+
+  <!-- Controls -->
+  <div class="pricing-controls">
+    <div class="pricing-search">
+      <span class="search-ic">🔍</span>
+      <input id="pricingSearchInput" type="text" placeholder="Search">
+    </div>
+
+    <!-- Right filter (only for manufacturer) -->
+    <div class="pricing-filter hidden" id="manufacturerFilterWrap">
+      <select id="manufacturerProcessingFilter">
+        <option value="">Processing Type</option>
+        {% for p in (filters.processing_types or []) %}
+          <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
+      <span class="filter-caret">⌄</span>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="pricing-table-wrap">
+    <table class="pricing-table" id="pricingTable">
+      <thead id="pricingThead"></thead>
+      <tbody id="pricingTbody"></tbody>
+    </table>
+
+    <div class="pricing-empty" id="pricingEmpty" style="display:none;">
+      <p>No records found.</p>
+    </div>
+  </div>
+
+</div>
+
+{# include modal #}
+{% include "PricingInfo.html" %}
+
+<script id="pricingData" type="application/json">
+  {{ pricing_data | tojson }}
+</script>
+
+<script src="{{ url_for('static', filename='js/pricing.js') }}"></script>
+
+{% endblock %}

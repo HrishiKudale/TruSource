@@ -1,0 +1,299 @@
+{% extends "farmer_base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='addorder.css') }}">
+
+<div class="addorder-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <img src="{{ url_for('static', filename='svg-icons/AddOrder.svg') }}" class="title-icon" alt="">
+      <h1 class="page-title">New Order</h1>
+    </div>
+
+    <!-- open modal instead of submitting directly -->
+    <button type="button" class="send-request-btn" id="openOrderSummaryBtn">
+      Send Request
+      <img src="{{ url_for('static', filename='svg-icons/plus.svg') }}" class="btn-icon" alt="">
+    </button>
+  </div>
+
+  <form id="orderForm" method="POST" action="{{ url_for('farmer_sales_bp.create_order') }}">
+
+    <!-- ORDER DETAILS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <img class="card-header-icon" src="{{ url_for('static', filename='svg-icons/Order Detail.svg') }}" alt="">
+          <h2 class="card-title">Order Details</h2>
+        </div>
+      </div>
+
+      <div class="grid-2">
+
+        <div class="field">
+          <label>Order ID</label>
+          <input id="orderId" type="text" name="orderId" readonly placeholder="Auto-generated">
+        </div>
+
+        <div class="field">
+          <label>Request ID</label>
+          <input id="requestId" type="text" name="requestId" readonly placeholder="Auto-generated">
+        </div>
+
+        <div class="field">
+          <label>Order Date</label>
+          <input id="orderDate" type="date" name="orderDate" required>
+        </div>
+
+        <div class="field">
+          <label>Payment Terms</label>
+          <select id="paymentTerms" name="payment_terms" required>
+            <option value="" disabled selected>Select payment method</option>
+            <option value="Cash">Cash</option>
+            <option value="Net 10">Net 10</option>
+            <option value="Net 15">Net 15</option>
+            <option value="Net 30">Net 30</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Buyer Type</label>
+          <select id="buyerType" name="buyerType" required>
+            <option value="" disabled selected>Select buyer type</option>
+            <option value="Manufacturer">Manufacturer</option>
+            <option value="Retailer">Retailer</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Buyer</label>
+          <select id="buyerSelect" name="buyerId" required>
+            <option value="" disabled selected>Select buyer</option>
+            {% for b in buyers %}
+              <option value="{{ b.userId }}" data-role="{{ b.role }}">
+                {{ b.name }}{% if b.officeName %} - {{ b.officeName }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Address</label>
+          <input id="buyerAddress" type="text" name="buyerAddress" placeholder="-" readonly>
+        </div>
+
+        <div class="field">
+          <label>Contact Person</label>
+          <input id="buyerContactPerson" type="text" name="buyerContactPerson" placeholder="-" readonly>
+        </div>
+
+        <div class="field">
+          <label>Contact</label>
+          <input id="buyerContact" type="text" name="buyerContact" placeholder="-" readonly>
+        </div>
+
+        <div class="field">
+          <label>Email</label>
+          <input id="buyerEmail" type="email" name="buyerEmail" placeholder="-" readonly>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TWO COLUMN -->
+    <div class="two-column">
+
+      <!-- CROP DETAILS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <img class="card-header-icon" src="{{ url_for('static', filename='svg-icons/AddNewOrderCrop.svg') }}" alt="">
+            <h2 class="card-title">Crop Details</h2>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>Crop ID</label>
+            <select id="cropIdSelect" name="cropId" required>
+              <option value="" disabled selected>Select crop ID</option>
+              {% for c in crops %}
+                <option value="{{ c.id or c.cropId or c._id }}"
+                        data-name="{{ c.crop_type or c.name or c.cropName }}">
+                  {{ c.id or c.cropId or c._id }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Crop</label>
+            <select id="cropTypeSelect" name="cropType" required>
+              <option value="" disabled selected>Select crop</option>
+              {% for c in crops %}
+                <option value="{{ c.crop_type or c.name or c.cropName }}"
+                        data-id="{{ c.id or c.cropId or c._id }}">
+                  {{ c.crop_name or crop.name or c.cropName }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Quantity (Kg)</label>
+            <input id="quantityKg" type="number" name="quantityKg" min="1" required placeholder="Enter quantity">
+          </div>
+
+          <div class="field">
+            <label>Price</label>
+            <input id="price" type="number" name="price" min="1" required placeholder="Enter price">
+          </div>
+        </div>
+      </div>
+
+            <!-- PICKUP DETAILS -->
+            <!-- PICKUP DETAILS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <img class="card-header-icon"
+                src="{{ url_for('static', filename='svg-icons/AddNewOrderLocation.svg') }}" alt="">
+            <h2 class="card-title">Pickup Details</h2>
+          </div>
+        </div>
+
+        <div class="pickup-type">
+          <label class="radio-option">
+            <input type="radio" name="pickupFromType" value="warehouse" checked>
+            <span>Warehouse</span>
+          </label>
+
+          <label class="radio-option">
+            <input type="radio" name="pickupFromType" value="farm">
+            <span>Farm</span>
+          </label>
+        </div>
+
+        <div class="grid-2">
+          <!-- Warehouse dropdown -->
+          <div class="field" id="pickupWarehouseWrap">
+            <label>Pickup From (Warehouse)</label>
+            <select id="pickupWarehouseSelect" name="pickupLocationId">
+              <option value="" disabled selected>Select warehouse</option>
+              {% for w in warehouses or [] %}
+                <option value="{{ w.warehouseId or w.userId }}">
+                  {{ w.name }} - {{ w.warehouseId or w.userId }}
+                </option>
+              {% endfor %}
+            </select>
+            <input type="hidden" name="pickupFromLabel" id="pickupFromLabelWarehouse">
+          </div>
+
+          <!-- Farm dropdown -->
+          <div class="field" id="pickupFarmWrap" style="display:none;">
+            <label>Pickup From (Farm)</label>
+            <select id="pickupFarmSelect" name="pickupFarmId">
+              <option value="" disabled selected>Select farm</option>
+              {% for f in farms or [] %}
+                <option value="{{ f.farmId or f._id }}">
+                  {{ f.name }} - {{ f.farmId or f._id }}
+                </option>
+              {% endfor %}
+            </select>
+            <input type="hidden" name="pickupFromLabel" id="pickupFromLabelFarm">
+          </div>
+
+          <div class="field">
+            <label>Pickup Date</label>
+            <input id="pickupDate" type="date" name="pickupDate">
+          </div>
+
+          <div class="field full-width">
+            <label>Notes</label>
+            <input id="notes" type="text" name="notes" placeholder="Optional notes">
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </form>
+</div>
+
+
+<!-- ===================== SUMMARY MODAL ===================== -->
+<div class="summary-modal" id="orderSummaryModal" aria-hidden="true">
+  <div class="summary-modal-backdrop" id="orderSummaryBackdrop"></div>
+
+  <div class="summary-modal-dialog" role="dialog" aria-modal="true">
+    <div class="summary-modal-content">
+      
+      <div class="summary-illus">
+        <img src="{{ url_for('static', filename='illustrations/Order Summary Modal.svg') }}" alt="">
+      </div>
+      <!-- REVIEW STATE -->
+      <div id="orderSummaryReview">
+
+        <div class="summary-illus">
+          <img src="{{ url_for('static', filename='illustrations/Confirm Modal.svg') }}" alt="">
+        </div>
+
+        <h3 class="summary-title">Confirm Order Request</h3>
+
+        <p class="summary-subtext">
+          Once confirmed, order details cannot be edited.<br>
+          Please review carefully before continuing.
+        </p>
+
+        <div class="summary-card">
+          <div class="summary-row"><span class="s-label">Order ID</span><span class="s-value" id="sumOrderId">-</span></div>
+          <div class="summary-row"><span class="s-label">Request ID</span><span class="s-value" id="sumRequestId">-</span></div>
+          <div class="summary-row"><span class="s-label">Buyer Type</span><span class="s-value" id="sumBuyerType">-</span></div>
+          <div class="summary-row"><span class="s-label">Buyer</span><span class="s-value" id="sumBuyer">-</span></div>
+          <div class="summary-row"><span class="s-label">Crop</span><span class="s-value" id="sumCrop">-</span></div>
+          <div class="summary-row"><span class="s-label">Crop ID</span><span class="s-value" id="sumCropId">-</span></div>
+          <div class="summary-row"><span class="s-label">Quantity</span><span class="s-value" id="sumQty">-</span></div>
+          <div class="summary-row"><span class="s-label">Total Value</span><span class="s-value" id="sumValue">-</span></div>
+          <div class="summary-row"><span class="s-label">Payment</span><span class="s-value" id="sumPayment">-</span></div>
+        </div>
+
+        <p class="summary-error" id="orderSummaryError" style="display:none;"></p>
+
+        <div class="summary-actions">
+          <button class="summary-btn secondary" type="button" id="btnOrderEdit">Go Back & Edit</button>
+          <button class="summary-btn primary" type="button" id="btnOrderConfirm">Confirm & Save</button>
+        </div>
+
+      </div>
+
+      <!-- SUCCESS STATE -->
+      <div id="orderSummarySuccess" style="display:none;">
+
+        <div class="summary-illus">
+          <img src="{{ url_for('static', filename='illustrations/Success Modal.svg') }}" alt="">
+        </div>
+
+        <h3 class="summary-title">Order Created Successfully</h3>
+
+        <p class="summary-subtext">
+          Your order has been successfully created and added to your records.
+        </p>
+
+        <div class="summary-actions single">
+          <a class="summary-btn primary" href="{{ url_for('farmer_sales_bp.orders_page') }}">View Orders</a>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  window.ADD_ORDER_PREFILL_REQUEST_ID = "{{ request_id or '' }}";
+</script>
+<script src="{{ url_for('static', filename='js/addorder.js') }}"></script>
+
+{% endblock %}

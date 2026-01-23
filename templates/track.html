@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ crop_id }} · Traceability Journey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --bg1:#f0fdf4; --bg2:#ecfeff;
+      --brand:#22c55e; --brand2:#0ea5e9;
+      --ink:#0b1220; --muted:#64748b; --panel:#ffffff; --line:#e5e7eb;
+      --radius:18px; --shadow:0 14px 34px rgba(2,8,23,.14); --softshadow:0 8px 20px rgba(2,8,23,.10);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink);
+      background:
+        radial-gradient(1200px 650px at 10% -10%, color-mix(in hsl, var(--brand) 18%, transparent) 0%, transparent 60%),
+        radial-gradient(1100px 600px at 110% 10%, color-mix(in hsl, var(--brand2) 18%, transparent) 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+      transition: background .4s ease;
+    }
+    a{color:inherit;text-decoration:none}
+    .shell{max-width:1220px;margin:0 auto;padding:0 18px}
+    .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+    .hero-inner{display:grid;grid-template-columns:1.25fr .75fr;gap:28px;align-items:center;padding:40px 18px 56px}
+    @media (max-width:980px){.hero-inner{grid-template-columns:1fr}}
+    .kicker{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:color-mix(in hsl, var(--brand) 70%, black 0%);font-weight:800}
+    .h1{margin:8px 0 10px;font-weight:800;line-height:1.12;font-size:clamp(28px,4.2vw,44px);
+      background:linear-gradient(90deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .sub{color:#0f172a;opacity:.85;font-size:15px}
+    .hero-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .tag{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid #c7f9e0;background:#ecfdf5;color:#065f46;font-weight:700;font-size:12px}
+
+    .bgfx{position:absolute;inset:0;pointer-events:none}
+    .blob{opacity:.28;filter:blur(10px)}
+    .float-slow{animation:float 16s ease-in-out infinite}
+    .float-fast{animation:float 10s ease-in-out infinite}
+    @keyframes float{0%{transform:translateY(0) translateX(0) scale(1)}50%{transform:translateY(-16px) translateX(10px) scale(1.06)}100%{transform:translateY(0) translateX(0) scale(1)}}
+
+    .grid{display:grid;grid-template-columns:1.35fr .65fr;gap:22px}
+    @media (max-width:1000px){.grid{grid-template-columns:1fr}}
+
+    .panel,.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fff 0%,#f8fafc 100%)}
+    .title{font-weight:800;letter-spacing:.2px}
+    .muted{color:var(--muted);font-size:13px}
+
+    .photo{position:relative;aspect-ratio:16/10;background:#f1f5f9}
+    .photo img{width:100%;height:100%;object-fit:cover;display:block}
+    .ribbon{position:absolute;left:12px;top:12px;font-weight:800;font-size:12px;background:linear-gradient(135deg,var(--brand2),var(--brand));color:#fff;padding:6px 10px;border-radius:999px;box-shadow:0 8px 18px rgba(2,8,23,.18)}
+    .card-body{padding:14px}
+    .meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;font-size:13px}
+    .meta .cell{background:#f8fafc;border:1px solid var(--line);padding:10px 12px;border-radius:12px}
+    .big{font-size:18px;font-weight:800}
+    .note{color:var(--muted);font-size:12px}
+    .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .btn{appearance:none;border:0;border-radius:12px;padding:12px 14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,var(--brand),#86efac);color:#052e1f;box-shadow:var(--softshadow);font-size:13px}
+    .btn.ghost{background:#f1f5f9;color:#0f172a}
+
+    /* TIMELINE – airy vertical, full-width on the left column */
+    .timeline{padding:8px 6px 22px}
+    .rail{position:relative;margin-left:0;padding-left:34px;border-left:3px dashed #cfe8ff}
+    @media (max-width:720px){.rail{padding-left:24px}}
+
+    .event{
+      position:relative;margin:26px 0;padding:0 0 0 0;border:0;border-radius:16px;background:transparent;
+      display:grid;grid-template-columns: 220px 1fr;gap:18px;align-items:start;opacity:0;transform:translateY(8px);transition:.35s ease;
+    }
+    @media (max-width:900px){.event{grid-template-columns:1fr}}
+    .event.show{opacity:1;transform:none}
+    .event::before{
+      content:"";position:absolute;left:-10px;top:12px;width:16px;height:16px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));box-shadow:0 0 0 4px #e0f2fe
+    }
+
+    .event-thumb{width:100%;aspect-ratio:4/3;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#eef2f7;box-shadow:var(--softshadow)}
+    .event-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+
+    .event-body{padding:6px 10px}
+    .label{font-weight:800;font-size:14px;color:#082f49;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .badge{font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;border:1px solid #c7f9e0;background:#ecfdf5;color:#065f46}
+    .rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px;font-size:13px;color:#0f172a}
+    @media (max-width:720px){.rows{grid-template-columns:1fr}}
+    .row b{color:#111827}
+
+    /* Nutrition card */
+    .nutri-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .nutri{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+    .nutri .val{font-weight:800}
+
+    .foot{margin:24px 0 10px;text-align:center;color:var(--muted);font-size:12px}
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="bgfx">
+      <svg class="blob float-slow" width="1200" height="380" viewBox="0 0 1200 380" fill="none" style="position:absolute; top:-120px; left:-140px;">
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="var(--brand)" stop-opacity=".35"/>
+          <stop offset="100%" stop-color="var(--brand2)" stop-opacity=".25"/>
+        </linearGradient></defs>
+        <path d="M291 137c71-96 212-145 330-99s190 190 303 222c112 33 241-30 282 32 41 62-43 146-140 168-96 22-205-16-307-8-102 8-197 66-302 56-106-11-223-95-240-198-16-103 3-176 74-173z" fill="url(#g1)"/>
+      </svg>
+      <!-- <svg class="blob float-fast" width="900" height="260" viewBox="0 0 900 260" fill="none" style="position:absolute; bottom:-60px; right:-80px;">
+        <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="var(--brand2)" stop-opacity=".50"/>
+          <stop offset="100%" stop-color="var(--brand)" stop-opacity=".35"/>
+        </linearGradient></defs>
+        <path d="M172 86c42-57 128-86 200-59 72 27 115 114 183 133 68 19 145-18 169 19 24 37-26 96-84 110s-123-10-185-5c-62 5-119 43-183 36-64-7-134-62-144-129S130 143 172 86z" fill="url(#g2)"/>
+      </svg> -->
+    </div>
+
+    <div class="shell hero-inner">
+      <div>
+        <div class="kicker">From Field to Shelf</div>
+        <h1 class="h1">{{ (events_combined[0].cropType if events_combined else 'Product') }} Traceability Journey</h1>
+        <p class="sub">  Explore the entire lifecycle of your product with real-time blockchain records.
+  Trust the source, validate each handoff, and experience farm-to-fork transparency..</p>
+        <div class="hero-badges">
+          <span class="tag">🌿 Farm Origin</span>
+          <span class="tag">🧺 Processing</span>
+          <span class="tag">🚚 Logistics</span>
+        </div>
+      </div>
+
+      <!-- Product highlight -->
+      <div class="card" style="max-width:520px; margin-left:auto">
+        <div class="photo">
+          {% set _type = (events_combined[0].cropType if events_combined and events_combined[0].cropType else '')|lower %}
+          {% set fallback_img = '/static/images/crops/' ~ (_type|replace(' ','_')) ~ '.jpg' %}
+          <img
+            src="{{ product_image_url or fallback_img }}"
+            alt="{{ _type or 'product' }}"
+            loading="lazy"
+            onerror="this.onerror=null;this.src='/static/images/crops/placeholder.jpg'">
+          <div class="ribbon">Crop • {{ crop_id or '—' }}</div>
+        </div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="cell"><div class="note">Crop Type</div><div class="big">{{ events_combined[0].cropType if events_combined else '—' }}</div></div>
+            <div class="cell"><div class="note">Latest Status</div><div class="big">{{ events_combined[-1].status if events_combined else '—' }}</div></div>
+            <div class="cell"><div class="note">Origin</div><div>{{ events_combined[0].location if events_combined else '—' }}</div></div>
+            <div class="cell"><div class="note">Actor</div><div>{{ events_combined[0].actor if events_combined else '—' }}</div></div>
+          </div>
+          <div class="cta">
+            <a class="btn ghost" href="/">Home</a>
+            <form method="POST" action="/export-pdf/{{ crop_id }}" style="margin:0"><button class="btn" type="submit">Export PDF</button></form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BODY -->
+  <div class="shell" style="padding:22px 18px 40px">
+    <div class="grid">
+
+      <!-- LEFT: Timeline -->
+      <section class="panel">
+        <div class="panel-head">
+          <div class="title">Trace Stages</div>
+          <div class="muted">End-to-end overview with imagery</div>
+        </div>
+
+{# ---- Crop-aware stage images with sub-stages + graceful fallbacks ---- #}
+{% set _crop      = (events_combined[0].cropType if events_combined else '')|lower %}
+{% set crop_slug  = _crop|replace(' ', '-')|replace('/', '-')|replace('&', 'and') %}
+{% set base_dir   = '/static/images/crops/' ~ crop_slug %}
+{% set common_dir = '/static/images/crops/_common' %}
+{% set placeholder= '/static/images/crops/placeholder.jpg' %}
+
+{# Optional dict overrides from backend: stage_images = {
+     'cover': '...', 'planted': '...', 'harvested': '...',
+     'processed_received': '...', 'processed_processed': '...',
+     'distributed_received': '...', 'distributed_dispatched': '...',
+     'retail_received': '...', 'retail_sold': '...'
+} #}
+
+{# Cover (hero) #}
+{% set cover_img =
+  (stage_images.cover if stage_images and stage_images.get('cover')) or
+  (base_dir ~ '/cover.jpg')
+%}
+
+{# Core stages #}
+{% set planted_img =
+  (stage_images.planted if stage_images and stage_images.get('planted')) or
+  (base_dir ~ '/planted.jpg') or
+  (common_dir ~ '/planted.jpg')
+%}
+
+{% set harvested_img =
+  (stage_images.harvested if stage_images and stage_images.get('harvested')) or
+  (base_dir ~ '/harvested.jpg') or
+  (common_dir ~ '/harvested.jpg')
+%}
+
+{# Processed: Received vs Processed #}
+{% set processed_received_img =
+  (stage_images.processed_received if stage_images and stage_images.get('processed_received')) or
+  (base_dir ~ '/processed_received.jpg') or
+  (common_dir ~ '/processed_received.jpg')
+%}
+
+{% set processed_processed_img =
+  (stage_images.processed_processed if stage_images and stage_images.get('processed_processed')) or
+  (base_dir ~ '/processed_processed.jpg') or
+  (common_dir ~ '/processed_processed.jpg')
+%}
+
+{# Distributed: Received vs Dispatched #}
+{% set distributed_received_img =
+  (stage_images.distributed_received if stage_images and stage_images.get('distributed_received')) or
+  (base_dir ~ '/distributed_received.jpg') or
+  (common_dir ~ '/distributed_received.jpg')
+%}
+
+{% set distributed_dispatched_img =
+  (stage_images.distributed_dispatched if stage_images and stage_images.get('distributed_dispatched')) or
+  (base_dir ~ '/distributed_dispatched.jpg') or
+  (common_dir ~ '/distributed_dispatched.jpg')
+%}
+
+{# Retail: Received vs Sold #}
+{% set retail_received_img =
+  (stage_images.retail_received if stage_images and stage_images.get('retail_received')) or
+  (base_dir ~ '/retail_received.jpg') or
+  (common_dir ~ '/retail_received.jpg')
+%}
+
+{% set retail_sold_img =
+  (stage_images.retail_sold if stage_images and stage_images.get('retail_sold')) or
+  (base_dir ~ '/retail_sold.jpg') or
+  (common_dir ~ '/retail_sold.jpg')
+%}
+
+<div class="timeline">
+  <div class="rail">
+    {% if events_combined %}
+      {% for e in events_combined %}
+        {# --------- image selection (crop + stage aware) --------- #}
+        {% set key = (e.image_stage or e.status or 'event')|lower %}
+        {# Prefer a dict like stage_images = { 'processed_received': '/static/...', ... } if you pass it.
+           Otherwise fall back to per-stage single variables; finally to a safe placeholder. #}
+        {% set thumb_url = (
+          (stage_images.get(key) if stage_images is defined and stage_images)
+          or
+          (
+            planted_img if key == 'planted' else
+            harvested_img if key == 'harvested' else
+            processed_received_img if key == 'processed_received' else
+            processed_processed_img if key in ['processed','processed_processed'] else
+            distributed_received_img if key == 'distributed_received' else
+            distributed_dispatched_img if key == 'distributed_dispatched' else
+            retail_received_img if key == 'retail_received' else
+            retail_sold_img if key == 'retail_sold' else
+            (product_image_url or '/static/images/crops/placeholder.jpg')
+          )
+        ) %}
+
+<article class="event" data-kind="{{ key }}">
+
+  <!-- ✅ Heading above image -->
+  <div class="event-heading" style="font-weight:700; font-size:15px; margin-bottom:6px;margin-left: 10px;margin-top: 10px;">
+    {{ e.status }}{% if e.stage %} • {{ e.stage }}{% endif %}
+  </div>
+
+  <div class="event-thumb">
+    <img src="{{ thumb_url }}"
+         alt="{{ e.status }} {{ e.stage or '' }} image"
+         loading="lazy"
+         onerror="this.onerror=null;this.src='/static/images/crops/placeholder.jpg'">
+  </div>
+
+  <div class="event-body">
+    <!-- <div class="label">
+      <span class="badge">{{ e.status }}{% if e.stage %} • {{ e.stage }}{% endif %}</span>
+      <span>{{ e.timestamp }}</span>
+    </div> -->
+
+    <div class="rows">
+      <div class="row"><b>Actor:</b> {{ e.actor or '—' }}</div>
+      <div class="row"><b>Location:</b> {{ e.location or '—' }}</div>
+      <div class="row"><b>Crop Type:</b> {{ e.cropType or '—' }}</div>
+      {% if e.batchCode %}
+        <div class="row"><b>Batch:</b> {{ e.batchCode }}</div>
+      {% endif %}
+
+      {# ---- Per-status details remain unchanged ---- #}
+      {% if e.status == 'Planted' %}
+        <div class="row"><b>Date Planted:</b> {{ e.datePlanted or '—' }}</div>
+        <div class="row"><b>Area Size:</b> {{ e.areaSize or '—' }}</div>
+
+      {% elif e.status == 'Harvested' %}
+        <div class="row"><b>Harvest Date:</b> {{ e.harvestDate or '—' }}</div>
+        <div class="row"><b>Quantity:</b> {{ e.harvestQuantity or '—' }}</div>
+        <div class="row"><b>Packaging:</b> {{ e.packagingType or '—' }}</div>
+        {% if e.harvesterName %}
+          <div class="row"><b>Harvester:</b> {{ e.harvesterName }}</div>
+        {% endif %}
+
+      {% elif e.status == 'Processed' %}
+        {% if (e.stage or '') == 'Received' %}
+          <div class="row"><b>Received Date:</b> {{ e.receivedDate or '—' }}</div>
+          <div class="row"><b>Received Qty:</b> {{ e.receivedQuantity or '—' }}</div>
+        {% else %}
+          <div class="row"><b>Processed Date:</b> {{ e.processedDate or '—' }}</div>
+          <div class="row"><b>Processed Qty:</b> {{ e.processedQuantity or '—' }}</div>
+        {% endif %}
+
+      {% elif e.status == 'Distributed' %}
+        {% if (e.stage or '') == 'Received' %}
+          <div class="row"><b>Received Date:</b> {{ e.receivedDate or '—' }}</div>
+          <div class="row"><b>Received Qty:</b> {{ e.receivedQuantity or e.quantity or '—' }}</div>
+        {% else %}
+          <div class="row"><b>Dispatch Date:</b> {{ e.dispatchDate or e.processedDate or '—' }}</div>
+          <div class="row"><b>Distributed Qty:</b> {{ e.distributedQuantity or '—' }}</div>
+        {% endif %}
+
+      {% elif e.status == 'Retail' %}
+        {% if (e.stage or '') == 'Received' %}
+          <div class="row"><b>Received Date:</b> {{ e.receivedDate or '—' }}</div>
+          <div class="row"><b>Received Qty:</b> {{ e.receivedQuantity or e.quantity or '—' }}</div>
+        {% else %}
+          <div class="row"><b>Sold Date:</b> {{ e.soldDate or '—' }}</div>
+          <div class="row"><b>Sold Qty:</b> {{ e.soldQuantity or '—' }}</div>
+        {% endif %}
+
+      {% else %}
+        {% if e.note %}
+          <div class="row"><b>Note:</b> {{ e.note }}</div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</article>
+
+      {% endfor %}
+    {% else %}
+      <article class="event show">
+        <div class="event-thumb">
+          <img src="/static/images/crops/placeholder.jpg" alt="No data">
+        </div>
+        <div class="event-body">
+          <div class="label"><span class="badge">No events</span> —</div>
+          <div class="rows"><div class="row">No history available for this crop.</div></div>
+        </div>
+      </article>
+    {% endif %}
+  </div>
+</div>
+
+      </section>
+
+      <!-- RIGHT: Nutrition -->
+      <aside class="card">
+        <div class="panel-head" style="border:none">
+          <div>
+            <div class="title">Nutritional Value</div>
+            <div class="muted">Per 100 g (approx.)</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="nutri-grid" id="nutriGrid"></div>
+          <div class="cta" style="margin-top:14px">
+            <a class="btn ghost" href="/track">Track Another</a>
+            <a class="btn ghost" href="/">Back Home</a>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+    <div class="foot">© {{ current_year or "" }} Precision Grow Traceability • Visual food journeys</div>
+  </div>
+
+  <script>
+    // Smooth reveal of timeline cards
+    const onScroll = () => {
+      document.querySelectorAll('.event').forEach(ev => {
+        const r = ev.getBoundingClientRect();
+        if (r.top < innerHeight - 60) ev.classList.add('show');
+      });
+    };
+    document.addEventListener('scroll', onScroll, {passive:true});
+    window.addEventListener('load', onScroll);
+
+    // Status → emoji flair
+    document.querySelectorAll('.event').forEach(ev=>{
+      const k = (ev.getAttribute('data-kind') || '').toLowerCase();
+      const badge = ev.querySelector('.badge'); if(!badge) return;
+      if(k.includes('plant'))   badge.textContent = '🌱 ' + badge.textContent;
+      else if(k.includes('harvest')) badge.textContent = '🌾 ' + badge.textContent;
+      else if(k.includes('process')) badge.textContent = '🏭 ' + badge.textContent;
+      else if(k.includes('distrib')) badge.textContent = '🚚 ' + badge.textContent;
+      else badge.textContent = '🔗 ' + badge.textContent;
+    });
+
+    // Theme by crop type
+    (function themeByCrop(){
+      const crop = "{{ (events_combined[0].cropType if events_combined else '')|lower }}";
+      const themes = {
+        rice:      { bg1:"#f1f8e9", bg2:"#ecfeff", brand:"#22c55e", brand2:"#0ea5e9" },
+        wheat:     { bg1:"#fff7ed", bg2:"#f0fdf4", brand:"#f59e0b", brand2:"#22c55e" },
+        tomato:    { bg1:"#fef2f2", bg2:"#fff7ed", brand:"#ef4444", brand2:"#f59e0b" },
+        onion:     { bg1:"#faf5ff", bg2:"#f0f9ff", brand:"#7c3aed", brand2:"#06b6d4" },
+        turmeric:  { bg1:"#fff7ed", bg2:"#fffbeb", brand:"#f59e0b", brand2:"#eab308" },
+        cotton:    { bg1:"#f8fafc", bg2:"#ecfeff", brand:"#06b6d4", brand2:"#3b82f6" },
+        sugarcane: { bg1:"#f0fdf4", bg2:"#ecfeff", brand:"#16a34a", brand2:"#0ea5e9" }
+      };
+      const t = themes[crop] || themes.sugarcane;
+      const root = document.documentElement;
+      root.style.setProperty('--bg1', t.bg1);
+      root.style.setProperty('--bg2', t.bg2);
+      root.style.setProperty('--brand', t.brand);
+      root.style.setProperty('--brand2', t.brand2);
+    })();
+
+    // Nutrition (hard-coded demo per crop family)
+    (function fillNutrition(){
+      const crop = ("{{ (events_combined[0].cropType if events_combined else '')|lower }}").split(' ')[0] || "";
+      const map = {
+        rice:      { Calories: "130 kcal", Carbs: "28 g", Protein: "2.7 g", Fat: "0.3 g", Fiber: "0.4 g", Sodium: "1 mg" },
+        wheat:     { Calories: "120 kcal", Carbs: "25 g", Protein: "4 g",   Fat: "0.9 g", Fiber: "3.6 g", Sodium: "2 mg" },
+        tomato:    { Calories: "18 kcal",  Carbs: "3.9 g", Protein: "0.9 g", Fat: "0.2 g", Fiber: "1.2 g", Sodium: "5 mg" },
+        onion:     { Calories: "40 kcal",  Carbs: "9.3 g", Protein: "1.1 g", Fat: "0.1 g", Fiber: "1.7 g", Sodium: "4 mg" },
+        turmeric:  { Calories: "312 kcal", Carbs: "67 g",  Protein: "9.7 g", Fat: "3.3 g", Fiber: "22 g", Sodium: "38 mg" },
+        cotton:    { Calories: "—", Carbs: "—", Protein: "—", Fat: "—", Fiber: "—", Sodium: "—" },
+        sugarcane: { Calories: "269 kcal", Carbs: "73 g",  Protein: "0 g",   Fat: "0 g",  Fiber: "0 g",  Sodium: "39 mg" }
+      };
+      const d = map[crop] || { Calories:"—", Carbs:"—", Protein:"—", Fat:"—", Fiber:"—", Sodium:"—" };
+      const root = document.getElementById('nutriGrid');
+      root.innerHTML = '';
+      Object.keys(d).forEach(k=>{
+        const div = document.createElement('div');
+        div.className = 'nutri';
+        div.innerHTML = `<div class="note">${k}</div><div class="val">${d[k]}</div>`;
+        root.appendChild(div);
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📜 My Crop History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin:0; font-family:'Inter',sans-serif; background:linear-gradient(to right,#f0fdf4,#e8f5e9); color:#2e7d32; }
+    .container { max-width:1000px; margin:40px auto; padding:30px; background:#fff; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.08); animation:fadeIn .8s ease; }
+    h2 { text-align:center; font-size:32px; margin-bottom:25px; }
+    select,button{ padding:10px 16px; font-size:16px; border:1px solid #c8e6c9; border-radius:8px; margin:10px; }
+    .tabs{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:30px 0; }
+    .tab-button{ padding:10px 20px; background:#e0f2f1; border:none; border-radius:6px; cursor:pointer; font-weight:600; color:#00695c; transition:background .3s; }
+    .tab-button.active{ background:#00695c; color:#fff; }
+    .event-card{ display:none; flex-wrap:wrap; align-items:center; background:#f9fbe7; padding:20px; margin-bottom:20px; border-left:5px solid #43a047; border-radius:12px; animation:slideIn .5s ease; }
+    .event-card.active{ display:flex; }
+    .event-card img{ width:60px; height:60px; margin-right:20px; }
+    .event-details{ flex:1; }
+    .event-details h3{ margin:0; color:#1b5e20; }
+    .event-details p{ margin:6px 0; font-size:15px; color:#444; }
+    .back-link{ text-align:center; display:block; margin-top:40px; color:#2e7d32; font-weight:bold; text-decoration:none; }
+    @keyframes fadeIn{ from{opacity:0; transform:translateY(20px)} to{opacity:1; transform:translateY(0)} }
+    @keyframes slideIn{ from{opacity:0; transform:translateX(-20px)} to{opacity:1; transform:translateX(0)} }
+    @media (max-width:768px){ .event-card{ flex-direction:column; align-items:flex-start } .event-card img{ margin-bottom:10px } }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>📜 Blockchain Crop History</h2>
+
+  <form method="get" style="text-align:center;">
+    <select name="crop_id" required>
+      <option value="">🔍 Select Crop ID</option>
+      {% for id in crop_ids %}
+        <option value="{{ id }}" {% if id == crop_id %}selected{% endif %}>{{ id }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">View</button>
+  </form>
+
+  {% if crop_id %}
+    {% if events_combined %}
+      <div class="tabs">
+        <button class="tab-button active" data-status="Planted">🌱 Planted</button>
+        <button class="tab-button" data-status="Harvested">🌾 Harvested</button>
+        <button class="tab-button" data-status="Processed">🏭 Processed</button>
+        <button class="tab-button" data-status="Distributed">🚚 Distributed</button>
+        <!-- IMPORTANT: bind to "Retail" to match backend events_combined status -->
+        <button class="tab-button" data-status="Retail">🛒 Retailer</button>
+      </div>
+
+      {% for event in events_combined %}
+        <div class="event-card {% if event.status == 'Planted' %}active{% endif %}" data-type="{{ event.status }}">
+          {% if event.status == "Planted" %}
+            <img src="/static/icons/planted.png" alt="Planted">
+          {% elif event.status == "Harvested" %}
+            <img src="/static/icons/harvested.png" alt="Harvested">
+          {% elif event.status == "Processed" %}
+            <img src="/static/icons/processed.png" alt="Processed">
+          {% elif event.status == "Distributed" %}
+            <img src="/static/icons/distributed.png" alt="Distributed">
+          {% elif event.status in ["Retail","Retailer","Sold"] %}
+            <img src="/static/icons/retailer.png" alt="Retailer">
+          {% endif %}
+
+          <div class="event-details">
+            <h3>{{ event.actor }} - {{ event.stage or event.status }}</h3>
+
+            <p><strong>Crop ID:</strong> {{ event.cropId }}</p>
+            <p><strong>Crop Type:</strong> {{ event.cropType }}</p>
+            <p><strong>Location:</strong> {{ event.location }}</p>
+            <p><strong>Timestamp:</strong> {{ event.timestamp }}</p>
+
+            {% if event.status == "Planted" %}
+              <p><strong>Date Planted:</strong> {{ event.datePlanted }}</p>
+              <p><strong>Farming Type:</strong> {{ event.farmingType }}</p>
+              <p><strong>Seed Planted:</strong> {{ event.seedType }}</p>
+              <p><strong>Area Size:</strong> {{ event.areaSize }} acres</p>
+
+            {% elif event.status == "Harvested" %}
+              <p><strong>Harvest Date:</strong> {{ event.harvestDate }}</p>
+              <p><strong>Harvest Quantity:</strong> {{ event.harvestQuantity }}</p>
+              <p><strong>Packaging Type:</strong> {{ event.packagingType }}</p>
+
+            {% elif event.status == "Processed" %}
+              {% if event.stage == "Received" %}
+                <p><strong>Received Date:</strong> {{ event.receivedDate }}</p>
+                <p><strong>Quantity Received:</strong> {{ event.receivedQuantity }}</p>
+                <p><strong>Packaging Type:</strong> {{ event.packagingType }}</p>
+              {% else %}
+                {% if event.receivedDate %}
+                  <p><strong>Received Date:</strong> {{ event.receivedDate }}</p>
+                {% endif %}
+                <p><strong>Processed Date:</strong> {{ event.processedDate }}</p>
+                <p><strong>Processed Quantity:</strong> {{ event.processedQuantity }}</p>
+                <p><strong>Packaging Type:</strong> {{ event.packagingType }}</p>
+                {% if event.batchCode %}
+                  <p><strong>Batch Code:</strong> {{ event.batchCode }}</p>
+                {% endif %}
+              {% endif %}
+
+            {% elif event.status == "Distributed" %}
+              {% if event.stage == "Received" %}
+                <p><strong>Received Date:</strong> {{ event.receivedDate }}</p>
+                <p><strong>Quantity Received:</strong> {{ event.quantity }}</p>
+                <p><strong>Packaging Type:</strong> {{ event.packagingType }}</p>
+                {% if event.batchCode %}
+                  <p><strong>Batch Code:</strong> {{ event.batchCode }}</p>
+                {% endif %}
+              {% else %}
+                {% if event.receivedDate %}
+                  <p><strong>Received Date:</strong> {{ event.receivedDate }}</p>
+                {% endif %}
+                <p><strong>Dispatch Date:</strong> {{ event.dispatchDate }}</p>
+                <p><strong>Distributed Quantity:</strong> {{ event.distributedQuantity }}</p>
+                <p><strong>Packaging Type:</strong> {{ event.packagingType }}</p>
+                {% if event.batchCode %}
+                  <p><strong>Batch Code:</strong> {{ event.batchCode }}</p>
+                {% endif %}
+              {% endif %}
+
+            {% elif event.status in ["Retail","Retailer","Sold"] %}
+              {% if event.stage == "Received" %}
+                <p><strong>Received Date:</strong> {{ event.receivedDate }}</p>
+                <p><strong>Quantity Received:</strong> {{ event.quantity }}</p>
+                {% if event.batchCode %}
+                  <p><strong>Batch Code:</strong> {{ event.batchCode }}</p>
+                {% endif %}
+              {% else %}
+                {% if event.receivedDate %}
+                  <p><strong>Received Date:</strong> {{ event.receivedDate }}</p>
+                {% endif %}
+                <p><strong>Sold Date:</strong> {{ event.soldDate }}</p>
+                <p><strong>Sold Quantity:</strong> {{ event.soldQuantity }}</p>
+                {% if event.batchCode %}
+                  <p><strong>Batch Code:</strong> {{ event.batchCode }}</p>
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+
+    {% else %}
+      <p style="text-align:center;">🚫 No events found for this crop.</p>
+    {% endif %}
+  {% endif %}
+
+  <a class="back-link" href="/">🏠 Back to Dashboard</a>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-button');
+  const cards = document.querySelectorAll('.event-card');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const type = tab.getAttribute('data-status');
+      cards.forEach(card => {
+        if (card.getAttribute('data-type') === type) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

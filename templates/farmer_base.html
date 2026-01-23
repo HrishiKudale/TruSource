@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title or "Farmer Dashboard - Precision Grow" }}</title>
+
+  <!-- Global + design tokens -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='globals.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styleguide.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+
+  {% block extra_head %}{% endblock %}
+
+  <style>
+    /* 🔥 Content-only loader: covers just the inner page content (.frame-14) */
+    #content-loader {
+      position: absolute;
+      inset: 0;                /* top:0; right:0; bottom:0; left:0 */
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      transition: opacity 0.25s ease-out, visibility 0.25s ease-out;
+    }
+
+    #content-loader video {
+      width: 220px;
+      height: auto;
+      display: block;
+    }
+
+    #content-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+  </style>
+</head>
+
+<body>
+{% set current_page = active_page|default('dashboard') %}
+{% set current_submenu = active_submenu or '' %}
+
+<div class="my-crop">
+  <!-- Sidebar -->
+  <aside class="sidebar" role="navigation" aria-label="Main navigation">
+    <header class="frame">
+      <div class="div">
+        <img class="rectangle" src="{{ url_for('static', filename='svg-icons/rectangle.svg') }}" alt="Precision Grow Logo"/>
+        <div class="frame-2">
+          <div class="precision-grow">PRECISION GROW</div>
+          <div class="pioneering-the">PIONEERING THE FUTURE FARMING</div>
+        </div>
+      </div>
+    </header>
+
+    <nav class="frame-3">
+      <div class="frame-4">
+        <section class="frame-5">
+          <div class="div-wrapper"><h2 class="text-wrapper">General</h2></div>
+          <ul class="frame-6">
+
+            <!-- DASHBOARD -->
+            <li class="{{ 'component-2' if current_page == 'dashboard' else 'component' }}">
+              <a href="{{ url_for('farmer_dashboard_bp.dashboard_page') }}" class="component-link">
+                <img class="img sidebar-icon {% if current_page == 'dashboard' %}active{% endif %}"
+                     src="{{ url_for('static', filename='svg-icons/Dashboard.svg') }}">
+                <span class="{{ 'dashboard' if current_page == 'dashboard' else 'text-wrapper-2' }}">Dashboard</span>
+              </a>
+            </li>
+
+            <!-- MY CROPS -->
+            <li class="{{ 'component-2' if current_page == 'my_crops' else 'component' }}">
+              <a href="{{ url_for('farmer_crop_bp.my_crops') }}" class="component-link">
+                <img class="img sidebar-icon {% if current_page == 'my_crops' %}active{% endif %}"
+                     src="{{ url_for('static', filename='svg-icons/My Crop.svg') }}">
+                <span class="{{ 'dashboard' if current_page == 'my_crops' else 'text-wrapper-2' }}">My Crop</span>
+              </a>
+            </li>
+
+            <!-- STORAGE & PROCESSING -->
+            <li class="component dropdown {% if current_submenu in ['warehouse', 'processing'] %}open submenu-parent{% endif %}">
+              <a class="component-link dropdown-toggle" href="javascript:void(0);">
+                <img class="img sidebar-icon {% if current_submenu in ['warehouse', 'processing'] %}active{% endif %}"
+                     src="{{ url_for('static', filename='svg-icons/warehouse1.svg') }}">
+                <span class="text-wrapper-2">Storage &amp; Processing</span>
+                <img class="caret-down" src="{{ url_for('static', filename='svg-icons/Vector.svg') }}">
+              </a>
+
+              <ul class="submenu">
+                <li class="{{ 'component-2 submenu-active' if current_submenu == 'warehouse' else 'component' }}">
+                  <a href="{{ url_for('farmer_storage.list_storage') }}" class="component-link">
+                    <img class="img sidebar-icon {% if current_submenu == 'warehouse' %}active{% endif %}"
+                         src="{{ url_for('static', filename='svg-icons/Warehouse.svg') }}">
+                    <span class="{{ 'dashboard' if current_submenu == 'warehouse' else 'text-wrapper-2' }}">Warehouse</span>
+                  </a>
+                </li>
+
+                <li class="{{ 'component-2 submenu-active' if current_submenu == 'processing' else 'component' }}">
+                  <a href="{{ url_for('farmer_processing_bp.processing_overview') }}" class="component-link">
+                    <img class="img sidebar-icon {% if current_submenu == 'processing' %}active{% endif %}"
+                         src="{{ url_for('static', filename='svg-icons/Manufacturer.svg') }}">
+                    <span class="{{ 'dashboard' if current_submenu == 'processing' else 'text-wrapper-2' }}">Processing</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <!-- SALES -->
+            <li class="component dropdown {% if current_submenu in ['orders', 'marketplace'] %}open submenu-parent{% endif %}">
+              <a class="component-link dropdown-toggle" href="javascript:void(0);">
+                <img class="img sidebar-icon {% if current_submenu in ['orders', 'marketplace'] %}active{% endif %}"
+                     src="{{ url_for('static', filename='svg-icons/Sales.svg') }}">
+                <span class="text-wrapper-2">Sales</span>
+                <img class="caret-down" src="{{ url_for('static', filename='svg-icons/Vector.svg') }}">
+              </a>
+
+              <ul class="frame-6 submenu-list submenu">
+                <li class="{{ 'component-2 submenu-active' if current_submenu == 'orders' else 'component' }}">
+                  <a href="{{ url_for('farmer_sales_bp.orders_page') }}" class="component-link">
+                    <img class="img sidebar-icon {% if current_submenu == 'orders' %}active{% endif %}"
+                         src="{{ url_for('static', filename='svg-icons/Orders.svg') }}">
+                    <span class="{{ 'dashboard' if current_submenu == 'orders' else 'text-wrapper-2' }}">Orders</span>
+                  </a>
+                </li>
+
+                <li class="{{ 'component-2 submenu-active' if current_submenu == 'marketplace' else 'component' }}">
+                  <a href="{{ url_for('farmer_marketplace_bp.marketplace_home') }}" class="component-link">
+                    <img class="img sidebar-icon {% if current_submenu == 'marketplace' %}active{% endif %}"
+                         src="{{ url_for('static', filename='svg-icons/Marketplace.svg') }}">
+                    <span class="{{ 'dashboard' if current_submenu == 'marketplace' else 'text-wrapper-2' }}">Marketplace</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <!-- LOGISTICS -->
+            <li class="{{ 'component-2' if current_page=='logistics' else 'component' }}">
+              <a href="{{ url_for('farmer_logistics.list_shipments') }}" class="component-link">
+                <img class="img sidebar-icon {% if current_page=='logistics' %}active{% endif %}"
+                     src="{{ url_for('static', filename='svg-icons/TruckProperty 1=Regular.svg') }}">
+                <span class="{{ 'dashboard' if current_page=='logistics' else 'text-wrapper-2' }}">Logistics</span>
+              </a>
+            </li>
+
+            <!-- PRICING -->
+            <li class="{{ 'component-2' if current_page=='pricing' else 'component' }}">
+              <a href="{{ url_for('farmer_pricing.pricing_page') }}" class="component-link">
+                <img class="img sidebar-icon {% if current_page=='pricing' %}active{% endif %}"
+                     src="{{ url_for('static', filename='svg-icons/Pricing.svg') }}">
+                <span class="{{ 'dashboard' if current_page=='pricing' else 'text-wrapper-2' }}">Pricing</span>
+              </a>
+            </li>
+
+            <!-- TRACEABILITY -->
+            <li class="{{ 'component-2' if current_page=='traceability' else 'component' }}">
+              <a href="{{ url_for('traceability_bp.traceability_page') }}" class="component-link">
+                <img class="img sidebar-icon {% if current_page=='traceability' %}active{% endif %}"
+                     src="{{ url_for('static', filename='svg-icons/Traceability.svg') }}">
+                <span class="{{ 'dashboard' if current_page=='traceability' else 'text-wrapper-2' }}">Traceability</span>
+              </a>
+            </li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="frame-4">
+        <section class="frame-5">
+          <div class="div-wrapper"><h2 class="text-wrapper">Support</h2></div>
+          <ul class="frame-6">
+
+            <li class="{{ 'component-2' if current_page=='FAQs' and not current_submenu else 'component' }}">
+              <a href="{{ url_for('farmer_dashboard_bp.dashboard_page') }}" class="component-link">
+                <img class="img sidebar-icon {% if current_page=='FAQs' and not current_submenu %}active{% endif %}"
+                     src="{{ url_for('static', filename='svg-icons/ChartBarProperty 1=Regular.svg') }}">
+                <span class="{{ 'dashboard' if current_page=='FAQs' and not current_submenu else 'text-wrapper-2' }}">FAQs</span>
+              </a>
+            </li>
+
+            <li class="{{ 'component-2' if current_page=='Help' and not current_submenu else 'component' }}">
+              <a href="{{ url_for('farmer_dashboard_bp.dashboard_page') }}" class="component-link">
+                <img class="img sidebar-icon {% if current_page=='Help' and not current_submenu %}active{% endif %}"
+                     src="{{ url_for('static', filename='svg-icons/HeadsetProperty 1=Regular.svg') }}">
+                <span class="{{ 'dashboard' if current_page=='Help' and not current_submenu else 'text-wrapper-2' }}">Help</span>
+              </a>
+            </li>
+
+          </ul>
+        </section>
+      </div>
+
+      <!-- Footer -->
+      <ul class="frame-6">
+        <li><img class="line-2" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}" alt=""/></li>
+        <li class="component">
+          <a href="#setting" class="component-link">
+            <img class="img sidebar-icon"
+                 src="{{ url_for('static', filename='svg-icons/Setting.svg') }}">
+            <span class="text-wrapper-2">Setting</span>
+          </a>
+        </li>
+        <li class="component">
+          <a href="{{ url_for('logout') if false else '#logout' }}" class="component-link">
+            <img class="img sidebar-icon"
+                 src="{{ url_for('static', filename='svg-icons/LogOut.svg') }}">
+            <span class="text-wrapper-2">Log out</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="frame-7">
+    <header class="frame-8">
+      <div class="frame-9" role="search">
+        <label for="main-search" class="magnifying-glass">
+          <img class="vector" src="{{ url_for('static', filename='svg-icons/MagnifyingGlass.svg') }}">
+        </label>
+        <input type="search" id="main-search" class="text-wrapper-3" placeholder="Search">
+      </div>
+
+      <div class="frame-10">
+        <button class="frame-11" type="button">
+          <img class="bell" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}">
+          <span class="frame-12"></span>
+        </button>
+        <button class="frame-13" type="button"></button>
+      </div>
+    </header>
+
+      <div class="frame-wrapper content-shell">
+
+        <!-- CONTENT LOADER (overlay only) -->
+        <div id="content-loader" class="content-loader">
+          <video id="loader-video"
+                autoplay muted loop playsinline preload="auto">
+            <source src="{{ url_for('media.stream_media', filename='loading.webm') }}" type="video/webm">
+          </video>
+        </div>
+
+        <div class="frame-14">
+          {% block content %}{% endblock %}
+        </div>
+
+      </div>
+
+  </main>
+</div>
+
+<!-- Always load sidebar dropdown behavior -->
+<script src="{{ url_for('static', filename='js/sidebar-dropdown.js') }}"></script>
+
+{# Page-specific extra scripts can still be added by child templates #}
+{% block extra_scripts %}{% endblock %}
+
+<script>
+(function () {
+  const loader = document.getElementById("content-loader");
+  if (!loader) return;
+
+  let loaderTimer = null;
+  let loaderVisible = false;
+
+  // Show loader ONLY if page takes longer than 600ms
+  function scheduleLoader() {
+    loaderTimer = setTimeout(() => {
+      loader.classList.add("visible");
+      loaderVisible = true;
+    }, 600); // 👈 magic number
+  }
+
+  function hideLoader() {
+    clearTimeout(loaderTimer);
+    if (loaderVisible) {
+      loader.classList.remove("visible");
+      loader.classList.add("hidden");
+      loaderVisible = false;
+    }
+  }
+
+  // On navigation start
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("a");
+    if (!link) return;
+
+    const href = link.getAttribute("href");
+    if (
+      href &&
+      href !== "#" &&
+      !href.startsWith("javascript:") &&
+      !href.startsWith("#")
+    ) {
+      scheduleLoader();
+    }
+  });
+
+  // On form submit
+  document.addEventListener("submit", () => {
+    scheduleLoader();
+  });
+
+  // When page finishes loading
+  window.addEventListener("load", () => {
+    hideLoader();
+  });
+})();
+</script>
+
+
+
+</body>
+</html>

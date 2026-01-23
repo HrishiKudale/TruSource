@@ -1,0 +1,100 @@
+{# templates/traceability.html #}
+{% extends "farmer_base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='traceability.css') }}">
+
+<div class="tr-page">
+
+  <!-- Header -->
+  <div class="tr-topbar">
+    <div class="tr-title">
+        <img class="grains" src="{{ url_for('static', filename='svg-icons/Traceability/Traceability.svg') }}" /><h1>Traceability</h1>
+    </div>
+
+    <div class="tr-actions">
+      <button class="btn-outline" id="btnExport">
+        Export <span class="btn-ico">⤴</span>
+      </button>
+      <button class="btn-primary" id="btnGenerateQR">
+        Generate QR <span class="btn-ico">⌁</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="tr-search">
+    <div class="search-box">
+      <span class="search-ico">🔎</span>
+      <input id="trSearchInput" type="text" placeholder="Enter Crop ID or Crop Name" autocomplete="off">
+    </div>
+    <button class="btn-dark" id="trSearchBtn">Search</button>
+  </div>
+
+  <!-- Cards -->
+  <div class="tr-grid">
+    <!-- Traceability card -->
+    <div class="card tr-card">
+      <div class="card-head">
+        <div class="head-left">
+          <img class="grains" src="{{ url_for('static', filename='svg-icons/Traceability/Traceability_Card.svg') }}" />
+          <span class="head-title">Traceability</span>
+        </div>
+        <div class="head-right">
+          <span class="crop-chip" id="cropChip">—</span>
+          <button class="icon-btn" id="btnCopyCrop" title="Copy crop id">⧉</button>
+        </div>
+      </div>
+
+      <div class="timeline" id="timeline">
+        <!-- JS renders items -->
+      </div>
+
+      <div class="tr-msg" id="trMsg" style="display:none;"></div>
+    </div>
+
+    <!-- Document list card -->
+    <div class="card doc-card">
+      <div class="doc-head">
+        <div class="doc-ico">📄</div>
+        <div class="doc-title">Document List</div>
+      </div>
+
+      <div class="doc-table">
+        <div class="doc-row doc-row-head">
+          <div>Name</div>
+          <div class="right">Action</div>
+        </div>
+        <div id="docBody">
+          <!-- JS renders -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script type="application/json" id="traceCfg">
+{
+  "traceApi": {{ url_for('traceability_bp.traceability_api') | tojson }},
+  "prefillCropId": {{ (crop_id or "") | tojson }}
+}
+</script>
+
+<script>
+  const cfg = JSON.parse(document.getElementById("traceCfg").textContent || "{}");
+  window.TRACE_API = cfg.traceApi || "";
+  window.PREFILL_CROP_ID = cfg.prefillCropId || "";
+
+  window.STATIC_ICONS = {
+    origin: "{{ url_for('static', filename='svg-icons/Traceability/Origin.svg') }}",
+    storage: "{{ url_for('static', filename='svg-icons/Traceability/Storage.svg') }}",
+    processing: "{{ url_for('static', filename='svg-icons/Traceability/Processing.svg') }}",
+    shipment: "{{ url_for('static', filename='svg-icons/Traceability/Shipment.svg') }}",
+    sale: "{{ url_for('static', filename='svg-icons/Traceability/Sale.svg') }}"
+  };
+</script>
+
+<script src="{{ url_for('static', filename='js/traceability.js') }}"></script>
+
+
+{% endblock %}

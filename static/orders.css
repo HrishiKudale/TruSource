@@ -1,0 +1,193 @@
+/* =========================================================
+   ORDERS PAGE (SCOPED)
+   This file prevents global style.css overlap issues
+   ========================================================= */
+
+.orders-page {
+  width: 100%;
+  position: relative;
+}
+
+/* Ensure sections stack vertically */
+.orders-header,
+.orders-kpis,
+.orders-table-section {
+  width: 100%;
+  position: relative;
+  display: block;
+}
+
+/* Header row can wrap on small screens */
+.orders-header.frame-15 {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* KPI layout */
+.orders-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+  margin-top: 32px;
+}
+
+/* KPI cards sizing */
+.orders-kpis .frame-19 {
+  flex: 1 1 240px;
+  min-width: 240px;
+}
+
+/* Toolbar wrap */
+.orders-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+/* Search box responsive */
+.orders-toolbar .frame-22 {
+  width: 260px;
+  max-width: 100%;
+}
+
+/* Table wrapper */
+.orders-table-wrapper {
+  width: 100%;
+  display: block;
+  position: relative;
+  overflow-x: auto; /* horizontal scroll on small screens */
+  background: transparent;
+  margin-top: 10px;
+}
+
+/* Table itself */
+.order-table {
+  width: 100%;
+  min-width: 980px; /* ensures columns don't squash */
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* Cells */
+.order-table th,
+.order-table td {
+  padding: 16px 14px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* Header row */
+.order-table thead {
+  background-color: #f0f0f0;
+}
+
+/* Hover */
+.order-table tbody tr {
+  background: #fff;
+  transition: background 0.2s ease;
+}
+
+.order-table tbody tr.click-row:hover {
+  background: #e8f4ff;
+  cursor: pointer;
+}
+
+/* EMPTY STATE (inside table) */
+.empty-state-row td {
+  padding: 0;
+}
+
+.empty-state-cell {
+  background: #fff;
+  text-align: center;
+}
+
+.empty-state-content {
+  min-height: 360px;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.empty-state-illustration {
+  width: auto;
+  max-width: 80%;
+  height: auto;
+  margin: 28px 1px 1px;
+}
+
+.empty-state-text {
+  font-family: var(--body-md-md-font-family);
+  font-weight: var(--body-md-md-font-weight);
+  color: var(--grey-950);
+  font-size: 18px;
+  text-align: center;
+}
+
+.empty-state-subtext {
+  font-family: var(--body-md-reg-font-family);
+  font-weight: var(--body-md-reg-font-weight);
+  color: var(--grey-700);
+  font-size: 16px;
+  text-align: center;
+  max-width: 420px;
+}
+
+/* Responsive behavior */
+@media (max-width: 900px) {
+  .orders-toolbar .frame-22 {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .orders-kpis .frame-19 {
+    min-width: 100%;
+  }
+
+  .order-table th,
+  .order-table td {
+    padding: 10px 12px;
+  }
+}
+/* TABLE CARD */
+.table-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #ececec;
+}
+
+/* Scrollable area */
+.table-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Hide scrollbar */
+.table-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+.table-scroll {
+    scrollbar-width: none;
+}

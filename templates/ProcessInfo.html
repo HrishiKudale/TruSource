@@ -1,0 +1,170 @@
+{# templates/ProcessInfo.html #}
+{% extends "farmer_base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='manufacturer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='processinfo.css') }}">
+
+<div class="processinfo-page">
+
+  <!-- MAIN HEADER -->
+  <div class="processinfo-header">
+    <div class="processinfo-header-left">
+                    <a href="{{ url_for('farmer_processing_bp.processing_overview') }}" class="back-btn"style="
+                    width: 34px;
+                    height: 34px;
+                ">
+                      <img src="/static/svg-icons/Manufacturer/Back Manufacturer.svg" style="
+              width: 34px;
+              height: 34px;
+          ">
+        </a>
+        <img src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}">
+
+      <div>
+        <h1 class="processinfo-title">Manufacturer Details</h1>
+        <p class="processinfo-subtitle">
+          Manufacturer ID:
+          <span class="processinfo-id">{{ manufacturerId }}</span>
+        </p>
+      </div>
+    </div>
+
+    <a href="{{ url_for('farmer_processing_bp.processing_overview') }}"
+       class="processinfo-back">
+      ← Back to Processing Overview
+    </a>
+  </div>
+
+  <!-- CARD 1: FACTORY DETAILS -->
+  <section class="pi-card">
+    <header class="pi-card-header">
+      <img
+        src="{{ url_for('static', filename='svg-icons/Manufacturer/Manufacturer Detail.svg') }}"
+        class="pi-card-icon"
+        alt=""
+      >
+      <h2 class="pi-card-title">Factory Details</h2>
+    </header>
+
+    <div class="pi-card-body">
+
+      <!-- Row 1: Manufacturer Name / Service Provided -->
+      <div class="pi-row">
+        <div class="pi-field">
+          <label class="pi-label">Manufacturer Name</label>
+          <div class="pi-value-box">{{ factory.name }}</div>
+        </div>
+
+        <div class="pi-field">
+          <label class="pi-label">Service Provided</label>
+          <div class="pi-value-box">{{ factory.serviceProvided }}</div>
+        </div>
+      </div>
+
+      <!-- Row 2: Location / Supports -->
+      <div class="pi-row">
+        <div class="pi-field">
+          <label class="pi-label">Location</label>
+          <div class="pi-value-box">{{ factory.location }}</div>
+        </div>
+
+        <div class="pi-field">
+          <label class="pi-label">GST</label>
+          <div class="pi-value-box">{{ factory.supports }}</div>
+        </div>
+      </div>
+
+      <!-- Row 3: Owner / Contact -->
+      <div class="pi-row">
+        <div class="pi-field">
+          <label class="pi-label">Owner</label>
+          <div class="pi-value-box">{{ factory.owner }}</div>
+        </div>
+
+        <div class="pi-field">
+          <label class="pi-label">Contact</label>
+          <div class="pi-value-box">{{ factory.contact }}</div>
+        </div>
+      </div>
+
+      <!-- Row 4: Crops Linked / Total Quantity -->
+      <div class="pi-row">
+        <div class="pi-field">
+          <label class="pi-label">Crops Linked</label>
+          <div class="pi-value-box">{{ factory.cropsLinked }}</div>
+        </div>
+
+        <div class="pi-field">
+          <label class="pi-label">Total Quantity</label>
+          <div class="pi-value-box">
+            {{ factory.totalQuantity }} qtl
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CARD 2: TABLE -->
+  <section class="pi-card">
+    <header class="pi-card-header">
+      <img
+        src="{{ url_for('static', filename='svg-icons/Manufacturer/Crop List.svg') }}"
+        class="pi-card-icon"
+        alt=""
+      >
+      <h2 class="pi-card-title">Linked Crops</h2>
+    </header>
+
+    {% if items %}
+      <div class="pi-table-wrapper">
+        <table class="manufacturer-table">
+          <thead>
+            <tr>
+              <th>Crop ID</th>
+              <th>Crop Name</th>
+              <th>Quantity</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in items %}
+              <tr>
+                <td>{{ row.cropId }}</td>
+                <td>{{ row.cropType }}</td>
+                <td>{{ row.quantity }}</td>
+                <td>
+                  <span class="status-pill
+                               {% if row.status|lower in ['processed','approved'] %}
+                                 status-complete
+                               {% else %}
+                                 status-pending
+                               {% endif %}">
+                    {{ row.status|capitalize }}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="pi-empty-state">
+        <img
+          src="{{ url_for('static', filename='illustrations/Empty Mfg.svg') }}"
+          alt="No linked crops"
+          class="pi-empty-illustration"
+        >
+        <p class="pi-empty-title">No Crop Requests Linked</p>
+        <p class="pi-empty-text">
+          Send your crop for processing to see them listed here.
+        </p>
+      </div>
+    {% endif %}
+  </section>
+
+</div>
+
+{% endblock content %}

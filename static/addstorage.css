@@ -1,0 +1,446 @@
+/* ============================================================
+   STORE IN WAREHOUSE PAGE
+   ============================================================ */
+
+/* ===== Page Layout ===== */
+.store-warehouse-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.store-warehouse-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+/* ===== Top 2 cards grid ===== */
+.store-warehouse-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(540px, 1.6fr);
+  gap: 10px;
+  width: 100%;
+  align-items: stretch;
+}
+
+@media (max-width: 1100px) {
+  .store-warehouse-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Base Card ===== */
+.store-card {
+  background-color: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--grey-100);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ===== Card Header ===== */
+.store-card-header {
+  background-color: var(--grey-50);
+  padding: 7px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--grey-100);
+}
+
+.store-card-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.store-card-title {
+    font-family: var(--body-md-semibold-font-family);
+    font-weight: var(--body-lg-semibold-font-weight);
+    font-size: var(--body-lg-semibold-font-size);
+    color: var(--grey-900);
+}
+
+/* ===== Card Body ===== */
+.store-card-body {
+  padding: 14px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ============================================================
+   NEW GRIDS FOR WAREHOUSE + CROP DETAILS
+   ============================================================ */
+
+/* ---------- Warehouse Grid ---------- */
+.warehouse-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 20px !important;
+}
+
+.warehouse-grid .full-row {
+  grid-column: 1 / -1 !important;
+}
+
+/* ---------- Crop Grid ---------- */
+.crop-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.crop-grid .full-row {
+  grid-column: 1 / -1 !important;
+}
+
+/* ---------- Mobile Adjustment ---------- */
+@media (max-width: 768px) {
+  .warehouse-grid,
+  .crop-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ============================================================
+   Fields (same as addorder.css)
+   ============================================================ */
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-label {
+  font-family: var(--body-sm-reg-font-family);
+  font-weight: var(--body-sm-reg-font-weight);
+  font-size: var(--body-sm-reg-font-size);
+  color: var(--grey-700);
+}
+
+.field-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--grey-200);
+  background-color: var(--white);
+}
+
+.field-input input,
+.field-input select {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--body-sm-reg-font-family);
+  font-size: var(--body-sm-reg-font-size);
+  min-width: 0;
+}
+
+.field-input input::placeholder {
+  color: var(--grey-400);
+}
+
+/* ===== Select Arrow ===== */
+.field-input--select select {
+  appearance: none;
+  padding-right: 40px;
+}
+
+.select-chevron {
+  position: absolute;
+  right: 0;
+  width: 40px;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--grey-100);
+  border-left: 1px solid var(--grey-200);
+  font-size: 12px;
+  color: #E7E7E7;
+  pointer-events: none;
+}
+
+/* ===== Field Suffix (kg, %) ===== */
+.field-suffix {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--grey-500);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Add Crop Button — FIXED ALIGNMENT
+   ============================================================ */
+.add-storage-btn {
+  margin-top: 6px;
+  padding: 8px 14px;
+  background-color: var(--green-700);
+  color: var(--white);
+  border-radius: 8px;
+  border: none;
+  font-family: var(--body-sm-semibold-font-family);
+  font-size: var(--body-sm-semibold-font-size);
+  cursor: pointer;
+
+  width: fit-content;         /* keeps button small */
+  justify-self: start;         /* align left in grid */
+  
+  /* Add same left padding as the card body */
+  margin-left: 18px;   
+  margin-bottom: 18px;        /* matches .store-card-body padding-left */
+}
+
+.add-storage-btn:hover {
+  background-color: var(--green-800);
+}
+
+/* ============================================================
+   Table Card
+   ============================================================ */
+
+.storage-table-wrapper {
+  background-color: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--grey-100);
+  overflow: hidden;
+  width: 100%;
+}
+
+.storage-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.storage-table thead tr {
+  background-color: var(--grey-50);
+}
+
+.storage-table th {
+  padding: 14px 16px;
+  font-family: var(--body-md-semibold-font-family);
+  font-size: var(--body-md-semibold-font-size);
+  color: var(--grey-800);
+  border-bottom: 1px solid var(--grey-200);
+  text-align: left;
+}
+
+.storage-table td {
+  padding: 12px 16px;
+  font-family: var(--body-sm-reg-font-family);
+  font-size: var(--body-sm-reg-font-size);
+  color: var(--grey-700);
+  border-bottom: 1px solid var(--grey-100);
+}
+
+/* ===== Empty State ===== */
+.storage-empty-state {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+/* ============================================================
+   Page Header
+   ============================================================ */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.send-request-btn {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--green-700);
+  color: var(--white);
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--body-md-semibold-font-family);
+  font-size: var(--body-md-semibold-font-size);
+}
+
+.send-request-btn:hover {
+  background-color: var(--green-800);
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
+
+/* ===================== SUMMARY MODAL (Storage) ===================== */
+.summary-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.summary-modal.open {
+  display: flex;
+}
+
+.summary-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+}
+
+.summary-modal-dialog {
+  position: relative;
+  width: min(520px, calc(100vw - 32px));
+  margin: 64px auto;
+  border-radius: 14px;
+}
+
+.summary-modal-content {
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 18px 45px rgba(0,0,0,0.22);
+}
+
+.summary-illus {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.summary-illus img {
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.summary-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 6px 0 6px;
+}
+
+.summary-subtext {
+  text-align: center;
+  color: #666;
+  margin: 0 0 14px;
+  line-height: 1.35;
+}
+
+.summary-card {
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  padding: 12px 12px;
+  margin: 10px 0 14px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 4px;
+}
+
+
+
+.s-label {
+  color: #777;
+  font-weight: 500;
+}
+
+.s-value {
+  color: #111;
+  font-weight: 600;
+  text-align: right;
+}
+
+.summary-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.summary-actions.single {
+  grid-template-columns: 1fr;
+}
+
+.summary-btn {
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid #d8d8d8;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.summary-btn.primary {
+  background: #0f913d;
+  border-color: #0f913d;
+  color: #fff;
+}
+
+.summary-btn.secondary {
+  background: #fff;
+  color: #111;
+}
+
+.summary-error {
+  margin: 10px 0 0;
+  color: #b00020;
+  background: #fff3f3;
+  border: 1px solid #ffd2d2;
+  padding: 10px 10px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Table remove button */
+.row-delete-btn {
+  border: 1px solid #e2e2e2;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.row-delete-btn:hover {
+  background: #f6f6f6;
+}
+
+/* Empty state show/hide is controlled by JS */
+.storage-empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 18px;
+}
