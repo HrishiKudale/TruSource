@@ -40,17 +40,25 @@ def create_app():
     # CORS for React Native mobile app
     CORS(app, resources={r"/*": {"origins": "*"}})
 
-    # ------------------------------------------
-    # Mongo & Blockchain
-    # ------------------------------------------
+# ------------------------------------------
+# Mongo & Blockchain
+# ------------------------------------------
     USE_REMOTE_AUTH_API = os.getenv("USE_REMOTE_AUTH_API", "0") == "1"
+    DISABLE_MONGO = os.getenv("DISABLE_MONGO", "0") == "1"
 
+    # If remote auth is enabled, Mongo is not required on this app
     if USE_REMOTE_AUTH_API:
-        print("⚠️ Skipping Mongo init: using Remote Auth API mode")
+        DISABLE_MONGO = True
+        print("⚠️ Remote Auth API enabled (USE_REMOTE_AUTH_API=1) -> Mongo init skipped")
+
+    if DISABLE_MONGO:
+        print("⚠️ Mongo disabled")
     else:
         init_mongo(app)
+    print("USE_REMOTE_AUTH_API:", USE_REMOTE_AUTH_API, "DISABLE_MONGO:", DISABLE_MONGO)
 
-    init_blockchain(app)   # loads contract + prints ✓
+
+  # loads contract + prints ✓
 
     # ------------------------------------------
     # JWT setup
