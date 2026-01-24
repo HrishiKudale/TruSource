@@ -1,4 +1,17 @@
 # backend/routes/auth/auth_routes.py
+#
+# ✅ PythonAnywhere Free compatible (Option B)
+# - Uses Remote Auth API over HTTPS when USE_REMOTE_AUTH_API=1
+# - Falls back to local Mongo when USE_REMOTE_AUTH_API=0 (for local dev / paid hosting)
+#
+# ENV VARS (PythonAnywhere -> Web -> Environment variables)
+#   USE_REMOTE_AUTH_API=1
+#   AUTH_API_BASE_URL=https://YOUR-AUTH-API.onrender.com
+#
+# Note:
+# - This file keeps your HTML routes (/newlogin, /newregister, /user/<id>)
+# - It proxies /auth/login and /auth/register to the remote Auth API in remote mode
+# - It removes hard dependency on backend.mongo when remote mode is enabled
 
 from __future__ import annotations
 
@@ -6,6 +19,9 @@ import os
 import time
 import base64
 from io import BytesIO
+
+import requests
+import qrcode
 
 from flask import (
     Blueprint,
@@ -26,10 +42,43 @@ from flask_jwt_extended import (
     get_jwt_identity,
 )
 
-import qrcode
-
-from backend.mongo import mongo
+# Blockchain imports remain (only used during registration anchoring)
 from backend.blockchain import contract, web3, account, suggest_fees
+
+# -------------------------------------------------------------------
+# Remote Auth API toggles
+# -------------------------------------------------------------------
+USE_REMOTE_AUTH_API = os.getenv("USE_REMOTE_AUTH_API", "0") == "1"
+AUTH_API_BASE_URL = os.getenv("AUTH_API_BASE_URL", "").rstrip("/")
+
+def _auth_api_post(path: str, payload: dict, timeout: int = 20):
+    """
+    Posts JSON to Remote Auth API and returns (status_code, json_dict).
+    Raises ValueError if response isn't JSON.
+    """
+    if not AUTH_API_BASE_URL:
+        raise RuntimeError("AUTH_API_BASE_URL is not set")
+    url = f"{AUTH_API_BASE_URL}{path}"
+    r = requests.post(url, json=payload, timeout=timeout)
+    return r.status_code, r.json()
+
+def _auth_api_get(path: str, timeout: int = 20):
+    if not AUTH_API_BASE_URL:
+        raise RuntimeError("AUTH_API_BASE_URL is not set")
+    url = f"{AUTH_API_BASE_URL}{path}"
+    r = requests.get(url, timeout=timeout)
+    return r.status_code, r.json()
+
+# -------------------------------------------------------------------
+# Local Mongo (import only when needed)
+# -------------------------------------------------------------------
+def _get_mongo():
+    """
+    Lazy import so PythonAnywhere free doesn't crash at import time.
+    Only called when USE_REMOTE_AUTH_API is False.
+    """
+    from backend.mongo import mongo  # local PyMongo instance
+    return mongo
 
 # -------------------------------------------------------------------
 # Blueprint
@@ -37,17 +86,13 @@ from backend.blockchain import contract, web3, account, suggest_fees
 auth_bp = Blueprint("auth", __name__)
 
 # We will use one shared Bcrypt instance per app via current_app
-# but to keep compatibility with your existing pattern, we allow
-# instantiating Bcrypt lazily.
 _bcrypt: Bcrypt | None = None
-
 
 def get_bcrypt() -> Bcrypt:
     global _bcrypt
     if _bcrypt is None:
         _bcrypt = Bcrypt(current_app)
     return _bcrypt
-
 
 # -------------------------------------------------------------------
 # Helpers
@@ -61,13 +106,11 @@ def _user_public_payload(u: dict) -> dict:
         "role": u.get("role", ""),
     }
 
-
 def _issue_tokens(user_doc: dict) -> tuple[str, str]:
     ident = _user_public_payload(user_doc)
     access = create_access_token(identity=ident)
     refresh = create_refresh_token(identity=ident)
     return access, refresh
-
 
 def _raw_tx_bytes(signed):
     """Support different eth-account versions exposing raw tx bytes."""
@@ -78,7 +121,6 @@ def _raw_tx_bytes(signed):
         raise TypeError("SignedTransaction has no raw tx bytes")
     return raw
 
-
 def generate_user_id(role: str) -> str | None:
     prefix_map = {
         "farmer": "FRM",
@@ -88,12 +130,21 @@ def generate_user_id(role: str) -> str | None:
         "transporter": "TRN",
         "warehousing": "WRH",
     }
-    prefix = prefix_map.get(role.lower())
+    prefix = prefix_map.get((role or "").lower())
     if not prefix:
         return None
-    # random + timestamp to keep IDs fairly unique
     return f"{prefix}{str(os.urandom(3).hex()).upper()}{int(time.time())}"
 
+def _normalize_role(v: str | None) -> str:
+    return (v or "").strip().lower()
+
+def _clean_nullable(v):
+    """Convert 'null', '', None -> None"""
+    if v is None:
+        return None
+    if isinstance(v, str) and v.strip().lower() in ("", "null", "none"):
+        return None
+    return v
 
 # -------------------------------------------------------------------
 # HTML: Registration Page (GET/POST)
@@ -102,23 +153,117 @@ def generate_user_id(role: str) -> str | None:
 def new_register():
     """
     Legacy HTML registration form.
-    POST: form fields, writes user to Mongo, anchors selected roles on-chain,
-          creates QR for user profile, sets session, redirects to success page.
+
+    Remote mode (USE_REMOTE_AUTH_API=1):
+      - Sends registration payload to Remote Auth API (/auth/register)
+      - Optionally anchors on-chain here (kept from your current code)
+      - Generates QR locally and stores metadata:
+          - If you want QR metadata stored in Mongo, add endpoint in remote API later.
+          - For now, QR image is generated + stored on PythonAnywhere filesystem.
+
+    Local mode:
+      - Writes user to Mongo locally (existing behavior)
+      - Anchors selected roles on-chain
+      - Creates QR + saves metadata to Mongo
     """
     bcrypt = get_bcrypt()
 
     if request.method == "POST":
         name = request.form.get("name")
-        email = request.form.get("email")
+        email = (request.form.get("email") or "").strip().lower()
         password = request.form.get("password")
         phone = request.form.get("phone")
         location = request.form.get("location")
-        role = request.form.get("role")
+        role = _normalize_role(request.form.get("role"))
         address = request.form.get("address")
         office_name = request.form.get("officeName")
         office_address = request.form.get("officeAddress")
         gst_number = request.form.get("gstNumber")
         warehouse_type = request.form.get("warehouseType")
+
+        # -------------------------
+        # REMOTE AUTH API MODE
+        # -------------------------
+        if USE_REMOTE_AUTH_API:
+            try:
+                status, api_data = _auth_api_post(
+                    "/auth/register",
+                    {
+                        "name": name,
+                        "email": email,
+                        "password": password,
+                        "phone": _clean_nullable(phone),
+                        "location": _clean_nullable(location),
+                        "role": role,
+                        "address": _clean_nullable(address),
+                        "officeName": _clean_nullable(office_name),
+                        "officeAddress": _clean_nullable(office_address),
+                        "gstNumber": _clean_nullable(gst_number),
+                        "warehouseType": _clean_nullable(warehouse_type),
+                    },
+                )
+            except Exception as e:
+                return jsonify({"message": f"Auth API error: {str(e)}"}), 500
+
+            if status not in (200, 201):
+                # Try to match your previous error shape
+                msg = api_data.get("message") or api_data.get("detail") or "Registration failed"
+                return jsonify({"message": msg}), status
+
+            user = api_data.get("user") or {}
+            user_id = user.get("userId")
+            if not user_id:
+                return jsonify({"message": "Registration failed: missing userId"}), 500
+
+            # (Optional) Anchor to chain here for selected roles
+            if role in ["farmer", "manufacturer", "distributor", "retailer"]:
+                fn = contract.functions.registerUserId(user_id)
+                try:
+                    gas_est = fn.estimate_gas({"from": account.address})
+                    prio, max_fee = suggest_fees()
+
+                    txn = fn.build_transaction(
+                        {
+                            "from": account.address,
+                            "nonce": web3.eth.get_transaction_count(account.address, "pending"),
+                            "chainId": 80002,  # Polygon Amoy
+                            "gas": int(gas_est * 1.20),
+                            "maxPriorityFeePerGas": prio,
+                            "maxFeePerGas": max_fee,
+                        }
+                    )
+
+                    signed = account.sign_transaction(txn)
+                    tx_hash = web3.eth.send_raw_transaction(_raw_tx_bytes(signed))
+                    receipt = web3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
+
+                    if not receipt or receipt.status != 1:
+                        # NOTE: To rollback remote DB insert, you need a DELETE endpoint in Auth API.
+                        return jsonify({"message": "Transaction failed on Polygon Amoy."}), 500
+
+                except Exception as e:
+                    # NOTE: To rollback remote DB insert, you need a DELETE endpoint in Auth API.
+                    return jsonify({"message": f"Blockchain error: {str(e)}"}), 500
+
+            # ✅ Generate QR linking to user profile
+            profile_url = url_for("auth.user_profile", user_id=user_id, _external=True)
+            os.makedirs("static/qrcodes", exist_ok=True)
+            qr = qrcode.make(profile_url)
+            qr_filename = f"static/qrcodes/{user_id}.png"
+            qr.save(qr_filename)
+
+            # Session
+            session["user_id"] = user_id
+            session["qr_code_path"] = qr_filename
+            session["user_name"] = name
+            session["user_role"] = role
+
+            return redirect(url_for("auth.registration_success"))
+
+        # -------------------------
+        # LOCAL MONGO MODE (existing behavior)
+        # -------------------------
+        mongo = _get_mongo()
 
         # Check duplicates
         existing_user = mongo.db.users.find_one({"email": email})
@@ -137,19 +282,19 @@ def new_register():
             "password": hashed_password,
             "phone": phone,
             "location": location,
-            "role": role.lower(),
-            "address": address if role.lower() == "farmer" else None,
-            "officeAddress": office_address if role.lower() != "farmer" else None,
-            "officeName": office_name if role.lower() != "farmer" else None,
-            "gstNumber": gst_number if role.lower() != "farmer" else None,
-            "warehouseType": warehouse_type if role.lower() == "warehousing" else None,
+            "role": role,
+            "address": address if role == "farmer" else None,
+            "officeAddress": office_address if role != "farmer" else None,
+            "officeName": office_name if role != "farmer" else None,
+            "gstNumber": gst_number if role != "farmer" else None,
+            "warehouseType": warehouse_type if role == "warehousing" else None,
         }
 
         # Write to Mongo first
         mongo.db.users.insert_one(user_data)
 
         # Only anchor to chain for selected roles
-        if role.lower() in ["farmer", "manufacturer", "distributor", "retailer"]:
+        if role in ["farmer", "manufacturer", "distributor", "retailer"]:
             fn = contract.functions.registerUserId(user_id)
             try:
                 gas_est = fn.estimate_gas({"from": account.address})
@@ -158,9 +303,7 @@ def new_register():
                 txn = fn.build_transaction(
                     {
                         "from": account.address,
-                        "nonce": web3.eth.get_transaction_count(
-                            account.address, "pending"
-                        ),
+                        "nonce": web3.eth.get_transaction_count(account.address, "pending"),
                         "chainId": 80002,  # Polygon Amoy
                         "gas": int(gas_est * 1.20),
                         "maxPriorityFeePerGas": prio,
@@ -175,12 +318,7 @@ def new_register():
                 if not receipt or receipt.status != 1:
                     # rollback local insert if on-chain failed
                     mongo.db.users.delete_one({"userId": user_id})
-                    return (
-                        jsonify(
-                            {"message": "Transaction failed on Polygon Amoy."}
-                        ),
-                        500,
-                    )
+                    return jsonify({"message": "Transaction failed on Polygon Amoy."}), 500
 
             except Exception as e:
                 # rollback local insert if tx building/sending failed
@@ -203,12 +341,11 @@ def new_register():
         session["user_id"] = user_id
         session["qr_code_path"] = qr_filename
         session["user_name"] = name
-        session["user_role"] = role.lower()
+        session["user_role"] = role
 
         return redirect(url_for("auth.registration_success"))
 
     return render_template("newregister.html")
-
 
 # -------------------------------------------------------------------
 # HTML: Registration Success Page
@@ -222,7 +359,6 @@ def registration_success():
     return render_template(
         "registration_success.html", user_name=user_name, user_id=user_id, role=role
     )
-
 
 # -------------------------------------------------------------------
 # HTML + JSON: Login Page
@@ -239,18 +375,50 @@ def new_login():
     if request.method == "POST":
         form_data = request.get_json() or {}
 
-        email = form_data.get("email")
-        password = form_data.get("password")
-        role = form_data.get("role")
+        email = (form_data.get("email") or "").strip().lower()
+        password = form_data.get("password") or ""
+        role = _normalize_role(form_data.get("role"))
 
         if not email or not password:
-            return (
-                jsonify(
-                    {"success": False, "message": "Email and password are required"}
-                ),
-                400,
-            )
+            return jsonify({"success": False, "message": "Email and password are required"}), 400
 
+        # -------------------------
+        # REMOTE AUTH API MODE
+        # -------------------------
+        if USE_REMOTE_AUTH_API:
+            try:
+                status, api_data = _auth_api_post(
+                    "/auth/login",
+                    {"email": email, "password": password, "role": role},
+                )
+            except Exception as e:
+                return jsonify({"success": False, "message": f"Auth API error: {str(e)}"}), 500
+
+            if status != 200:
+                msg = api_data.get("message") or api_data.get("detail") or "Login failed"
+                return jsonify({"success": False, "message": msg}), status
+
+            user = api_data.get("user") or {}
+
+            # Session for web SSR
+            session["user_id"] = user.get("userId")
+            session["role"] = user.get("role")
+            session["username"] = user.get("name", "")
+
+            # Optional: if your frontend expects these
+            return jsonify(
+                {
+                    "success": True,
+                    "role": user.get("role"),
+                    "access_token": api_data.get("access_token"),
+                    "refresh_token": api_data.get("refresh_token"),
+                }
+            ), 200
+
+        # -------------------------
+        # LOCAL MONGO MODE (existing behavior)
+        # -------------------------
+        mongo = _get_mongo()
         user = mongo.db.users.find_one({"email": email, "role": role})
         if not user:
             return jsonify({"success": False, "message": "User not found"}), 400
@@ -274,32 +442,22 @@ def new_login():
             else:
                 session["user_crops"] = []
         except Exception as e:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "message": f"Error fetching crops: {str(e)}",
-                    }
-                ),
-                500,
-            )
+            return jsonify({"success": False, "message": f"Error fetching crops: {str(e)}"}), 500
 
         # JWT tokens for mobile / SPA usage
         access, refresh = _issue_tokens(user)
 
-        role_value = user["role"]
         return jsonify(
             {
                 "success": True,
-                "role": role_value,
+                "role": user["role"],
                 "access_token": access,
                 "refresh_token": refresh,
             }
-        )
+        ), 200
 
     # GET => return HTML login page
     return render_template("newlogin.html")
-
 
 # -------------------------------------------------------------------
 # JSON: /auth/register (API)
@@ -308,27 +466,51 @@ def new_login():
 def auth_register():
     """
     JSON registration endpoint.
-    Body:
-      { name, email, password, role, phone?, location?, address?, ... }
-    Returns JWT access + refresh tokens.
+    In Remote mode: proxies to Remote Auth API.
+    In Local mode: uses Mongo.
     """
     bcrypt = get_bcrypt()
     data = request.get_json(silent=True) or {}
 
+    # -------------------------
+    # REMOTE MODE
+    # -------------------------
+    if USE_REMOTE_AUTH_API:
+        try:
+            status, api_data = _auth_api_post("/auth/register", data)
+        except Exception as e:
+            return jsonify(ok=False, message=f"Auth API error: {str(e)}"), 500
+
+        msg_ok = api_data.get("ok", True)
+        if status not in (200, 201) or not msg_ok:
+            msg = api_data.get("message") or api_data.get("detail") or "Registration failed"
+            return jsonify(ok=False, message=msg), status
+
+        # Optionally set session for SSR apps too
+        user = api_data.get("user") or {}
+        session["user_id"] = user.get("userId")
+        session["role"] = user.get("role")
+        session["username"] = user.get("name", "")
+
+        return jsonify(
+            ok=True,
+            user=user,
+            access_token=api_data.get("access_token"),
+            refresh_token=api_data.get("refresh_token"),
+        ), 201
+
+    # -------------------------
+    # LOCAL MODE (existing behavior)
+    # -------------------------
     name = (data.get("name") or "").strip()
     email = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
-    role = (data.get("role") or "").strip().lower()
+    role = _normalize_role(data.get("role"))
 
     if not (name and email and password and role):
-        return (
-            jsonify(
-                ok=False,
-                message="name, email, password, role are required",
-            ),
-            400,
-        )
+        return jsonify(ok=False, message="name, email, password, role are required"), 400
 
+    mongo = _get_mongo()
     if mongo.db.users.find_one({"email": email}):
         return jsonify(ok=False, message="User already exists"), 400
 
@@ -354,19 +536,8 @@ def auth_register():
 
     mongo.db.users.insert_one(user_doc)
 
-    # (Optional) You can also anchor to chain here if desired, similar to HTML register.
-
     access, refresh = _issue_tokens(user_doc)
-    return (
-        jsonify(
-            ok=True,
-            user=_user_public_payload(user_doc),
-            access_token=access,
-            refresh_token=refresh,
-        ),
-        201,
-    )
-
+    return jsonify(ok=True, user=_user_public_payload(user_doc), access_token=access, refresh_token=refresh), 201
 
 # -------------------------------------------------------------------
 # JSON: /auth/login (API)
@@ -376,15 +547,43 @@ def auth_login():
     """
     JSON login:
       { email, password, role? }
-    Returns JWT tokens + user payload.
-    Also sets Flask session for SSR dashboards.
+    In Remote mode: proxies to Remote Auth API.
+    In Local mode: uses Mongo.
     """
     bcrypt = get_bcrypt()
     data = request.get_json(silent=True) or {}
 
+    # -------------------------
+    # REMOTE MODE
+    # -------------------------
+    if USE_REMOTE_AUTH_API:
+        try:
+            status, api_data = _auth_api_post("/auth/login", data)
+        except Exception as e:
+            return jsonify(ok=False, message=f"Auth API error: {str(e)}"), 500
+
+        if status != 200 or not api_data.get("ok", True):
+            msg = api_data.get("message") or api_data.get("detail") or "Login failed"
+            return jsonify(ok=False, message=msg), status
+
+        user = api_data.get("user") or {}
+        session["user_id"] = user.get("userId")
+        session["role"] = user.get("role")
+        session["username"] = user.get("name", "")
+
+        return jsonify(
+            ok=True,
+            user=user,
+            access_token=api_data.get("access_token"),
+            refresh_token=api_data.get("refresh_token"),
+        ), 200
+
+    # -------------------------
+    # LOCAL MODE (existing behavior)
+    # -------------------------
     email = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
-    role = (data.get("role") or "").strip().lower()  # optional filter
+    role = _normalize_role(data.get("role"))
 
     if not (email and password):
         return jsonify(ok=False, message="Email and password are required"), 400
@@ -393,28 +592,20 @@ def auth_login():
     if role:
         query["role"] = role
 
+    mongo = _get_mongo()
     user = mongo.db.users.find_one(query)
     if not user:
         return jsonify(ok=False, message="User not found"), 404
-    if not bcrypt.check_password_hash(user["password"], password):
-        return jsonify(ok=False, message="Invalid password"), 400
 
-    # SSR session support
+    if not bcrypt.check_password_hash(user["password"], password):
+        return jsonify(ok=False, message="Invalid password"), 401
+
     session["user_id"] = user["userId"]
     session["role"] = user["role"]
     session["username"] = user.get("name", "")
 
     access, refresh = _issue_tokens(user)
-    return (
-        jsonify(
-            ok=True,
-            user=_user_public_payload(user),
-            access_token=access,
-            refresh_token=refresh,
-        ),
-        200,
-    )
-
+    return jsonify(ok=True, user=_user_public_payload(user), access_token=access, refresh_token=refresh), 200
 
 # -------------------------------------------------------------------
 # JSON: /auth/refresh
@@ -424,12 +615,12 @@ def auth_login():
 def auth_refresh():
     """
     JWT refresh endpoint.
-    Requires a valid refresh token; returns a new access token.
+    Note: In Remote mode, refresh should be done against Remote API directly by client.
+    This route remains for local mode usage.
     """
     ident = get_jwt_identity()
     new_access = create_access_token(identity=ident)
     return jsonify(ok=True, access_token=new_access), 200
-
 
 # -------------------------------------------------------------------
 # HTML: User Profile + QR (Card View)
@@ -438,8 +629,24 @@ def auth_refresh():
 def user_profile(user_id: str):
     """
     Render a user card with an embedded QR code pointing back to this profile.
+    Remote mode: expects Remote Auth API to provide a GET /users/<userId> endpoint.
+                If you don't have it yet, this will show "User not found".
+    Local mode: reads from Mongo.
     """
-    user = mongo.db.users.find_one({"userId": user_id})
+    user = None
+
+    if USE_REMOTE_AUTH_API:
+        # If you haven't implemented this in the remote API, add it there later.
+        try:
+            status, api_data = _auth_api_get(f"/users/{user_id}")
+            if status == 200 and api_data.get("ok", True):
+                user = api_data.get("user") or api_data  # support either shape
+        except Exception:
+            user = None
+    else:
+        mongo = _get_mongo()
+        user = mongo.db.users.find_one({"userId": user_id})
+
     if not user:
         return "User not found", 404
 

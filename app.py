@@ -43,7 +43,13 @@ def create_app():
     # ------------------------------------------
     # Mongo & Blockchain
     # ------------------------------------------
-    init_mongo(app)        # connects mongo + printlos ✓
+    USE_REMOTE_AUTH_API = os.getenv("USE_REMOTE_AUTH_API", "0") == "1"
+
+    if USE_REMOTE_AUTH_API:
+        print("⚠️ Skipping Mongo init: using Remote Auth API mode")
+    else:
+        init_mongo(app)
+
     init_blockchain(app)   # loads contract + prints ✓
 
     # ------------------------------------------
