@@ -55,3 +55,8 @@ def get_user(user_id: str):
     if not user:
         return jsonify(message="User not found"), 404
     return jsonify(user=user), 200
+
+@auth_bp.get("/mongo-ping")
+def mongo_ping():
+    client.admin.command("ping")
+    return jsonify(ok=True), 200
