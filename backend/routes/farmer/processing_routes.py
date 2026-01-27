@@ -89,7 +89,6 @@ def submit_request():
             manufacturers=manufacturers,
             crops=crops,
             items=[],
-            error=res.get("error"),
             error=mongo_error,
         ), 400
 
