@@ -235,8 +235,8 @@ def get_farm_coordinates():
     db= get_db()
     coord_doc= None
     if db is not None:
-        docs = list(
+        coord_doc = list(
             mongo.db.farm_coordinates.find({"user_id": farmer_id}, {"_id": 0})
         )
 
-    return jsonify({"ok": True, "data": docs})
+    return jsonify({"ok": True, "data": coord_doc})
