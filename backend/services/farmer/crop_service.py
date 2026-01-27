@@ -13,7 +13,8 @@ from backend.blockchain import (
     register_crop_onchain,
 )
 from backend.models.farmer.crop_models import CropRegistrationModel, CropInfoModel
-
+from backend.mongo import get_db
+from backend.mongo_safe import get_col
 
 class CropService:
     # ------------------------------------------------------------
@@ -237,41 +238,31 @@ class CropService:
     # ============================================================
     # SAVE COORDINATES + REGISTER CROP (ONE FLOW)
     # ============================================================
+
     @staticmethod
     def register_crop_with_blockchain(
         farmer_id: str, payload: Dict[str, Any]
     ) -> Dict[str, Any]:
-        # --- 1. Normalize keys from your payload ---
+
+        # --- 1) Normalize keys ---
         crop_id = payload.get("cropId") or payload.get("crop_id")
-        crop_type = (
-            payload.get("cropType")
-            or payload.get("crop_type")
-        )
-        crop_name= payload.get("cropName")
+        crop_type = payload.get("cropType") or payload.get("crop_type")
+        crop_name = payload.get("cropName") or payload.get("crop_name")
         date_planted = payload.get("datePlanted") or payload.get("date_planted")
         farming_type = payload.get("farmingType") or payload.get("farming_type")
         seed_type = payload.get("seedType") or payload.get("seed_type")
         location = payload.get("location") or ""
-        farmer_name = (
-            payload.get("farmerName")
-            or payload.get("farmer_name")
-            or ""
-        )
-        area_size = (
-            payload.get("areaSize")
-            or payload.get("area_size")
-            or 0
-        )
+        farmer_name = payload.get("farmerName") or payload.get("farmer_name") or ""
+        area_size = payload.get("areaSize") or payload.get("area_size") or 0
 
         coords = payload.get("coordinates")
-        # coordinates may arrive as JSON string
         if isinstance(coords, str):
             try:
                 coords = json.loads(coords)
             except Exception:
                 coords = None
 
-        # --- 2. Validate via Pydantic model ---
+        # --- 2) Validate with Pydantic ---
         model = CropRegistrationModel(
             farmerId=farmer_id,
             cropId=crop_id,
@@ -279,58 +270,78 @@ class CropService:
             cropName=crop_name,
             farmingType=farming_type,
             seedType=seed_type,
-            areaSize=float(area_size or 0)
-            if area_size not in ("", None)
-            else None,
+            areaSize=float(area_size or 0) if area_size not in ("", None) else None,
             datePlanted=date_planted,
             coordinates=coords,
         )
 
-        # --- 3. Save farm coordinates to Mongo (farm_coordinates collection) ---
+        # --- 3) Save farm coordinates to Mongo (SAFE) ---
+        inserted_id = None
+        farm_col = get_col("farm_coordinates")
+
         farm_doc = {
             "user_id": farmer_id,
             "crop_id": model.cropId,
             "cropType": model.cropType,
+            "cropName": crop_name,
             "area_size": str(model.areaSize) if model.areaSize is not None else None,
             "date_planted": model.datePlanted,
             "coordinates": model.coordinates or [],
             "created_at": datetime.utcnow(),
         }
-        insert_res = mongo.db.farm_coordinates.insert_one(farm_doc)
 
-        # --- 4. Register crop ON-CHAIN ---
+        if farm_col:
+            try:
+                res = farm_col.insert_one(farm_doc)
+                inserted_id = res.inserted_id
+            except Exception as e:
+                print(f"⚠️ Mongo insert farm_coordinates failed: {e}")
+        else:
+            print("⚠️ Mongo disabled/unavailable: skipping farm_coordinates insert")
+
+        # --- 4) Register crop ON-CHAIN ---
         tx_hash = register_crop_onchain(
             user_id=model.farmerId,
             crop_id=model.cropId,
             crop_type=model.cropType,
-            crop_name=crop_name,
-            farmer_name=farmer_name,
+            crop_name=crop_name or "",
+            farmer_name=farmer_name or "",
             date_planted=model.datePlanted or "",
-            farming_type=model.farmingType,
-            seed_type=model.seedType,
-            location=location,
+            farming_type=model.farmingType or "",
+            seed_type=model.seedType or "",
+            location=location or "",
             area_size=model.areaSize or 0,
         )
 
-        # Optionally, back-link tx hash
-        mongo.db.farm_coordinates.update_one(
-            {"_id": insert_res.inserted_id},
-            {"$set": {"txHash": tx_hash}},
-        )
+        # --- 5) Back-link tx hash in Mongo (SAFE) ---
+        if farm_col and inserted_id:
+            try:
+                farm_col.update_one(
+                    {"_id": inserted_id},
+                    {"$set": {"txHash": tx_hash, "updated_at": datetime.utcnow()}},
+                )
+            except Exception as e:
+                print(f"⚠️ Mongo update txHash failed: {e}")
+        else:
+            print("⚠️ Skipping txHash update (Mongo off or insert missing)")
 
         return {
             "ok": True,
             "cropId": model.cropId,
             "txHash": tx_hash,
+            "mongo_saved": bool(inserted_id),
         }
+
 
     # ------------------------------------------------------------
     # JUST save coordinates (no blockchain) – optional helper
     # ------------------------------------------------------------
+
     @staticmethod
     def save_coordinates_only(
         farmer_id: str, payload: Dict[str, Any]
     ) -> Dict[str, Any]:
+
         normalized = {
             "farmerId": farmer_id,
             "cropId": payload.get("cropId"),
@@ -364,24 +375,30 @@ class CropService:
             "created_at": datetime.utcnow(),
         }
 
-        mongo.db.farm_coordinates.insert_one(doc)
+        col = get_col("farm_coordinates")
+        if not col:
+            return {
+                "ok": False,
+                "err": "MongoDB is disabled or unavailable"
+            }
+
+        col.insert_one(doc)
         return {"ok": True, "cropId": reg.cropId}
+
 
 
     @staticmethod
     def get_crop_activity_timeline(farmer_id: str, crop_id: str):
         """
         Returns ordered list of timeline steps.
-        Each item:
-          key, title, desc, at (datetime string), link(optional), is_done(bool)
+        Safe when Mongo is disabled/unavailable.
         """
 
         # ====== Base step: Crop Registered (onchain / crop doc) ======
-        crop = CropService.get_crop_detail(farmer_id, crop_id)  # your existing function
+        crop = CropService.get_crop_detail(farmer_id, crop_id)  # dict
 
         timeline = []
 
-        # helpers
         def _dt(x):
             if not x:
                 return ""
@@ -392,41 +409,102 @@ class CropService:
             "key": "crop_registered",
             "title": "Crop Registered",
             "desc": "You registered this crop successfully.",
-            "at": _dt(getattr(crop, "date_planted", None) or crop.get("date_planted") if isinstance(crop, dict) else ""),
+            "at": _dt(crop.get("date_planted", "")),
             "link": None,
             "is_done": True
         })
 
-        # 2) Harvesting (only if harvested)
-        harvest_date = (crop.get("harvest_date") if isinstance(crop, dict) else getattr(crop, "harvest_date", "")) or ""
-        total_qty = (crop.get("total_quantity") if isinstance(crop, dict) else getattr(crop, "total_quantity", 0)) or 0
-        status = (crop.get("status") if isinstance(crop, dict) else getattr(crop, "status", "")) or ""
-
-        harvested_done = status in ("Harvested", "Stored", "Listed", "OrderRequested", "OrderCreated", "Dispatched", "Sold", "PaymentReceived", "Paid")
+        # 2) Harvesting
+        harvest_date = crop.get("harvest_date", "") or ""
+        status = crop.get("status", "") or ""
+        harvested_done = status in (
+            "Harvested", "Stored", "Listed", "OrderRequested", "OrderCreated",
+            "Dispatched", "Sold", "PaymentReceived", "Paid"
+        )
         timeline.append({
             "key": "harvesting",
             "title": "Harvesting",
-            "desc": f"Crop harvested and ready for storage or sale.",
+            "desc": "Crop harvested and ready for storage or sale.",
             "at": _dt(harvest_date),
             "link": None,
             "is_done": bool(harvest_date) or harvested_done
         })
 
-        # ====== Mongo lookups (adjust fields if your schema differs) ======
+        # -------------------------
+        # Mongo-dependent steps
+        # -------------------------
+        db = get_db()
+        if db is None:
+            # Mongo off -> return placeholders for all mongo-based steps
+            timeline.extend([
+                {
+                    "key": "stored_warehouse",
+                    "title": "Stored in Warehouse",
+                    "desc": "Mongo is disabled, storage status not available.",
+                    "at": "",
+                    "link": None,
+                    "is_done": False
+                },
+                {
+                    "key": "listed_sale",
+                    "title": "Listed for Sale",
+                    "desc": "Mongo is disabled, marketplace status not available.",
+                    "at": "",
+                    "link": None,
+                    "is_done": False
+                },
+                {
+                    "key": "order_requested",
+                    "title": "Order Requested",
+                    "desc": "Mongo is disabled, order status not available.",
+                    "at": "",
+                    "link": None,
+                    "is_done": False
+                },
+                {
+                    "key": "order_created",
+                    "title": "Order Created",
+                    "desc": "Mongo is disabled, order status not available.",
+                    "at": "",
+                    "link": None,
+                    "is_done": False
+                },
+                {
+                    "key": "dispatched_sold",
+                    "title": "Dispatched & Sold",
+                    "desc": "Mongo is disabled, shipment status not available.",
+                    "at": "",
+                    "link": None,
+                    "is_done": False
+                },
+                {
+                    "key": "payment_received",
+                    "title": "Payment Received",
+                    "desc": "Mongo is disabled, payment status not available.",
+                    "at": "",
+                    "link": None,
+                    "is_done": False
+                },
+            ])
+            return timeline
 
         # 3) Stored in Warehouse (farmer_request requestKind=storage)
-        storage_req = mongo.db.farmer_request.find_one(
-            {"farmer_id": farmer_id, "crop_id": crop_id, "requestKind": "storage"},
+        storage_req = db.farmer_request.find_one(
+            {
+                "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
+                "$or": [{"crop_id": crop_id}, {"cropId": crop_id}],
+                "$or": [{"requestKind": "storage"}, {"request_kind": "storage"}],
+            },
             sort=[("created_at", -1)]
         )
+
         if storage_req:
-            st = storage_req.get("status", "")
             timeline.append({
                 "key": "stored_warehouse",
                 "title": "Stored in Warehouse",
                 "desc": "Crop stored successfully.",
                 "at": _dt(storage_req.get("created_at")),
-                "link": "/farmer/storage/warehouse/" if st else None,
+                "link": "/farmer/storage/warehouse/",
                 "is_done": True
             })
         else:
@@ -439,18 +517,29 @@ class CropService:
                 "is_done": False
             })
 
-        # 4) Listed for Sale (marketplace_requests)
-        market_req = mongo.db.marketplace.find_one(
-            {"farmerId": farmer_id, "cropId": crop_id},
-            sort=[("created_at", -1)]
-        )
+        # 4) Listed for Sale (marketplace / market_place / marketplace_requests)
+        market_req = None
+        for col_name in ("marketplace", "market_place", "marketplace_requests"):
+            try:
+                market_req = db[col_name].find_one(
+                    {
+                        "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
+                        "$or": [{"crop_id": crop_id}, {"cropId": crop_id}],
+                    },
+                    sort=[("created_at", -1)]
+                )
+                if market_req:
+                    break
+            except Exception:
+                continue
+
         if market_req:
             timeline.append({
                 "key": "listed_sale",
                 "title": "Listed for Sale",
                 "desc": "Crop listed successfully in marketplace.",
                 "at": _dt(market_req.get("created_at")),
-                "link": "/farmer/marketplace" ,
+                "link": "/farmer/marketplace",
                 "is_done": True
             })
         else:
@@ -464,8 +553,11 @@ class CropService:
             })
 
         # 5/6/7/8 order flow (farmer_orders)
-        order = mongo.db.farmer_orders.find_one(
-            {"farmerId": farmer_id, "cropId": crop_id},
+        order = db.farmer_orders.find_one(
+            {
+                "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
+                "$or": [{"crop_id": crop_id}, {"cropId": crop_id}],
+            },
             sort=[("created_at", -1)]
         )
 
@@ -491,11 +583,22 @@ class CropService:
                 "is_done": True
             })
 
-            # Shipment from transporter_request
-            ship = mongo.db.transporter_request.find_one(
-                {"cropId": crop_id, "farmerId": farmer_id},
-                sort=[("created_at", -1)]
-            )
+            # Shipment from transporter_request (or transport_request)
+            ship = None
+            for col_name in ("transporter_request", "transport_request"):
+                try:
+                    ship = db[col_name].find_one(
+                        {
+                            "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
+                            "$or": [{"crop_id": crop_id}, {"cropId": crop_id}],
+                        },
+                        sort=[("created_at", -1)]
+                    )
+                    if ship:
+                        break
+                except Exception:
+                    continue
+
             if ship:
                 timeline.append({
                     "key": "dispatched_sold",
@@ -515,7 +618,7 @@ class CropService:
                     "is_done": False
                 })
 
-            paid = order_status in ("paid", "payment_received", "completed")
+            paid = order_status in ("paid", "payment_received", "completed", "success")
             timeline.append({
                 "key": "payment_received",
                 "title": "Payment Received",
@@ -526,13 +629,16 @@ class CropService:
             })
 
         else:
-            # placeholders if no order
             for key, title, desc in [
-                ("order_requested","Order Requested","No buyer request yet."),
-                ("order_created","Order Created","No buyer order yet."),
-                ("dispatched_sold","Dispatched & Sold","Not dispatched yet."),
-                ("payment_received","Payment Received","Payment not received yet.")
+                ("order_requested", "Order Requested", "No buyer request yet."),
+                ("order_created", "Order Created", "No buyer order yet."),
+                ("dispatched_sold", "Dispatched & Sold", "Not dispatched yet."),
+                ("payment_received", "Payment Received", "Payment not received yet.")
             ]:
-                timeline.append({"key": key, "title": title, "desc": desc, "at": "", "link": None, "is_done": False})
+                timeline.append({
+                    "key": key, "title": title, "desc": desc,
+                    "at": "", "link": None, "is_done": False
+                })
 
         return timeline
+
