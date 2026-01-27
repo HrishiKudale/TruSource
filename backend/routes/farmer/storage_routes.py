@@ -9,10 +9,9 @@ from flask import (
     request,
 )
 
-from backend.services.farmer.processing_service import FarmerProcessingService
+from backend.mongo_safe import get_db, get_col
 from backend.services.farmer.storage_service import FarmerStorageService
 from backend.services.farmer.crop_service import CropService
-from backend.mongo import mongo
 
 # IMPORTANT: name must match what you use in url_for('farmer_storage.list_storage')
 storage_bp = Blueprint(
@@ -21,13 +20,10 @@ storage_bp = Blueprint(
     url_prefix="/farmer/storage",
 )
 
-
 # ----------------------------------------------------
 # 1) STORAGE OVERVIEW / LIST PAGE
 #    GET  /farmer/storage/list
 # ----------------------------------------------------
-# backend/routes/farmer/storage_routes.py
-
 @storage_bp.get("/list")
 def list_storage():
     if session.get("role") != "farmer" or not session.get("user_id"):
@@ -44,13 +40,12 @@ def list_storage():
         active_submenu="warehouse",
         storage_items=storage_items,
 
-        # ✅ KPIs
-        total_warehouses=kpis["total_warehouses"],
-        total_capacity=kpis["total_capacity"],
-        shipments_linked=kpis["shipments_linked"],
-        total_stored=kpis["total_stored"],
+        # ✅ KPIs (safe)
+        total_warehouses=kpis.get("total_warehouses", 0),
+        total_capacity=kpis.get("total_capacity", 0),
+        shipments_linked=kpis.get("shipments_linked", 0),
+        total_stored=kpis.get("total_stored", 0),
     )
-
 
 
 # ----------------------------------------------------
@@ -64,31 +59,39 @@ def add_storage_page():
 
     farmer_id = session["user_id"]
 
-    # Warehouses: from users collection (role = "warehouse")
-    warehouses = list(
-        mongo.db.users.find(
-            {"role": "warehouse"},
-            {
-                "_id": 0,
-                "userId": 1,          # acts as warehouseId if you don't have a separate field
-                "warehouseId": 1,
-                "name": 1,
-                "location": 1,
-            },
-        )
-    )
+    # Warehouses dropdown (Mongo)
+    users_col = get_col("users")
+    warehouses = []
+    mongo_error = None
 
-    # Crops for this farmer (for crop dropdowns)
+    if users_col:
+        warehouses = list(
+            users_col.find(
+                {"role": "warehouse"},
+                {
+                    "_id": 0,
+                    "userId": 1,          # acts as warehouseId
+                    "warehouseId": 1,
+                    "name": 1,
+                    "location": 1,
+                },
+            )
+        )
+    else:
+        mongo_error = "Mongo is disabled/unavailable. Warehouse list cannot be loaded."
+
+    # Crops dropdown (Blockchain-based in your CropService)
     crop_data = CropService.get_my_crops(farmer_id)
     crops = crop_data.get("crops", [])
+
     return render_template(
         "AddStorage.html",
         active_page="storage",
         active_submenu="warehouse",
-        warehouses=warehouses,
+        coord_doc=warehouses,   # keep same template variable name
         crops=crops,
         items=[],
-        error=None,
+        error=mongo_error,      # optional message
     )
 
 
@@ -98,44 +101,44 @@ def add_storage_page():
 # ----------------------------------------------------
 @storage_bp.post("/add")
 def submit_storage_request():
-    """
-    Handles the POST from AddStorage.html.
-    Uses FarmerStorageService.create_storage_requests()
-    to insert docs into farmer_request with requestKind='storage'.
-    """
     if session.get("role") != "farmer" or not session.get("user_id"):
         return redirect("/newlogin")
 
     farmer_id = session["user_id"]
+
     res = FarmerStorageService.create_storage_requests(farmer_id, request.form)
 
     # If something went wrong, re-render form with error
     if not res.get("ok"):
-        # Re-build dropdown data
-        warehouses = list(
-            mongo.db.users.find(
-                {"role": "warehouse"},
-                {
-                    "_id": 0,
-                    "userId": 1,
-                    "warehouseId": 1,
-                    "name": 1,
-                    "location": 1,
-                },
+        users_col = get_col("users")
+        warehouses = []
+        if users_col:
+            warehouses = list(
+                users_col.find(
+                    {"role": "warehouse"},
+                    {
+                        "_id": 0,
+                        "userId": 1,
+                        "warehouseId": 1,
+                        "name": 1,
+                        "location": 1,
+                    },
+                )
             )
-        )
-        crops = CropService.get_my_crops(farmer_id)
+
+        crop_data = CropService.get_my_crops(farmer_id)
+        crops = crop_data.get("crops", [])
 
         return render_template(
             "AddStorage.html",
             active_page="storage",
             active_submenu="warehouse",
-            warehouses=warehouses,
+            coord_doc=warehouses,
             crops=crops,
+            items=[],
             error=res.get("error", "Failed to create storage request."),
         ), 400
 
-    # On success, go back to list page
     return redirect("/farmer/storage/list")
 
 
@@ -153,11 +156,9 @@ def storage_list_api():
     return jsonify({"ok": True, "items": items})
 
 
-
-
 # ==========================================================
-# ✅ NEW: Warehouse Info Page (HTML)
-# GET /farmer/storage/warehouse/<request_id>
+# Warehouse Info Page (HTML)
+# GET /farmer/storage/warehouse/<warehouse_id>
 # ==========================================================
 @storage_bp.get("/warehouse/<warehouse_id>")
 def warehouse_info_page(warehouse_id):
@@ -189,18 +190,17 @@ def warehouse_info_page(warehouse_id):
     )
 
 
-
 # ==========================================================
-# ✅ NEW: Warehouse Info API (JSON)
-# GET /farmer/storage/api/warehouse/<request_id>
+# Warehouse Info API (JSON)
+# GET /farmer/storage/api/warehouse/<warehouse_id>
 # ==========================================================
-@storage_bp.get("/api/warehouse/<request_id>")
-def warehouse_info_api(request_id):
+@storage_bp.get("/api/warehouse/<warehouse_id>")
+def warehouse_info_api(warehouse_id):
     if session.get("role") != "farmer" or not session.get("user_id"):
         return jsonify({"error": "unauthorized"}), 401
 
     farmer_id = session["user_id"]
-    data = FarmerStorageService.get_warehouse_info_page_data(farmer_id, request_id)
+    data = FarmerStorageService.get_warehouse_info_page_data(farmer_id, warehouse_id)
 
     if not data.get("ok"):
         return jsonify(data), 404
