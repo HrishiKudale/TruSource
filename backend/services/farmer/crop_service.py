@@ -13,7 +13,7 @@ from backend.blockchain import (
     register_crop_onchain,
 )
 from backend.models.farmer.crop_models import CropRegistrationModel, CropInfoModel
-from backend.mongo import get_db
+from backend.mongo_safe import get_db
 from backend.mongo_safe import get_col
 
 class CropService:
