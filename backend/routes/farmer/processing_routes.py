@@ -2,6 +2,7 @@
 
 from flask import Blueprint, render_template, session, jsonify, redirect, request, url_for, flash
 
+from backend.mongo_safe import get_col
 from backend.services.farmer.processing_service import FarmerProcessingService
 from backend.services.farmer.crop_service import CropService
 from backend.mongo import mongo
@@ -23,12 +24,19 @@ def request_processing_page():
     farmer_id = session["user_id"]
 
     # manufacturers from users collection
-    manufacturers = list(
-        mongo.db.users.find(
-            {"role": "manufacturer"},
-            {"_id": 0, "userId": 1, "manufacturerId": 1, "name": 1, "location": 1},
+    users_col = get_col("users")
+    manufacturers = []
+    mongo_error = None
+
+    if users_col:
+        manufacturers = list(
+            mongo.db.users.find(
+                {"role": "manufacturer"},
+                {"_id": 0, "userId": 1, "manufacturerId": 1, "name": 1, "location": 1},
+            )
         )
-    )
+    else:
+        mongo_error = "Mongo is disabled/unavailable. Warehouse list cannot be loaded."
 
     # crops for this farmer (from blockchain-backed CropService)
     crop_data = CropService.get_my_crops(farmer_id)
@@ -40,7 +48,8 @@ def request_processing_page():
         active_submenu="processing",
         manufacturers=manufacturers,
         crops=crops,
-        items=[],   # no prefilled table rows
+        items=[], 
+        error=mongo_error,  # no prefilled table rows
     )
 
 
@@ -56,12 +65,20 @@ def submit_request():
 
     if not res.get("ok"):
         # re-render form with error message
+        users_col = get_col("users")
+    manufacturers = []
+    mongo_error = None
+
+    if users_col:
         manufacturers = list(
             mongo.db.users.find(
                 {"role": "manufacturer"},
                 {"_id": 0, "userId": 1, "manufacturerId": 1, "name": 1, "location": 1},
             )
         )
+    else:
+        mongo_error = "Mongo is disabled/unavailable. Warehouse list cannot be loaded."
+
         crop_data = CropService.get_my_crops(farmer_id)
         crops = crop_data.get("crops", [])
 
@@ -73,6 +90,7 @@ def submit_request():
             crops=crops,
             items=[],
             error=res.get("error"),
+            error=mongo_error,
         ), 400
 
     # success → go back to overview
