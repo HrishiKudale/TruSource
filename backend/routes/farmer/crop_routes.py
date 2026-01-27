@@ -5,6 +5,7 @@ from backend.blockchain import get_user_crops
 from backend.services.farmer.crop_service import CropService
 from backend.mongo import mongo
 from backend.services.farmer.harvest_service import HarvestService
+from backend.mongo_safe import get_db
 
 
 # ======================================================
@@ -71,11 +72,17 @@ def crop_info_page(crop_id: str):
     crop = CropService.get_crop_detail(farmer_id, crop_id)
 
     # fetch coordinates for THIS crop
-    from backend.mongo import mongo
-    coord_doc = mongo.db.farm_coordinates.find_one(
-        {"crop_id": crop_id},
-        {"_id": 0, "coordinates": 1}
-    )
+    db = get_db()
+
+    coord_doc = None
+    if db is not None:
+        coord_doc = db.farm_coordinates.find_one(
+            {"crop_id": crop_id},
+            sort=[("created_at", -1)]
+        )
+    else:
+        print("⚠️ Mongo disabled/unavailable: skipping farm_coordinates lookup")
+
     coords = coord_doc["coordinates"] if coord_doc else []
     
     activities = CropService.get_crop_activity_timeline(farmer_id, crop_id)
@@ -125,12 +132,14 @@ def add_crop_page(crop_id: str):
 
     farmer_id = session["user_id"]
     crop = CropService.get_crop_detail(farmer_id, crop_id)
-
-    coord_doc = mongo.db.farm_coordinates.find_one(
-        {"crop_id": crop_id},
-        {"_id": 0, "coordinates": 1}
-    )
-    coords = coord_doc["coordinates"] if coord_doc else []
+    db= get_db()
+    coord_doc = None
+    if db is not None:
+        coord_doc = mongo.db.farm_coordinates.find_one(
+            {"crop_id": crop_id},
+            {"_id": 0, "coordinates": 1}
+        )
+        coords = coord_doc["coordinates"] if coord_doc else []
 
     return render_template(
         "AddCrop.html",
@@ -223,9 +232,11 @@ def get_farm_coordinates():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
 
     farmer_id = session["user_id"]
-
-    docs = list(
-        mongo.db.farm_coordinates.find({"user_id": farmer_id}, {"_id": 0})
-    )
+    db= get_db()
+    coord_doc= None
+    if db is not None:
+        docs = list(
+            mongo.db.farm_coordinates.find({"user_id": farmer_id}, {"_id": 0})
+        )
 
     return jsonify({"ok": True, "data": docs})
