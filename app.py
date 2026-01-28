@@ -40,21 +40,19 @@ def create_app():
     # CORS for React Native mobile app
     CORS(app, resources={r"/*": {"origins": "*"}})
 
-# ------------------------------------------
-# Mongo & Blockchain
-# ------------------------------------------
+    # ------------------------------------------
+    # Mongo & Blockchain
+    # ------------------------------------------
     USE_REMOTE_AUTH_API = os.getenv("USE_REMOTE_AUTH_API", "0") == "1"
     DISABLE_MONGO = os.getenv("DISABLE_MONGO", "0") == "1"
 
-    # If remote auth is enabled, Mongo is not required on this app
-    if USE_REMOTE_AUTH_API:
-        DISABLE_MONGO = True
-        print("⚠️ Remote Auth API enabled (USE_REMOTE_AUTH_API=1) -> Mongo init skipped")
-
+    # ✅ Remote auth does NOT mean Mongo should be disabled.
+    # Only DISABLE_MONGO=1 disables Mongo.
     if DISABLE_MONGO:
-        print("⚠️ Mongo disabled")
+        print("⚠️ Mongo disabled by DISABLE_MONGO=1")
     else:
         init_mongo(app)
+
     print("USE_REMOTE_AUTH_API:", USE_REMOTE_AUTH_API, "DISABLE_MONGO:", DISABLE_MONGO)
 
 
@@ -93,3 +91,14 @@ if __name__ == "__main__":
         port=5000,
         debug=True  # ❗ Disable in production
     )
+@app.get("/_health/mongo")
+def mongo_health():
+    try:
+        from backend.mongo_safe import get_col
+        users = get_col("users")
+        if not users:
+            return {"ok": False, "error": "mongo not initialized / users col missing"}, 500
+        count = users.count_documents({})
+        return {"ok": True, "users_count": count}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}, 500
