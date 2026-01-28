@@ -9,11 +9,10 @@ from flask import (
     request,
 )
 
-from backend.mongo_safe import get_db, get_col
+from backend.mongo_safe import get_col
 from backend.services.farmer.storage_service import FarmerStorageService
 from backend.services.farmer.crop_service import CropService
 
-# IMPORTANT: name must match what you use in url_for('farmer_storage.list_storage')
 storage_bp = Blueprint(
     "farmer_storage",
     __name__,
@@ -39,8 +38,6 @@ def list_storage():
         active_page="storage",
         active_submenu="warehouse",
         storage_items=storage_items,
-
-        # ✅ KPIs (safe)
         total_warehouses=kpis.get("total_warehouses", 0),
         total_capacity=kpis.get("total_capacity", 0),
         shipments_linked=kpis.get("shipments_linked", 0),
@@ -64,13 +61,13 @@ def add_storage_page():
     warehouses = []
     mongo_error = None
 
-    if users_col:
+    if users_col is not None:
         warehouses = list(
             users_col.find(
                 {"role": "warehouse"},
                 {
                     "_id": 0,
-                    "userId": 1,          # acts as warehouseId
+                    "userId": 1,
                     "warehouseId": 1,
                     "name": 1,
                     "location": 1,
@@ -80,7 +77,7 @@ def add_storage_page():
     else:
         mongo_error = "Mongo is disabled/unavailable. Warehouse list cannot be loaded."
 
-    # Crops dropdown (Blockchain-based in your CropService)
+    # Crops dropdown (Blockchain-based)
     crop_data = CropService.get_my_crops(farmer_id)
     crops = crop_data.get("crops", [])
 
@@ -88,10 +85,10 @@ def add_storage_page():
         "AddStorage.html",
         active_page="storage",
         active_submenu="warehouse",
-        coord_doc=warehouses,   # keep same template variable name
+        coord_doc=warehouses,   # template variable name unchanged
         crops=crops,
         items=[],
-        error=mongo_error,      # optional message
+        error=mongo_error,
     )
 
 
@@ -105,14 +102,12 @@ def submit_storage_request():
         return redirect("/newlogin")
 
     farmer_id = session["user_id"]
-
     res = FarmerStorageService.create_storage_requests(farmer_id, request.form)
 
-    # If something went wrong, re-render form with error
     if not res.get("ok"):
         users_col = get_col("users")
         warehouses = []
-        if users_col:
+        if users_col is not None:
             warehouses = list(
                 users_col.find(
                     {"role": "warehouse"},
