@@ -5,7 +5,6 @@ from flask import Blueprint, render_template, session, jsonify, redirect, reques
 from backend.mongo_safe import get_col
 from backend.services.farmer.processing_service import FarmerProcessingService
 from backend.services.farmer.crop_service import CropService
-from backend.mongo import mongo
 
 processing_bp = Blueprint(
     "farmer_processing_bp",
@@ -13,32 +12,28 @@ processing_bp = Blueprint(
     url_prefix="/farmer/processing",
 )
 
-
 # ----------------- REQUEST PROCESSING PAGE (FORM) -----------------
 @processing_bp.get("/request")
 def request_processing_page():
-    """Show Processing Request form."""
     if session.get("role") != "farmer" or not session.get("user_id"):
         return redirect("/newlogin")
 
     farmer_id = session["user_id"]
 
-    # manufacturers from users collection
     users_col = get_col("users")
     manufacturers = []
     mongo_error = None
 
-    if users_col:
+    if users_col is not None:
         manufacturers = list(
-            mongo.db.users.find(
+            users_col.find(
                 {"role": "manufacturer"},
-                {"_id": 0, "userId": 1, "manufacturerId": 1, "name": 1, "location": 1},
+                {"_id": 0, "userId": 1, "manufacturerId": 1, "name": 1, "officeName": 1, "location": 1},
             )
         )
     else:
-        mongo_error = "Mongo is disabled/unavailable. Warehouse list cannot be loaded."
+        mongo_error = "Mongo is disabled/unavailable. Manufacturer list cannot be loaded."
 
-    # crops for this farmer (from blockchain-backed CropService)
     crop_data = CropService.get_my_crops(farmer_id)
     crops = crop_data.get("crops", [])
 
@@ -48,14 +43,13 @@ def request_processing_page():
         active_submenu="processing",
         manufacturers=manufacturers,
         crops=crops,
-        items=[], 
-        error=mongo_error,  # no prefilled table rows
+        items=[],
+        error=mongo_error,
     )
 
 
 @processing_bp.post("/request")
 def submit_request():
-    """Handle POST from ProcessingRequest.html and write farmer_request docs."""
     if session.get("role") != "farmer" or not session.get("user_id"):
         return redirect("/newlogin")
 
@@ -64,20 +58,22 @@ def submit_request():
     res = FarmerProcessingService.create_processing_requests(farmer_id, request.form)
 
     if not res.get("ok"):
-        # re-render form with error message
+        # Re-render form with error message
         users_col = get_col("users")
-    manufacturers = []
-    mongo_error = None
+        manufacturers = []
+        mongo_error = res.get("error") or "Failed to submit processing request."
 
-    if users_col:
-        manufacturers = list(
-            mongo.db.users.find(
-                {"role": "manufacturer"},
-                {"_id": 0, "userId": 1, "manufacturerId": 1, "name": 1, "location": 1},
+        if users_col is not None:
+            manufacturers = list(
+                users_col.find(
+                    {"role": "manufacturer"},
+                    {"_id": 0, "userId": 1, "manufacturerId": 1, "name": 1, "officeName": 1, "location": 1},
+                )
             )
-        )
-    else:
-        mongo_error = "Mongo is disabled/unavailable. Warehouse list cannot be loaded."
+        else:
+            # if mongo is down, prefer your service error text
+            if "Mongo" not in mongo_error:
+                mongo_error = "Mongo is disabled/unavailable. Manufacturer list cannot be loaded."
 
         crop_data = CropService.get_my_crops(farmer_id)
         crops = crop_data.get("crops", [])
@@ -92,7 +88,6 @@ def submit_request():
             error=mongo_error,
         ), 400
 
-    # success → go back to overview
     flash("Processing request submitted.", "success")
     return redirect(url_for("farmer_processing_bp.processing_overview"))
 
@@ -149,15 +144,10 @@ def processing_detail_api(crop_id: str):
     farmer_id = session["user_id"]
     return jsonify(FarmerProcessingService.get_processing_detail(farmer_id, crop_id))
 
+
 # ----------------- MANUFACTURER / FACTORY INFO PAGE -----------------
 @processing_bp.get("/manufacturer/<manufacturer_id>")
 def manufacturer_info_page(manufacturer_id: str):
-    """
-    ProcessInfo page:
-    - Main header: Manufacturer ID
-    - Factory Details card
-    - Table of all farmer_request docs for this manufacturer
-    """
     if session.get("role") != "farmer" or not session.get("user_id"):
         return redirect("/newlogin")
 
