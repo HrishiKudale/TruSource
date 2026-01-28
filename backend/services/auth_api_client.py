@@ -1,150 +1,146 @@
 # backend/services/auth_api_client.py
-
 from __future__ import annotations
 
 import os
 import time
+import requests
 from typing import Any, Dict, Optional
 
-import requests
-from requests import Response
-
 API_BASE = (os.getenv("AUTH_API_BASE_URL", "") or "").rstrip("/")
+
+# Tunables (safe defaults for Render cold starts)
+DEFAULT_TIMEOUT = int(os.getenv("AUTH_API_TIMEOUT", "20"))  # seconds
+WARMUP_TIMEOUT = int(os.getenv("AUTH_API_WARMUP_TIMEOUT", "8"))
+MAX_RETRIES = int(os.getenv("AUTH_API_MAX_RETRIES", "3"))
+
+# Retry these (typical transient / cold start / gateway)
+RETRY_STATUS = {502, 503, 504}
 
 
 class AuthApiError(Exception):
     pass
 
 
-# -----------------------------
-# Config (tune if needed)
-# -----------------------------
-# Render cold start usually: first request fails or times out -> retry works
-DEFAULT_TIMEOUT = 6           # per attempt
-MAX_RETRIES = 3               # total attempts
-BACKOFF_SECONDS = 1.5         # base delay between retries
-
-# Warmup only once per process
-_WARMED_UP = False
-
-
-def _require_base():
+def _ensure_base():
     if not API_BASE:
         raise AuthApiError("AUTH_API_BASE_URL is not set")
 
 
-def _is_retryable_status(code: int) -> bool:
-    # Typical Render / upstream "not ready yet" statuses
-    return code in (408, 429, 500, 502, 503, 504)
+def _safe_json(resp: requests.Response) -> Optional[Dict[str, Any]]:
+    """
+    Return JSON dict if response is JSON, else None.
+    Render 502 often returns HTML -> must not crash json().
+    """
+    ctype = (resp.headers.get("Content-Type") or "").lower()
+    if "application/json" in ctype:
+        try:
+            data = resp.json()
+            if isinstance(data, dict):
+                return data
+            # If it's a list etc, wrap
+            return {"data": data}
+        except Exception:
+            return None
 
-
-def _safe_json(r: Response) -> Dict[str, Any]:
+    # Some services return JSON without correct header
     try:
-        data = r.json()
+        data = resp.json()
         if isinstance(data, dict):
             return data
         return {"data": data}
     except Exception:
-        # non-json (html error page, gateway error etc.)
-        return {"message": f"Auth API returned non-JSON response ({r.status_code})"}
+        return None
 
 
-def _warmup_if_needed(session: requests.Session):
+def _warmup() -> None:
     """
-    Hit /health once to wake the auth service on Render.
-    If it fails, we don't hard-fail; the real call below will retry anyway.
+    Ping /health once (or a few times) to wake Render service.
+    We ignore failures here; main request handles retry anyway.
     """
-    global _WARMED_UP
-    if _WARMED_UP:
-        return
-
-    _require_base()
+    _ensure_base()
     url = f"{API_BASE}/health"
-
     try:
-        session.get(url, timeout=DEFAULT_TIMEOUT)
+        requests.get(url, timeout=WARMUP_TIMEOUT)
     except Exception:
         pass
 
-    _WARMED_UP = True
 
+def _post(path: str, payload: dict, timeout: int = DEFAULT_TIMEOUT) -> Dict[str, Any]:
+    """
+    POST with:
+      - warmup for Render cold-start
+      - retry on 502/503/504 and network timeouts
+      - safe JSON parsing (handle HTML 502 pages)
+    """
+    _ensure_base()
+    _warmup()
 
-def _request_with_retry(
-    method: str,
-    path: str,
-    *,
-    json_payload: Optional[dict] = None,
-    timeout: int = DEFAULT_TIMEOUT,
-) -> Dict[str, Any]:
-    _require_base()
     url = f"{API_BASE}{path}"
+    last_err: Optional[str] = None
 
-    with requests.Session() as s:
-        # Warm-up (Render cold start)
-        _warmup_if_needed(s)
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            resp = requests.post(url, json=payload, timeout=timeout)
 
-        last_exc: Optional[Exception] = None
-        last_data: Optional[dict] = None
-        last_status: Optional[int] = None
+            # Retry transient gateway errors
+            if resp.status_code in RETRY_STATUS:
+                last_err = f"Upstream error {resp.status_code}"
+                # exponential backoff: 0.6, 1.2, 2.4 ...
+                time.sleep(0.6 * (2 ** (attempt - 1)))
+                continue
 
-        for attempt in range(1, MAX_RETRIES + 1):
-            try:
-                r = s.request(method, url, json=json_payload, timeout=timeout)
-                last_status = r.status_code
-                data = _safe_json(r)
-                last_data = data
+            data = _safe_json(resp)
 
-                # Success
-                if 200 <= r.status_code < 300:
-                    return data
+            # If server didn't return JSON, show short snippet to help debug
+            if data is None:
+                snippet = (resp.text or "").strip().replace("\n", " ")[:240]
+                raise AuthApiError(
+                    f"Auth API returned non-JSON response ({resp.status_code}): {snippet}"
+                )
 
-                # Non-retryable auth errors -> fail fast
-                if r.status_code in (400, 401, 403, 404):
-                    msg = data.get("message") or data.get("detail") or "Request failed"
-                    raise AuthApiError(msg)
+            # If error status, raise with best message we can extract
+            if resp.status_code >= 400:
+                msg = (
+                    data.get("message")
+                    or data.get("detail")
+                    or data.get("error")
+                    or "Request failed"
+                )
+                raise AuthApiError(f"{msg} (HTTP {resp.status_code})")
 
-                # Retryable errors -> retry
-                if _is_retryable_status(r.status_code):
-                    msg = data.get("message") or data.get("detail") or "Temporary auth service error"
-                    last_exc = AuthApiError(f"{msg} (HTTP {r.status_code})")
-                else:
-                    # Other errors: treat as non-retryable
-                    msg = data.get("message") or data.get("detail") or "Request failed"
-                    raise AuthApiError(f"{msg} (HTTP {r.status_code})")
+            return data
 
-            except (requests.Timeout, requests.ConnectionError) as e:
-                last_exc = e
-            except AuthApiError:
-                # already meaningful, don't wrap
-                raise
-            except Exception as e:
-                last_exc = e
-
-            # Retry backoff if not last attempt
+        except (requests.Timeout, requests.ConnectionError) as e:
+            last_err = f"Network error: {e}"
             if attempt < MAX_RETRIES:
-                time.sleep(BACKOFF_SECONDS * attempt)
+                time.sleep(0.6 * (2 ** (attempt - 1)))
+                continue
+            raise AuthApiError(f"Auth API unreachable: {last_err}")
 
-        # Exhausted retries
-        if isinstance(last_exc, AuthApiError):
-            raise last_exc
+        except AuthApiError:
+            # if it's a deliberate error, don't retry unless it's a retry status
+            raise
 
-        # Provide a helpful message
-        if last_status is not None:
-            msg = (last_data or {}).get("message") or "Auth service unavailable"
-            raise AuthApiError(f"{msg} (HTTP {last_status}) - please retry")
-        raise AuthApiError(f"Auth service unreachable: {last_exc}")
+        except Exception as e:
+            last_err = str(e)
+            if attempt < MAX_RETRIES:
+                time.sleep(0.6 * (2 ** (attempt - 1)))
+                continue
+            raise AuthApiError(f"Auth API error: {last_err}")
+
+    raise AuthApiError(f"Auth API failed after {MAX_RETRIES} retries: {last_err}")
 
 
-def login(email: str, password: str, role: str | None = None) -> dict:
+def login(email: str, password: str, role: str | None = None) -> Dict[str, Any]:
     payload = {"email": email, "password": password}
     if role:
         payload["role"] = role
-    return _request_with_retry("POST", "/auth/login", json_payload=payload)
+    return _post("/auth/login", payload)
 
 
-def register(payload: dict) -> dict:
-    return _request_with_retry("POST", "/auth/register", json_payload=payload)
+def register(payload: dict) -> Dict[str, Any]:
+    return _post("/auth/register", payload)
 
 
-def refresh(refresh_token: str) -> dict:
-    return _request_with_retry("POST", "/auth/refresh", json_payload={"refresh_token": refresh_token})
+def refresh(refresh_token: str) -> Dict[str, Any]:
+    return _post("/auth/refresh", {"refresh_token": refresh_token})
