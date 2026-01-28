@@ -80,7 +80,6 @@ def create_app():
     # ------------------------------------------
     return app
 
-
 # -----------------------------
 #  ENTRY POINT
 # -----------------------------
@@ -91,14 +90,3 @@ if __name__ == "__main__":
         port=5000,
         debug=True  # ❗ Disable in production
     )
-@app.get("/_health/mongo")
-def mongo_health():
-    try:
-        from backend.mongo_safe import get_col
-        users = get_col("users")
-        if not users:
-            return {"ok": False, "error": "mongo not initialized / users col missing"}, 500
-        count = users.count_documents({})
-        return {"ok": True, "users_count": count}
-    except Exception as e:
-        return {"ok": False, "error": str(e)}, 500
