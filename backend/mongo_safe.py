@@ -17,9 +17,6 @@ def is_mongo_enabled() -> bool:
     if os.getenv("DISABLE_MONGO", "0") == "1":
         return False
 
-    # If you're using Remote Auth API, Mongo may be intentionally not initialized.
-    if os.getenv("USE_REMOTE_AUTH_API", "0") == "1":
-        return False
 
     return True
 
