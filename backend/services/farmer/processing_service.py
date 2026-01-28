@@ -28,13 +28,6 @@ class FarmerProcessingService:
     # -------------------------------------------------
     @staticmethod
     def get_processing_overview(farmer_id: str) -> Dict[str, Any]:
-        """
-        Overview for Processing UI:
-        - KPIs (totals)
-        - Table rows per farmer_request
-        Data = Mongo (farmer_request) + on-chain Processed events (if any).
-        """
-
         rows: List[Dict[str, Any]] = []
 
         total_requests = 0
@@ -44,8 +37,7 @@ class FarmerProcessingService:
         completed_requests = 0
 
         farmer_req_col = get_col("farmer_request")
-        if not farmer_req_col:
-            # Mongo disabled/unavailable -> keep UI working
+        if farmer_req_col is None:
             return {
                 "farmerId": farmer_id,
                 "kpis": {
@@ -56,13 +48,13 @@ class FarmerProcessingService:
                     "total_harvest_qty": 0,
                 },
                 "items": [],
+                "error": "Mongo is disabled/unavailable.",
             }
 
         cursor = (
-            farmer_req_col
-            .find(
+            farmer_req_col.find(
                 {
-                    "requestKind": {"$in": ["processing", "Processing", None]},
+                    "requestKind": {"$in": ["processing", "Processing"]},
                     "$or": [{"farmerId": farmer_id}, {"farmer_id": farmer_id}],
                 }
             )
@@ -70,14 +62,18 @@ class FarmerProcessingService:
         )
 
         for raw in cursor:
-            # Normalize keys safely (support mixed schema)
             crop_id = raw.get("cropId") or raw.get("crop_id") or ""
             crop_type = raw.get("cropType") or raw.get("crop_type") or raw.get("crop_name") or ""
             manufacturer_id = raw.get("manufacturerId") or raw.get("manufacturer_id") or ""
             status = raw.get("status", "pending")
 
             try:
-                harvest_qty = float(raw.get("harvestQuantity") or raw.get("harvest_qty") or raw.get("quantity") or 0)
+                harvest_qty = float(
+                    raw.get("harvestQuantity")
+                    or raw.get("harvest_qty")
+                    or raw.get("quantity")
+                    or 0
+                )
             except Exception:
                 harvest_qty = 0.0
 
@@ -98,13 +94,12 @@ class FarmerProcessingService:
                     updated_at=raw.get("updated_at"),
                 )
             except Exception as e:
-                print(f"[FarmerProcessingService] invalid farmer_request doc: {e}")
+                print(f"[FarmerProcessingService.get_processing_overview] invalid doc: {e}")
                 continue
 
             total_requests += 1
             total_harvest_qty += req.harvestQuantity or 0.0
 
-            # --- On-chain Processed event (if exists)
             onchain_evt = FarmerProcessingService._latest_processed_event(req.cropId)
 
             if onchain_evt:
@@ -145,20 +140,18 @@ class FarmerProcessingService:
 
     @staticmethod
     def get_processing_detail(farmer_id: str, crop_id: str) -> Dict[str, Any]:
-        """
-        Detail view for a single cropId:
-        - Farmer request (Mongo)
-        - All Processed on-chain events
-        """
-
         farmer_req_col = get_col("farmer_request")
 
         req_doc = None
-        if farmer_req_col:
+        if farmer_req_col is not None:
+            # ✅ IMPORTANT: cannot have two "$or" keys. Use $and.
             req_doc = farmer_req_col.find_one(
                 {
-                    "$or": [{"farmerId": farmer_id}, {"farmer_id": farmer_id}],
-                    "$or": [{"cropId": crop_id}, {"crop_id": crop_id}],
+                    "$and": [
+                        {"$or": [{"farmerId": farmer_id}, {"farmer_id": farmer_id}]},
+                        {"$or": [{"cropId": crop_id}, {"crop_id": crop_id}]},
+                        {"requestKind": {"$in": ["processing", "Processing"]}},
+                    ]
                 }
             )
 
@@ -173,7 +166,7 @@ class FarmerProcessingService:
                 req = ProcessingRequestModel(
                     cropId=req_doc.get("cropId") or req_doc.get("crop_id") or crop_id,
                     farmerId=req_doc.get("farmerId") or req_doc.get("farmer_id") or farmer_id,
-                    cropType=req_doc.get("cropType") or req_doc.get("crop_type"),
+                    cropType=req_doc.get("cropType") or req_doc.get("crop_type") or req_doc.get("crop_name"),
                     harvestDate=req_doc.get("harvestDate") or req_doc.get("harvest_date"),
                     harvestQuantity=harvest_qty,
                     manufacturerId=req_doc.get("manufacturerId") or req_doc.get("manufacturer_id"),
@@ -283,7 +276,7 @@ class FarmerProcessingService:
         farmer_req_col = get_col("farmer_request")
         users_col = get_col("users")
 
-        if not farmer_req_col:
+        if farmer_req_col is None:
             return {"ok": False, "error": "Mongo is disabled/unavailable. Cannot create processing request."}
 
         manufacturer_id = (form.get("manufacturer_id") or "").strip()
@@ -310,9 +303,11 @@ class FarmerProcessingService:
 
         # Optional manufacturer location from users
         location = ""
-        if manufacturer_id and users_col:
-            mdoc = users_col.find_one({"manufacturerId": manufacturer_id}, {"location": 1}) \
+        if manufacturer_id and users_col is not None:
+            mdoc = (
+                users_col.find_one({"manufacturerId": manufacturer_id}, {"location": 1})
                 or users_col.find_one({"userId": manufacturer_id}, {"location": 1})
+            )
             if mdoc:
                 location = mdoc.get("location") or ""
 
@@ -342,14 +337,25 @@ class FarmerProcessingService:
             doc = {
                 "requestKind": "processing",
 
+                # ✅ store both naming styles so old code works too
                 "cropId": crop_id,
+                "crop_id": crop_id,
+
                 "farmerId": farmer_id,
-                "cropType": crop_name,          # keep your existing meaning (UI)
+                "farmer_id": farmer_id,
+
+                "cropType": crop_name,     # your UI label
+                "crop_type": crop_name,
+
                 "harvestDate": request_date,
                 "harvestQuantity": harvest_qty,
 
                 "manufacturerId": manufacturer_id,
+                "manufacturer_id": manufacturer_id,
+
                 "manufacturerName": manufacturer_name,
+                "manufacturer_name": manufacturer_name,
+
                 "packagingType": packaging_type,
                 "status": "pending",
 
@@ -386,7 +392,7 @@ class FarmerProcessingService:
         users_col = get_col("users")
         farmer_req_col = get_col("farmer_request")
 
-        if not users_col or not farmer_req_col:
+        if users_col is None or farmer_req_col is None:
             return {
                 "farmerId": farmer_id,
                 "manufacturerId": manufacturer_id,
@@ -419,7 +425,7 @@ class FarmerProcessingService:
         contact = ""
 
         if mdoc:
-            name = mdoc.get("officeName") or mdoc.get("manufacturerName") or ""
+            name = mdoc.get("officeName") or mdoc.get("manufacturerName") or mdoc.get("name") or ""
             service_provided = mdoc.get("serviceProvided") or mdoc.get("services") or mdoc.get("service") or ""
 
             raw_supports = mdoc.get("gstNumber") or mdoc.get("supportedCrops") or ""
@@ -429,14 +435,22 @@ class FarmerProcessingService:
                 supports = raw_supports or ""
 
             location = mdoc.get("location") or ""
-            owner = mdoc.get("ownerName") or mdoc.get("contactPerson") or mdoc.get("managerName") or mdoc.get("name") or ""
+            owner = (
+                mdoc.get("ownerName")
+                or mdoc.get("contactPerson")
+                or mdoc.get("managerName")
+                or mdoc.get("name")
+                or ""
+            )
             contact = mdoc.get("phone") or mdoc.get("mobile") or mdoc.get("contactNumber") or ""
 
         cur = farmer_req_col.find(
             {
                 "requestKind": "processing",
-                "$or": [{"farmerId": farmer_id}, {"farmer_id": farmer_id}],
-                "$or": [{"manufacturerId": manufacturer_id}, {"manufacturer_id": manufacturer_id}],
+                "$and": [
+                    {"$or": [{"farmerId": farmer_id}, {"farmer_id": farmer_id}]},
+                    {"$or": [{"manufacturerId": manufacturer_id}, {"manufacturer_id": manufacturer_id}]},
+                ],
             }
         ).sort([("created_at", -1), ("_id", -1)])
 
