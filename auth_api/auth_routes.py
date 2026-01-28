@@ -1,4 +1,6 @@
 import os
+from datetime import datetime, timezone
+
 from flask import Blueprint, request, jsonify
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import create_access_token, create_refresh_token
@@ -7,13 +9,17 @@ from pymongo import MongoClient
 auth_bp = Blueprint("auth", __name__)
 bcrypt = Bcrypt()
 
+# IMPORTANT:
+# Ensure MONGO_URI is set in trusource Render env
 client = MongoClient(os.getenv("MONGO_URI"))
 db = client["crop_traceability_db"]
 users = db["users"]
 
+
 @auth_bp.get("/health")
 def health():
     return jsonify(ok=True), 200
+
 
 def _public_user(u: dict) -> dict:
     return {
@@ -23,12 +29,87 @@ def _public_user(u: dict) -> dict:
         "role": u.get("role", ""),
     }
 
+
+def _norm(v):
+    return (v or "").strip()
+
+
+def _norm_email(v):
+    return (v or "").strip().lower()
+
+
+@auth_bp.post("/auth/register")
+def register():
+    """
+    Receives payload from trusource-main.
+    Must support BOTH:
+      - JSON payload (auth_api_client uses requests.post(json=...))
+      - form payload (if ever used)
+    """
+
+    data = request.get_json(silent=True)
+    if not data:
+        data = request.form.to_dict(flat=True) or {}
+
+    # userId ideally comes from blockchain generation in trusource-main
+    user_id = _norm(data.get("userId") or data.get("user_id"))
+    name = _norm(data.get("name"))
+    email = _norm_email(data.get("email"))
+    password = data.get("password") or ""
+    role = _norm(data.get("role")).lower()
+
+    if not user_id:
+        return jsonify(message="userId is required (must come from blockchain/main app)"), 400
+    if not name:
+        return jsonify(message="Name is required"), 400
+    if not email:
+        return jsonify(message="Email is required"), 400
+    if not password:
+        return jsonify(message="Password is required"), 400
+    if not role:
+        return jsonify(message="Role is required"), 400
+
+    # block duplicate
+    if users.find_one({"userId": user_id}):
+        return jsonify(message="UserId already exists"), 409
+
+    if users.find_one({"email": email, "role": role}):
+        return jsonify(message="User already exists for this role"), 409
+
+    hashed = bcrypt.generate_password_hash(password).decode("utf-8")
+    now = datetime.now(timezone.utc)
+
+    # store EVERYTHING you pass (safe allow-list approach is better, but this keeps your app flexible)
+    doc = dict(data)
+
+    # enforce normalized/secure fields
+    doc["userId"] = user_id
+    doc["name"] = name
+    doc["email"] = email
+    doc["role"] = role
+    doc["password"] = hashed
+    doc["created_at"] = now
+    doc["updated_at"] = now
+
+    # remove any accidental empty _id
+    doc.pop("_id", None)
+
+    users.insert_one(doc)
+
+    ident = _public_user(doc)
+    return jsonify(
+        user=ident,
+        access_token=create_access_token(identity=ident),
+        refresh_token=create_refresh_token(identity=ident),
+    ), 201
+
+
 @auth_bp.post("/auth/login")
 def login():
     data = request.get_json(silent=True) or {}
-    email = (data.get("email") or "").strip().lower()
+    email = _norm_email(data.get("email"))
     password = data.get("password") or ""
-    role = (data.get("role") or "").strip().lower()
+    role = _norm(data.get("role")).lower()
 
     if not email or not password:
         return jsonify(message="Email and password are required"), 400
@@ -49,12 +130,14 @@ def login():
         refresh_token=create_refresh_token(identity=ident),
     ), 200
 
+
 @auth_bp.get("/users/<user_id>")
 def get_user(user_id: str):
     user = users.find_one({"userId": user_id}, {"_id": 0, "password": 0})
     if not user:
         return jsonify(message="User not found"), 404
     return jsonify(user=user), 200
+
 
 @auth_bp.get("/mongo-ping")
 def mongo_ping():
