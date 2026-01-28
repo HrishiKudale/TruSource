@@ -12,10 +12,13 @@ from backend.mongo_safe import get_col
 
 class FarmerStorageService:
 
+    # -----------------------------
+    # LIST STORAGE REQUESTS
+    # -----------------------------
     @staticmethod
     def list_storage(farmer_id: str) -> List[Dict[str, Any]]:
         col = get_col("farmer_request")
-        if not col:
+        if col is None:
             print("⚠️ Mongo disabled/unavailable: list_storage returning empty")
             return []
 
@@ -25,9 +28,9 @@ class FarmerStorageService:
                 "$or": [
                     {"farmerId": farmer_id},     # legacy
                     {"farmer_id": farmer_id},    # new
-                ]
+                ],
             }
-        ).sort([("created_at", -1)])
+        ).sort([("created_at", -1), ("_id", -1)])
 
         items: List[Dict[str, Any]] = []
 
@@ -41,19 +44,9 @@ class FarmerStorageService:
             if isinstance(d.get("warehouse_detail"), list) and d["warehouse_detail"]:
                 wh = d["warehouse_detail"][0] or {}
 
-            d["warehouseId"] = (
-                d.get("warehouseId")
-                or wh.get("warehouse_id")
-                or "-"
-            )
-
-            d["warehouseName"] = (
-                d.get("warehouseName")
-                or wh.get("warehouse_name")
-                or "-"
-            )
-
-            d["location"] = d.get("location") or "-"
+            d["warehouseId"] = d.get("warehouseId") or wh.get("warehouse_id") or "-"
+            d["warehouseName"] = d.get("warehouseName") or wh.get("warehouse_name") or "-"
+            d["location"] = d.get("location") or wh.get("location") or "-"
 
             # -----------------------------
             # CROP (nested-safe)
@@ -62,27 +55,13 @@ class FarmerStorageService:
             if isinstance(d.get("crop_detail"), list) and d["crop_detail"]:
                 cd = d["crop_detail"][0] or {}
 
-            d["cropName"] = (
-                d.get("cropName")
-                or cd.get("crop_name")
-                or "-"
-            )
-
-            d["harvestQuantity"] = (
-                d.get("harvestQuantity")
-                or cd.get("quantity")
-                or 0
-            )
+            d["cropName"] = d.get("cropName") or cd.get("crop_name") or "-"
+            d["harvestQuantity"] = d.get("harvestQuantity") or cd.get("quantity") or 0
 
             # -----------------------------
             # STORAGE META
             # -----------------------------
-            d["storageDuration"] = (
-                d.get("storageDuration")
-                or wh.get("storage_duration")
-                or "-"
-            )
-
+            d["storageDuration"] = d.get("storageDuration") or wh.get("storage_duration") or "-"
             d["status"] = d.get("status", "pending")
 
             upd = d.get("updated_at") or d.get("created_at")
@@ -95,18 +74,19 @@ class FarmerStorageService:
 
         return items
 
+    # -----------------------------
+    # KPIs
+    # -----------------------------
     @staticmethod
     def get_kpis(farmer_id: str) -> Dict[str, Any]:
         items = FarmerStorageService.list_storage(farmer_id)
 
         total_requests = len(items)
-        unique_warehouses = len(
-            set([
-                i.get("warehouseId")
-                for i in items
-                if i.get("warehouseId") and i.get("warehouseId") != "-"
-            ])
-        )
+        unique_warehouses = len(set([
+            i.get("warehouseId")
+            for i in items
+            if i.get("warehouseId") and i.get("warehouseId") != "-"
+        ]))
 
         total_qty = 0.0
         for i in items:
@@ -127,7 +107,7 @@ class FarmerStorageService:
     # Helpers
     # -----------------------------
     @staticmethod
-    def _generate_request_id():
+    def _generate_request_id() -> str:
         date_part = datetime.now(timezone.utc).strftime("%Y%m%d")
         rand = random.randint(10000, 99999)
         return f"REQ-FRM-{date_part}-{rand}"
@@ -138,7 +118,7 @@ class FarmerStorageService:
     @staticmethod
     def create_storage_requests(farmer_id: str, form) -> Dict[str, Any]:
         col = get_col("farmer_request")
-        if not col:
+        if col is None:
             return {"ok": False, "error": "Mongo is disabled/unavailable. Cannot create storage request."}
 
         now = datetime.now(timezone.utc)
@@ -171,9 +151,11 @@ class FarmerStorageService:
             return {"ok": False, "error": "Crop and quantity are required"}
 
         doc = {
+            # ✅ store both keys to keep all code compatible
             "farmer_id": farmer_id,
-            "request_id": FarmerStorageService._generate_request_id(),
+            "farmerId": farmer_id,
 
+            "request_id": FarmerStorageService._generate_request_id(),
             "requestKind": "storage",
             "status": "pending",
 
@@ -201,31 +183,48 @@ class FarmerStorageService:
         }
 
         col.insert_one(doc)
-
         return {"ok": True, "request_id": doc["request_id"]}
 
+    # -----------------------------
+    # FIND STORAGE REQUEST
+    # -----------------------------
     @staticmethod
-    def _find_storage_request_for_farmer(farmer_id: str, request_id: str) -> Optional[Dict[str, Any]]:
+    def _find_storage_request_for_farmer(
+        farmer_id: str,
+        request_id: str
+    ) -> Optional[Dict[str, Any]]:
+
         col = get_col("farmer_request")
-        if not col:
+        if col is None:
             return None
 
-        base_or = [{"farmerId": farmer_id}, {"farmer_id": farmer_id}]
-        base = {"requestKind": "storage", "$or": base_or}
+        base = {
+            "requestKind": "storage",
+            "$or": [
+                {"farmerId": farmer_id},
+                {"farmer_id": farmer_id},
+            ]
+        }
 
-        # primary: by _id
+        # 1) by Mongo _id
         if ObjectId.is_valid(request_id):
             doc = col.find_one({**base, "_id": ObjectId(request_id)})
             if doc:
                 return doc
 
-        # fallback: request_id fields
-        return col.find_one({**base, "request_id": request_id}) or col.find_one({**base, "requestId": request_id})
+        # 2) by request_id string (your generated id)
+        return (
+            col.find_one({**base, "request_id": request_id})
+            or col.find_one({**base, "requestId": request_id})
+        )
 
+    # -----------------------------
+    # FIND WAREHOUSE USER
+    # -----------------------------
     @staticmethod
     def _find_warehouse_user(warehouse_id: str) -> Optional[Dict[str, Any]]:
         users = get_col("users")
-        if not users:
+        if users is None:
             return None
 
         u = users.find_one({"userId": warehouse_id})
@@ -233,6 +232,9 @@ class FarmerStorageService:
             u = users.find_one({"warehouseId": warehouse_id})
         return u
 
+    # -----------------------------
+    # INVENTORY NORMALIZATION
+    # -----------------------------
     @staticmethod
     def _flatten_inventory_docs(inv_docs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         out: List[Dict[str, Any]] = []
@@ -244,14 +246,26 @@ class FarmerStorageService:
         return out
 
     @staticmethod
-    def _get_inventory_for_warehouse(warehouse_id: str, farmer_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def _get_inventory_for_warehouse(
+        warehouse_id: str,
+        farmer_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+
         inv_col = get_col("warehouse_inventory")
-        if not inv_col:
+        if inv_col is None:
             return []
 
         q = {"warehouseId": warehouse_id}
+
+        # support both farmerId and farmer_id in inventory too
         if farmer_id:
-            q = {"warehouseId": warehouse_id, "farmerId": farmer_id}
+            q = {
+                "warehouseId": warehouse_id,
+                "$or": [
+                    {"farmerId": farmer_id},
+                    {"farmer_id": farmer_id},
+                ]
+            }
 
         inv_docs = list(inv_col.find(q).sort([("storedOn", -1), ("created_at", -1)]))
         return FarmerStorageService._flatten_inventory_docs(inv_docs)
@@ -269,8 +283,15 @@ class FarmerStorageService:
             "imageUrl": c.get("imageUrl") or c.get("image_url") or None,
         }
 
+    # -----------------------------
+    # WAREHOUSE INFO PAGE DATA
+    # -----------------------------
     @staticmethod
-    def get_warehouse_info_page_data(farmer_id: str, warehouse_id: str) -> Dict[str, Any]:
+    def get_warehouse_info_page_data(
+        farmer_id: str,
+        warehouse_id: str
+    ) -> Dict[str, Any]:
+
         if not warehouse_id:
             return {"ok": False, "error": "warehouse_id is required."}
 
