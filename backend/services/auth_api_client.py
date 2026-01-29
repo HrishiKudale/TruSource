@@ -3,103 +3,93 @@ from __future__ import annotations
 
 import os
 import time
+import threading
 import requests
 from typing import Any, Dict, Optional
 
 API_BASE = (os.getenv("AUTH_API_BASE_URL", "") or "").rstrip("/")
 
-DEFAULT_TIMEOUT = int(os.getenv("AUTH_API_TIMEOUT", "30"))          # per request
-WARMUP_TIMEOUT  = int(os.getenv("AUTH_API_WARMUP_TIMEOUT", "8"))    # per warmup ping
-WARMUP_MAX_WAIT = int(os.getenv("AUTH_API_WARMUP_MAX_WAIT", "25"))  # total warmup time
-MAX_RETRIES     = int(os.getenv("AUTH_API_MAX_RETRIES", "6"))
+DEFAULT_TIMEOUT = int(os.getenv("AUTH_API_TIMEOUT", "15"))
+WARMUP_TIMEOUT = int(os.getenv("AUTH_API_WARMUP_TIMEOUT", "6"))
+MAX_RETRIES = int(os.getenv("AUTH_API_MAX_RETRIES", "3"))
 
+# Render transient / cold start
 RETRY_STATUS = {502, 503, 504}
 
-# keep service warmup state in-memory (per gunicorn worker)
-_WARMED_UNTIL = 0.0  # epoch seconds
-
+# Warmup cache (avoid calling /health for every request)
+WARMUP_EVERY_SECONDS = int(os.getenv("AUTH_API_WARMUP_EVERY_SECONDS", "600"))  # 10 min
 
 class AuthApiError(Exception):
     pass
 
+# Reuse connections (reduces overhead)
+_session = requests.Session()
 
-def _ensure_base():
+# Warmup state
+_warm_lock = threading.Lock()
+_last_warm_at = 0.0
+
+def _ensure_base() -> None:
     if not API_BASE:
         raise AuthApiError("AUTH_API_BASE_URL is not set")
-
 
 def _safe_json(resp: requests.Response) -> Optional[Dict[str, Any]]:
     try:
         data = resp.json()
-        return data if isinstance(data, dict) else {"data": data}
+        if isinstance(data, dict):
+            return data
+        return {"data": data}
     except Exception:
         return None
 
-
-def warmup(force: bool = False) -> bool:
+def warmup(force: bool = False) -> None:
     """
-    BLOCKING warmup:
-    - keep pinging /health until it returns 200 OR until WARMUP_MAX_WAIT is reached.
-    - caches success for ~2 minutes to avoid doing this on every request.
+    Wake Render service by calling /health, but not on every request.
     """
-    global _WARMED_UNTIL
+    global _last_warm_at
     _ensure_base()
 
     now = time.time()
-    if not force and now < _WARMED_UNTIL:
-        return True
+    if not force and (now - _last_warm_at) < WARMUP_EVERY_SECONDS:
+        return
 
-    url = f"{API_BASE}/health"
-    start = now
-    delay = 0.8
+    with _warm_lock:
+        # double-check after lock
+        now = time.time()
+        if not force and (now - _last_warm_at) < WARMUP_EVERY_SECONDS:
+            return
 
-    while True:
         try:
-            r = requests.get(url, timeout=WARMUP_TIMEOUT, allow_redirects=True)
-            if r.status_code == 200:
-                _WARMED_UNTIL = time.time() + 120  # cache warm state for 2 minutes
-                return True
+            _session.get(f"{API_BASE}/health", timeout=WARMUP_TIMEOUT, allow_redirects=True)
         except Exception:
+            # ignore warmup failure; actual request will retry
             pass
-
-        if (time.time() - start) >= WARMUP_MAX_WAIT:
-            return False
-
-        time.sleep(delay)
-        delay = min(delay * 1.4, 3.0)
-
+        finally:
+            _last_warm_at = time.time()
 
 def _post(path: str, payload: dict, timeout: int = DEFAULT_TIMEOUT) -> Dict[str, Any]:
-    """
-    Single base only:
-      API_BASE + /auth/login
-      API_BASE + /auth/register
-    Retry:
-      - 502/503/504
-      - connection/timeouts
-    """
     _ensure_base()
 
-    # Try to wake auth service (best-effort; request loop will still handle)
+    # Warmup once in a while, not every request
     warmup(force=False)
 
     url = f"{API_BASE}{path}"
-    last_err: Optional[str] = None
+    last_err = None
 
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            resp = requests.post(url, json=payload, timeout=timeout, allow_redirects=True)
+            resp = _session.post(url, json=payload, timeout=timeout, allow_redirects=True)
 
-            # Cold start / gateway errors
             if resp.status_code in RETRY_STATUS:
                 last_err = f"Upstream error {resp.status_code}"
-                time.sleep(min(0.8 * attempt, 4.0))
+                time.sleep(min(0.6 * (2 ** (attempt - 1)), 3.0))
                 continue
 
             data = _safe_json(resp)
+
             if data is None:
-                snippet = (resp.text or "").strip().replace("\n", " ")[:240]
-                raise AuthApiError(f"Auth API returned non-JSON ({resp.status_code}): {snippet}")
+                snippet = (resp.text or "").strip().replace("\n", " ")[:200]
+                raise AuthApiError(f"Auth API returned non-JSON response ({resp.status_code}): {snippet}")
 
             if resp.status_code >= 400:
                 msg = data.get("message") or data.get("detail") or data.get("error") or "Request failed"
@@ -109,16 +99,19 @@ def _post(path: str, payload: dict, timeout: int = DEFAULT_TIMEOUT) -> Dict[str,
 
         except (requests.Timeout, requests.ConnectionError) as e:
             last_err = f"Network error: {e}"
-            time.sleep(min(0.8 * attempt, 4.0))
+            time.sleep(min(0.6 * (2 ** (attempt - 1)), 3.0))
             continue
 
-    raise AuthApiError(f"Auth API not responding at {url}. Last: {last_err}")
+    raise AuthApiError(f"Auth API failed after {MAX_RETRIES} retries: {last_err}")
 
-
-def login(email: str, password: str, role: str) -> Dict[str, Any]:
-    return _post("/auth/login", {"email": email, "password": password, "role": role})
-
+def login(email: str, password: str, role: str | None = None) -> Dict[str, Any]:
+    payload = {"email": email, "password": password}
+    if role:
+        payload["role"] = role
+    return _post("/auth/login", payload)
 
 def register(payload: dict) -> Dict[str, Any]:
-    # IMPORTANT: payload must include userId if your auth_api enforces it
     return _post("/auth/register", payload)
+
+def refresh(refresh_token: str) -> Dict[str, Any]:
+    return _post("/auth/refresh", {"refresh_token": refresh_token})
