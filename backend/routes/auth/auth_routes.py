@@ -11,7 +11,7 @@ import base64
 from io import BytesIO
 import time
 
-import qrcode
+
 
 from flask import (
     Blueprint,
@@ -184,13 +184,6 @@ def newregister():
 
             user = out.get("user", {})
             user_id = user.get("userId")
-
-            # QR
-            profile_url = url_for("auth.user_profile", user_id=user_id, _external=True)
-            os.makedirs("static/qrcodes", exist_ok=True)
-            qr_path = f"static/qrcodes/{user_id}.png"
-            qrcode.make(profile_url).save(qr_path)
-
             session["user_id"] = user_id
             session["user_role"] = user.get("role")
             session["user_name"] = user.get("name")
@@ -261,22 +254,4 @@ def refresh():
     ), 200
 
 
-# -------------------------------------------------------------------
-# HTML: User profile + QR
-# -------------------------------------------------------------------
-@auth_bp.route("/user/<user_id>")
-def user_profile(user_id: str):
-    # In remote mode, profile data should come from Auth API later
-    profile_url = url_for("auth.user_profile", user_id=user_id, _external=True)
 
-    qr = qrcode.make(profile_url)
-    buf = BytesIO()
-    qr.save(buf, format="PNG")
-    buf.seek(0)
-
-    qr_b64 = base64.b64encode(buf.read()).decode()
-    return render_template(
-        "user_card.html",
-        user={"userId": user_id},
-        qr_image=f"data:image/png;base64,{qr_b64}",
-    )
