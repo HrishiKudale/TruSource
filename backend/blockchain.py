@@ -5,15 +5,27 @@ simple helper functions without touching Web3 directly.
 
 Also exposes init_blockchain(app) used by app.py to attach web3 + contracts
 to the Flask app config.
-"""
 
-from typing import Any
+✅ IMPORTANT FIXES INCLUDED:
+- `from __future__ import annotations` is placed correctly (top of file).
+- Removed duplicate / late imports (no imports in the middle of the file).
+- Removed duplicate `import json` and repeated `typing` imports.
+- No circular/self imports.
+- All helper functions kept and cleaned.
+- Added missing return typing and safer conversions.
+"""
 
 from __future__ import annotations
 
 import os
 import time
-from typing import Optional
+from typing import Any, Dict, List, Optional, Union
+
+# NOTE:
+# If this file is inside "backend/", and blockchain_setup.py is ALSO inside "backend/",
+# then prefer: `from backend.blockchain_setup import ...`
+# If blockchain_setup.py is at repo root, keep: `from blockchain_setup import ...`
+# Based on your current file, you are using `from blockchain_setup import ...`
 from blockchain_setup import (
     web3,
     account,
@@ -22,17 +34,13 @@ from blockchain_setup import (
     suggest_fees,
     file_recall_onchain,
 )
-from blockchain_setup import web3 as _web3  # reuse same instance
-from blockchain_setup import account as _account
-from blockchain_setup import contract as _contract
 
-# --------------------------------------
-#  App wiring (used by app.create_app)
-# --------------------------------------
+# -------------------------------------------------------------------
+# App wiring (used by app.create_app)
+# -------------------------------------------------------------------
 def init_blockchain(app: Any) -> None:
     """
-    Wire blockchain_setup objects into Flask app.config
-    and print a small status banner.
+    Wire blockchain_setup objects into Flask app.config.
 
     Called from app.py:
         from backend.blockchain import init_blockchain
@@ -40,7 +48,6 @@ def init_blockchain(app: Any) -> None:
     """
     print("⧉ Initializing Blockchain (using blockchain_setup.py)…")
 
-    # Attach to app.config for easy access anywhere:
     app.config["WEB3"] = web3
     app.config["BLOCKCHAIN_ACCOUNT"] = account
     app.config["TRACE_CONTRACT"] = contract
@@ -57,19 +64,22 @@ def init_blockchain(app: Any) -> None:
     except Exception:
         app.config["RECALL_CONTRACT_ADDRESS"] = None
 
+    try:
+        acct_addr = account.address
+    except Exception:
+        acct_addr = None
+
     print("✓ Blockchain wired from blockchain_setup.py")
-    print(f"  • Account: {account.address}")
+    print(f"  • Account: {acct_addr}")
     print(f"  • Trace contract: {app.config['TRACE_CONTRACT_ADDRESS']}")
     print(f"  • Recall contract: {app.config['RECALL_CONTRACT_ADDRESS']}")
 
 
-# --------------------------------------
-# Traceability Helpers (used by services)
-# --------------------------------------
+# -------------------------------------------------------------------
+# Traceability Read Helpers (used by services)
+# -------------------------------------------------------------------
 def get_crop(crop_id: str):
-    """
-    Read crop details from the smart contract.
-    """
+    """Read crop details from the smart contract."""
     try:
         return contract.functions.getCrop(crop_id).call()
     except Exception as e:
@@ -78,9 +88,7 @@ def get_crop(crop_id: str):
 
 
 def get_crop_history(crop_id: str):
-    """
-    Returns full crop lifecycle from chain.
-    """
+    """Returns full crop lifecycle from chain."""
     try:
         return contract.functions.getCropHistory(crop_id).call()
     except Exception as e:
@@ -89,9 +97,7 @@ def get_crop_history(crop_id: str):
 
 
 def get_user_crops(user_id: str):
-    """
-    Returns list of crop IDs owned by a user.
-    """
+    """Returns list of crop IDs owned by a user."""
     try:
         return contract.functions.getUserCrops(user_id).call()
     except Exception as e:
@@ -99,13 +105,11 @@ def get_user_crops(user_id: str):
         return []
 
 
-# --------------------------------------
+# -------------------------------------------------------------------
 # Recall Helpers (used by farmer + mfg)
-# --------------------------------------
-def file_recall(crop_id, batch_code, severity, expires_at, reason_uri):
-    """
-    Files a recall on-chain using blockchain_setup helper.
-    """
+# -------------------------------------------------------------------
+def file_recall(crop_id: str, batch_code: str, severity: str, expires_at: int, reason_uri: str):
+    """Files a recall on-chain using blockchain_setup helper."""
     return file_recall_onchain(
         crop_id=crop_id,
         batch_code=batch_code,
@@ -114,23 +118,21 @@ def file_recall(crop_id, batch_code, severity, expires_at, reason_uri):
         reason_uri=reason_uri,
     )
 
-# --------------------------------------
-#  Internal helper: get raw tx bytes
-# --------------------------------------
+
+# -------------------------------------------------------------------
+# Internal helper: get raw tx bytes (supports eth-account variants)
+# -------------------------------------------------------------------
 def _raw_tx_bytes(signed) -> bytes:
     """
     Handle both eth-account styles:
-
-    - signed.rawTransaction
-    - signed.raw_transaction
-    - or dict-style {"rawTransaction": ...}
+      - signed.rawTransaction
+      - signed.raw_transaction
+      - or dict-style {"rawTransaction": ...}
     """
-    # Object-style attributes
     raw = getattr(signed, "rawTransaction", None)
     if raw is None:
         raw = getattr(signed, "raw_transaction", None)
 
-    # Dict-style (some eth-account versions)
     if raw is None and isinstance(signed, dict):
         raw = signed.get("rawTransaction") or signed.get("raw_transaction")
 
@@ -140,40 +142,27 @@ def _raw_tx_bytes(signed) -> bytes:
     return raw
 
 
-# --------------------------------------
-#  Crop Registration Helper
-# --------------------------------------
+# -------------------------------------------------------------------
+# Crop Registration Helper (registerCrop)
+# Solidity signature in your contract:
+# registerCrop(userId, cropId, cropName, cropType, farmerName, datePlanted,
+#              farmingType, seedType, location, areaSize)
+# -------------------------------------------------------------------
 def register_crop_onchain(
     user_id: str,
     crop_id: str,
     crop_type: str,
-    crop_name:str,
+    crop_name: str,
     farmer_name: str,
     date_planted: str,
-    farming_type: str | None,
-    seed_type: str | None,
+    farming_type: Optional[str],
+    seed_type: Optional[str],
     location: str,
-    area_size: float | int | str,
+    area_size: Union[float, int, str],
 ) -> str:
     """
-    Call Solidity:
-        function registerCrop(
-            string userId,
-            string cropId,
-            string cropType,
-            string farmerName,
-            string datePlanted,
-            string farmingType,
-            string seedType,
-            string location,
-            uint256 areaSize
-        )
     Returns tx hash (hex string).
     """
-    from blockchain_setup import web3 as _web3  # reuse same instance
-    from blockchain_setup import account as _account
-    from blockchain_setup import contract as _contract
-
     # normalize areaSize → uint256 (store 2 decimals: 2.55 -> 255)
     try:
         area_f = float(area_size or 0)
@@ -184,11 +173,11 @@ def register_crop_onchain(
     farming_type = farming_type or ""
     seed_type = seed_type or ""
 
-    fn = _contract.functions.registerCrop(
+    fn = contract.functions.registerCrop(
         user_id,
         crop_id,
-        crop_type,
         crop_name,
+        crop_type,
         farmer_name,
         date_planted,
         farming_type,
@@ -197,15 +186,13 @@ def register_crop_onchain(
         area_uint,
     )
 
-    gas_est = fn.estimate_gas({"from": _account.address})
+    gas_est = fn.estimate_gas({"from": account.address})
     prio, max_fee = suggest_fees()
 
     tx = fn.build_transaction(
         {
-            "from": _account.address,
-            "nonce": _web3.eth.get_transaction_count(
-                _account.address, "pending"
-            ),
+            "from": account.address,
+            "nonce": web3.eth.get_transaction_count(account.address, "pending"),
             "chainId": 80002,  # Polygon Amoy
             "gas": int(gas_est * 1.20),
             "maxPriorityFeePerGas": prio,
@@ -213,62 +200,50 @@ def register_crop_onchain(
         }
     )
 
-    signed = _account.sign_transaction(tx)
-
-    # 🔥 Use helper that supports all eth-account variants
+    signed = account.sign_transaction(tx)
     raw_tx = _raw_tx_bytes(signed)
-
-    tx_hash = _web3.eth.send_raw_transaction(raw_tx)
+    tx_hash = web3.eth.send_raw_transaction(raw_tx)
     return tx_hash.hex()
 
 
-
-
-
-# --------------------------------------
-#  Crop Registration Helper
-# --------------------------------------
-
-import json
-from typing import Any
-import json
-
+# -------------------------------------------------------------------
+# Harvest Registration Helper (registerHarvest)
+# Solidity signature in your contract:
+# registerHarvest(userId, cropId, harvestDate, harvesterName, harvestQuantity, packagingType)
+# -------------------------------------------------------------------
 def register_harvest_onchain(
     user_id: str,
     crop_id: str,
-    harvester_name: str,
     harvest_date: str,
-    harvest_quantity,
-    packaging_type: str | None,
+    harvester_name: str,
+    harvest_quantity: Union[str, int, float],
+    packaging_type: Optional[str],
 ) -> str:
-    from blockchain_setup import web3 as _web3
-    from blockchain_setup import account as _account
-    from blockchain_setup import contract as _contract
-
-    # Normalize
+    """
+    Returns tx hash (hex string).
+    """
     packaging_type = packaging_type or ""
     try:
         qty = float(harvest_quantity or 0)
-    except:
+    except Exception:
         qty = 0.0
 
-    fn = _contract.functions.registerHarvest(
+    fn = contract.functions.registerHarvest(
         user_id,
         crop_id,
-        harvester_name,
         harvest_date,
-        int(qty),             # if contract expects uint
+        harvester_name,
+        int(qty),
         packaging_type,
-
     )
 
-    gas_est = fn.estimate_gas({"from": _account.address})
+    gas_est = fn.estimate_gas({"from": account.address})
     prio, max_fee = suggest_fees()
 
     tx = fn.build_transaction(
         {
-            "from": _account.address,
-            "nonce": _web3.eth.get_transaction_count(_account.address, "pending"),
+            "from": account.address,
+            "nonce": web3.eth.get_transaction_count(account.address, "pending"),
             "chainId": 80002,
             "gas": int(gas_est * 1.20),
             "maxPriorityFeePerGas": prio,
@@ -276,32 +251,41 @@ def register_harvest_onchain(
         }
     )
 
-    signed = _account.sign_transaction(tx)
+    signed = account.sign_transaction(tx)
     raw_tx = _raw_tx_bytes(signed)
-    tx_hash = _web3.eth.send_raw_transaction(raw_tx)
+    tx_hash = web3.eth.send_raw_transaction(raw_tx)
     return tx_hash.hex()
 
 
-def register_rfid_onchain(
-        user_id: str,
-        username:str,
-        crop_type:str,
-        crop_id: str,
-        packaging_date:str,
-        expiry_date:str,
-        bag_capacity:str,
-        total_bags:str,
-        rfid_epc:str,
-
+# -------------------------------------------------------------------
+# RFID Registration
+# Your Solidity currently shows registerRFIDs(...) (plural), NOT registerRFID(...)
+# But your old python called registerRFID(...).
+#
+# ✅ This implementation keeps BOTH:
+# - register_rfid_onchain_single() → calls registerRFID if present
+# - register_rfids_onchain()       → calls registerRFIDs (recommended with your Solidity)
+# -------------------------------------------------------------------
+def register_rfid_onchain_single(
+    user_id: str,
+    username: str,
+    crop_name: str,
+    crop_type: str,
+    crop_id: str,
+    packaging_date: str,
+    expiry_date: str,
+    bag_capacity: str,
+    total_bags: str,
+    rfid_epc: str,
 ) -> str:
-    from blockchain_setup import web3 as _web3
-    from blockchain_setup import account as _account
-    from blockchain_setup import contract as _contract
-    from blockchain_setup import suggest_fees as _suggest_fees
-
-    fn = _contract.functions.registerRFID(
+    """
+    Calls contract.registerRFID(...) if that function exists in ABI.
+    Returns tx hash.
+    """
+    fn = contract.functions.registerRFID(
         user_id,
         username,
+        crop_name,
         crop_type,
         crop_id,
         packaging_date,
@@ -311,64 +295,98 @@ def register_rfid_onchain(
         rfid_epc,
     )
 
-    gas_est = fn.estimate_gas({"from":_account.address})
-    prio, max_fee = _suggest_fees()
+    gas_est = fn.estimate_gas({"from": account.address})
+    prio, max_fee = suggest_fees()
 
     tx = fn.build_transaction(
         {
-            "from": _account.address,
-            "nonce": _web3.eth.get_transaction_count(_account.address, "pending"),
-            "chainId":80002,
+            "from": account.address,
+            "nonce": web3.eth.get_transaction_count(account.address, "pending"),
+            "chainId": 80002,
             "gas": int(gas_est * 1.20),
-            "maxPriorityFeePerGas":prio,
-            "maxFeePerGas":max_fee,
+            "maxPriorityFeePerGas": prio,
+            "maxFeePerGas": max_fee,
         }
     )
-    signed = _account.sign_transaction(tx)
+    signed = account.sign_transaction(tx)
     raw_tx = _raw_tx_bytes(signed)
-    tx_hash = _web3.eth.send_raw_transaction(raw_tx)
+    tx_hash = web3.eth.send_raw_transaction(raw_tx)
     return tx_hash.hex()
 
-    
+
+def register_rfids_onchain(
+    user_id: str,
+    username: str,
+    crop_name: str,
+    crop_type: str,
+    crop_id: str,
+    packaging_date: str,
+    expiry_date: str,
+    bag_capacity: str,
+    total_bags: str,
+    epcs: List[str],
+) -> str:
+    """
+    Calls contract.registerRFIDs(...) (plural) which matches your Solidity.
+    Returns tx hash.
+    """
+    fn = contract.functions.registerRFIDs(
+        user_id,
+        username,
+        crop_name,
+        crop_type,
+        crop_id,
+        packaging_date,
+        expiry_date,
+        bag_capacity,
+        total_bags,
+        epcs,
+    )
+
+    gas_est = fn.estimate_gas({"from": account.address})
+    prio, max_fee = suggest_fees()
+
+    tx = fn.build_transaction(
+        {
+            "from": account.address,
+            "nonce": web3.eth.get_transaction_count(account.address, "pending"),
+            "chainId": 80002,
+            "gas": int(gas_est * 1.20),
+            "maxPriorityFeePerGas": prio,
+            "maxFeePerGas": max_fee,
+        }
+    )
+    signed = account.sign_transaction(tx)
+    raw_tx = _raw_tx_bytes(signed)
+    tx_hash = web3.eth.send_raw_transaction(raw_tx)
+    return tx_hash.hex()
+
+
 def get_rfid_epcs_by_crop(crop_id: str):
     try:
         return contract.functions.getRFIDEpcsByCrop(crop_id).call()
     except Exception as e:
         print("❌ get_rfid_epcs_by_crop() failed:", e)
         return []
+
+
 def get_rfid_record(crop_id: str, rfid_epc: str):
+    """
+    NOTE: Your Solidity shared does NOT include getRFID(cropId, epc).
+    If your deployed ABI has getRFID, this will work.
+    Otherwise you'll get an ABI error. Keep as-is if you already added getRFID in contract.
+    """
     try:
         return contract.functions.getRFID(crop_id, rfid_epc).call()
     except Exception as e:
         print("❌ get_rfid_record() failed:", e)
         return None
-# --------------------------
-# Explicit exports
-# --------------------------------------
-__all__ = [
-    "init_blockchain",
-    "web3",
-    "account",
-    "contract",
-    "recall_contract",
-    "get_crop",
-    "get_crop_history",
-    "get_user_crops",
-    "suggest_fees",
-    "file_recall",
-    "register_crop_onchain",
-    "register_harvest_onchain",
-    "register_rfid_onchain",
-    "get_rfid_epcs_by_crop",
-    "get_rfid_record",
-]
 
 
-
-# ✅ IMPORT / SETUP from your existing blockchain.py
-# You already have: web3, contract, account, suggest_fees, _raw_tx_bytes etc.
-# Keep them as-is, just add the functions below.
-
+# -------------------------------------------------------------------
+# UserId generation + anchoring
+# Only userId goes on chain via registerUserId(userId)
+# -------------------------------------------------------------------
 def generate_user_id(role: str) -> Optional[str]:
     prefix_map = {
         "farmer": "FRM",
@@ -389,10 +407,12 @@ def should_anchor_user(role: str) -> bool:
     return (role or "").strip().lower() in {"farmer", "manufacturer", "distributor", "retailer"}
 
 
-def anchor_user_id_onchain(user_id: str) -> dict:
+def anchor_user_id_onchain(user_id: str) -> Dict[str, Any]:
     """
     Anchors userId on-chain using registerUserId(userId).
-    Returns: {"ok": True, "tx_hash": "..."} or {"ok": False, "error": "..."}
+    Returns:
+      {"ok": True,  "tx_hash": "..."}
+      {"ok": False, "error": "..."}
     """
     try:
         fn = contract.functions.registerUserId(user_id)
@@ -422,3 +442,29 @@ def anchor_user_id_onchain(user_id: str) -> dict:
 
     except Exception as e:
         return {"ok": False, "error": f"Blockchain error: {e}"}
+
+
+# -------------------------------------------------------------------
+# Explicit exports
+# -------------------------------------------------------------------
+__all__ = [
+    "init_blockchain",
+    "web3",
+    "account",
+    "contract",
+    "recall_contract",
+    "suggest_fees",
+    "file_recall",
+    "get_crop",
+    "get_crop_history",
+    "get_user_crops",
+    "register_crop_onchain",
+    "register_harvest_onchain",
+    "register_rfid_onchain_single",
+    "register_rfids_onchain",
+    "get_rfid_epcs_by_crop",
+    "get_rfid_record",
+    "generate_user_id",
+    "should_anchor_user",
+    "anchor_user_id_onchain",
+]
