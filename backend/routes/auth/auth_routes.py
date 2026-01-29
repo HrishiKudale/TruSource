@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import base64
 from io import BytesIO
+import time
 
 import qrcode
 
@@ -83,6 +84,20 @@ def _issue_tokens(user: dict):
 def _norm(v: str | None) -> str:
     return (v or "").strip().lower()
 
+def generate_user_id(role: str) -> str | None:
+    prefix_map = {
+        "farmer": "FRM",
+        "manufacturer": "MFG",
+        "distributor": "DIST",
+        "retailer": "RET",
+        "transporter": "TRN",
+        "warehousing": "WRH",
+    }
+    prefix = prefix_map.get(role.lower())
+    if not prefix:
+        return None
+    # random + timestamp to keep IDs fairly unique
+    return f"{prefix}{str(os.urandom(3).hex()).upper()}{int(time.time())}"
 
 # -------------------------------------------------------------------
 # HTML: Login
