@@ -9,8 +9,6 @@ from pymongo import MongoClient
 auth_bp = Blueprint("auth", __name__)
 bcrypt = Bcrypt()
 
-# IMPORTANT:
-# Ensure MONGO_URI is set in trusource Render env
 client = MongoClient(os.getenv("MONGO_URI"))
 db = client["crop_traceability_db"]
 users = db["users"]
@@ -39,19 +37,11 @@ def _norm_email(v):
 
 
 @auth_bp.post("/auth/register")
-def register():
-    """
-    Receives payload from trusource-main.
-    Must support BOTH:
-      - JSON payload (auth_api_client uses requests.post(json=...))
-      - form payload (if ever used)
-    """
-
+def register_user():
     data = request.get_json(silent=True)
     if not data:
         data = request.form.to_dict(flat=True) or {}
 
-    # userId ideally comes from blockchain generation in trusource-main
     user_id = _norm(data.get("userId") or data.get("user_id"))
     name = _norm(data.get("name"))
     email = _norm_email(data.get("email"))
@@ -59,7 +49,7 @@ def register():
     role = _norm(data.get("role")).lower()
 
     if not user_id:
-        return jsonify(message="userId is required (must come from blockchain/main app)"), 400
+        return jsonify(message="userId is required"), 400
     if not name:
         return jsonify(message="Name is required"), 400
     if not email:
@@ -69,7 +59,6 @@ def register():
     if not role:
         return jsonify(message="Role is required"), 400
 
-    # block duplicate
     if users.find_one({"userId": user_id}):
         return jsonify(message="UserId already exists"), 409
 
@@ -79,10 +68,9 @@ def register():
     hashed = bcrypt.generate_password_hash(password).decode("utf-8")
     now = datetime.now(timezone.utc)
 
-    # store EVERYTHING you pass (safe allow-list approach is better, but this keeps your app flexible)
     doc = dict(data)
+    doc.pop("_id", None)
 
-    # enforce normalized/secure fields
     doc["userId"] = user_id
     doc["name"] = name
     doc["email"] = email
@@ -90,9 +78,6 @@ def register():
     doc["password"] = hashed
     doc["created_at"] = now
     doc["updated_at"] = now
-
-    # remove any accidental empty _id
-    doc.pop("_id", None)
 
     users.insert_one(doc)
 
