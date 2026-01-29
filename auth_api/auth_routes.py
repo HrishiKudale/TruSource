@@ -1,14 +1,9 @@
+# auth_api/auth_routes.py
 import os
-from datetime import datetime, timezone
 import time
+from datetime import datetime, timezone
 
-
-
-from backend.services.auth_api_client import register as auth_api_register, AuthApiError
-
-# ✅ NEW imports
-from backend.blockchain import generate_user_id, should_anchor_user, anchor_user_id_onchain
-from flask import Blueprint, redirect, render_template, request, jsonify, session, url_for
+from flask import Blueprint, request, jsonify
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import create_access_token, create_refresh_token
 from pymongo import MongoClient
@@ -35,80 +30,66 @@ def _public_user(u: dict) -> dict:
     }
 
 
-
-USE_REMOTE_AUTH_API = os.getenv("USE_REMOTE_AUTH_API", "0") == "1"
-auth_bp = Blueprint("auth", __name__)
-
-def _norm(v: str | None) -> str:
+def _norm(v):
     return (v or "").strip()
 
-def _norm_email(v: str | None) -> str:
+
+def _norm_email(v):
     return (v or "").strip().lower()
 
-@auth_bp.route("/newregister", methods=["GET", "POST"])
-def newregister():
-    if request.method == "POST":
-        form = request.form.to_dict()
 
-        # ✅ normalize
-        form["email"] = _norm_email(form.get("email"))
-        form["role"] = _norm(form.get("role")).lower()
-        form["name"] = _norm(form.get("name"))
-        form["password"] = form.get("password") or ""
+@auth_bp.post("/auth/register")
+def register():
+    data = request.get_json(silent=True) or {}
+    # allow form fallback
+    if not data:
+        data = request.form.to_dict(flat=True) or {}
 
-        # ✅ must-have fields validation (main app side)
-        if not form.get("name"):
-            return jsonify(message="Name is required"), 400
-        if not form.get("email"):
-            return jsonify(message="Email is required"), 400
-        if not form.get("password"):
-            return jsonify(message="Password is required"), 400
-        if not form.get("role"):
-            return jsonify(message="Role is required"), 400
+    user_id = _norm(data.get("userId") or data.get("user_id"))
+    name = _norm(data.get("name"))
+    email = _norm_email(data.get("email"))
+    password = data.get("password") or ""
+    role = _norm(data.get("role")).lower()
 
-        # =========================================================
-        # ✅ REMOTE AUTH MODE (Render Auth Service)
-        # =========================================================
-        if USE_REMOTE_AUTH_API:
-            # 1) Generate userId here (main app)
-            user_id = generate_user_id(form["role"])
-            if not user_id:
-                return jsonify(message="Invalid role provided."), 400
+    if not user_id:
+        return jsonify(message="userId is required"), 400
+    if not name:
+        return jsonify(message="Name is required"), 400
+    if not email:
+        return jsonify(message="Email is required"), 400
+    if not password:
+        return jsonify(message="Password is required"), 400
+    if not role:
+        return jsonify(message="Role is required"), 400
 
-            form["userId"] = user_id  # ✅ REQUIRED by auth service
+    # duplicates
+    if users.find_one({"userId": user_id}):
+        return jsonify(message="UserId already exists"), 409
+    if users.find_one({"email": email, "role": role}):
+        return jsonify(message="User already exists for this role"), 409
 
-            # 2) Anchor to blockchain if needed (before storing user in Mongo)
-            if should_anchor_user(form["role"]):
-                chain_res = anchor_user_id_onchain(user_id)
-                if not chain_res.get("ok"):
-                    return jsonify(message=chain_res.get("error", "Blockchain error")), 500
+    hashed = bcrypt.generate_password_hash(password).decode("utf-8")
+    now = datetime.now(timezone.utc)
 
-                # optional: store tx_hash in mongo too
-                form["chain_tx_hash"] = chain_res.get("tx_hash")
+    doc = dict(data)
+    doc.pop("_id", None)
 
-            # 3) Register in Auth API (stores in Mongo, hashes password)
-            try:
-                out = auth_api_register(form)
-            except AuthApiError as e:
-                return jsonify(message=str(e)), 400
-            except Exception as e:
-                return jsonify(message=f"Auth API error: {e}"), 500
+    doc["userId"] = user_id
+    doc["name"] = name
+    doc["email"] = email
+    doc["role"] = role
+    doc["password"] = hashed
+    doc["created_at"] = now
+    doc["updated_at"] = now
 
-            user = out.get("user", {})
-            user_id = user.get("userId") or form["userId"]
-            session["user_id"] = user_id
-            session["user_role"] = user.get("role") or form.get("role")
-            session["user_name"] = user.get("name") or form.get("name")
+    users.insert_one(doc)
 
-            return redirect(url_for("auth.registration_success"))
-
-        # =========================================================
-        # LOCAL DEV MODE (optional)
-        # =========================================================
-        return jsonify(message="Local registration disabled in production"), 400
-
-    return render_template("newregister.html")
-
+    ident = _public_user(doc)
+    return jsonify(
+        user=ident,
+        access_token=create_access_token(identity=ident),
+        refresh_token=create_refresh_token(identity=ident),
+    ), 201
 
 
 @auth_bp.post("/auth/login")
@@ -144,9 +125,3 @@ def get_user(user_id: str):
     if not user:
         return jsonify(message="User not found"), 404
     return jsonify(user=user), 200
-
-
-@auth_bp.get("/mongo-ping")
-def mongo_ping():
-    client.admin.command("ping")
-    return jsonify(ok=True), 200
