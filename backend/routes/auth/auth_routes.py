@@ -252,6 +252,13 @@ def registration_success():
         role=session.get("user_role"),
     )
 
+@auth_bp.route("/user/<user_id>")
+def user_profile(user_id: str):
+    # Minimal page to avoid BuildError
+    return render_template(
+        "user_card.html",
+        user={"userId": user_id},
+    )
 
 # -------------------------------------------------------------------
 # JSON: /auth/login (API)
