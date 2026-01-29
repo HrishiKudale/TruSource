@@ -4,17 +4,19 @@ from __future__ import annotations
 import os
 import time
 import requests
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional
 
 API_BASE = (os.getenv("AUTH_API_BASE_URL", "") or "").rstrip("/")
 
-# Tunables for Render cold starts
-DEFAULT_TIMEOUT = int(os.getenv("AUTH_API_TIMEOUT", "20"))
-WARMUP_TIMEOUT = int(os.getenv("AUTH_API_WARMUP_TIMEOUT", "8"))
-MAX_RETRIES = int(os.getenv("AUTH_API_MAX_RETRIES", "3"))
+DEFAULT_TIMEOUT = int(os.getenv("AUTH_API_TIMEOUT", "30"))          # per request
+WARMUP_TIMEOUT  = int(os.getenv("AUTH_API_WARMUP_TIMEOUT", "8"))    # per warmup ping
+WARMUP_MAX_WAIT = int(os.getenv("AUTH_API_WARMUP_MAX_WAIT", "25"))  # total warmup time
+MAX_RETRIES     = int(os.getenv("AUTH_API_MAX_RETRIES", "6"))
 
-# Retry these (typical transient / cold start / gateway)
 RETRY_STATUS = {502, 503, 504}
+
+# keep service warmup state in-memory (per gunicorn worker)
+_WARMED_UNTIL = 0.0  # epoch seconds
 
 
 class AuthApiError(Exception):
@@ -27,20 +29,6 @@ def _ensure_base():
 
 
 def _safe_json(resp: requests.Response) -> Optional[Dict[str, Any]]:
-    """
-    Return JSON dict if response body is JSON, else None.
-    Handles HTML (Render 502/404 pages) safely.
-    """
-    # Try header-based check
-    ctype = (resp.headers.get("Content-Type") or "").lower()
-    if "application/json" in ctype:
-        try:
-            data = resp.json()
-            return data if isinstance(data, dict) else {"data": data}
-        except Exception:
-            return None
-
-    # Some services return JSON without correct content-type
     try:
         data = resp.json()
         return data if isinstance(data, dict) else {"data": data}
@@ -48,120 +36,89 @@ def _safe_json(resp: requests.Response) -> Optional[Dict[str, Any]]:
         return None
 
 
-def _candidate_bases() -> List[str]:
+def warmup(force: bool = False) -> bool:
     """
-    Support common deployments:
-      - https://service.onrender.com
-      - https://service.onrender.com/api
-    If user already set /api in base, don't double it.
+    BLOCKING warmup:
+    - keep pinging /health until it returns 200 OR until WARMUP_MAX_WAIT is reached.
+    - caches success for ~2 minutes to avoid doing this on every request.
     """
-    base = API_BASE.rstrip("/")
-    if base.endswith("/api"):
-        return [base]  # already includes /api
-    return [base, base + "/api"]
-
-
-def _warmup() -> None:
-    """
-    Ping health endpoints to wake Render service.
-    Try both /health and /api/health depending on mount style.
-    Ignore failures (main request handles retry).
-    """
+    global _WARMED_UNTIL
     _ensure_base()
-    for b in _candidate_bases():
-        url = f"{b}/health"
+
+    now = time.time()
+    if not force and now < _WARMED_UNTIL:
+        return True
+
+    url = f"{API_BASE}/health"
+    start = now
+    delay = 0.8
+
+    while True:
         try:
-            requests.get(url, timeout=WARMUP_TIMEOUT, allow_redirects=True)
-            return  # one successful warmup is enough
+            r = requests.get(url, timeout=WARMUP_TIMEOUT, allow_redirects=True)
+            if r.status_code == 200:
+                _WARMED_UNTIL = time.time() + 120  # cache warm state for 2 minutes
+                return True
         except Exception:
             pass
 
+        if (time.time() - start) >= WARMUP_MAX_WAIT:
+            return False
 
-def _post_any(path: str, payload: dict, timeout: int = DEFAULT_TIMEOUT) -> Dict[str, Any]:
+        time.sleep(delay)
+        delay = min(delay * 1.4, 3.0)
+
+
+def _post(path: str, payload: dict, timeout: int = DEFAULT_TIMEOUT) -> Dict[str, Any]:
     """
-    POST with:
-      - warmup for Render cold-start
-      - retry on 502/503/504 and network timeouts
-      - path fallback: tries {base}{path} and {base}/api{path} depending on AUTH_API_BASE_URL
-      - safe JSON parsing (handle HTML 404/502 pages)
+    Single base only:
+      API_BASE + /auth/login
+      API_BASE + /auth/register
+    Retry:
+      - 502/503/504
+      - connection/timeouts
     """
     _ensure_base()
-    _warmup()
 
-    # Build candidate URLs
-    urls: List[str] = []
-    for b in _candidate_bases():
-        urls.append(f"{b}{path}")
+    # Try to wake auth service (best-effort; request loop will still handle)
+    warmup(force=False)
 
+    url = f"{API_BASE}{path}"
     last_err: Optional[str] = None
 
-    for url in urls:
-        for attempt in range(1, MAX_RETRIES + 1):
-            try:
-                resp = requests.post(url, json=payload, timeout=timeout, allow_redirects=True)
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            resp = requests.post(url, json=payload, timeout=timeout, allow_redirects=True)
 
-                # Retry transient gateway errors
-                if resp.status_code in RETRY_STATUS:
-                    last_err = f"Upstream error {resp.status_code} on {url}"
-                    time.sleep(0.6 * (2 ** (attempt - 1)))
-                    continue
+            # Cold start / gateway errors
+            if resp.status_code in RETRY_STATUS:
+                last_err = f"Upstream error {resp.status_code}"
+                time.sleep(min(0.8 * attempt, 4.0))
+                continue
 
-                data = _safe_json(resp)
+            data = _safe_json(resp)
+            if data is None:
+                snippet = (resp.text or "").strip().replace("\n", " ")[:240]
+                raise AuthApiError(f"Auth API returned non-JSON ({resp.status_code}): {snippet}")
 
-                # If server didn't return JSON
-                if data is None:
-                    snippet = (resp.text or "").strip().replace("\n", " ")[:240]
-                    # If it's 404 HTML, try next candidate URL
-                    if resp.status_code == 404:
-                        last_err = f"404 Not Found on {url}: {snippet}"
-                        break
-                    raise AuthApiError(f"Auth API returned non-JSON response ({resp.status_code}) on {url}: {snippet}")
+            if resp.status_code >= 400:
+                msg = data.get("message") or data.get("detail") or data.get("error") or "Request failed"
+                raise AuthApiError(f"{msg} (HTTP {resp.status_code})")
 
-                # If error status, raise with message
-                if resp.status_code >= 400:
-                    msg = data.get("message") or data.get("detail") or data.get("error") or "Request failed"
-                    # If 404 from JSON, try next candidate URL
-                    if resp.status_code == 404:
-                        last_err = f"{msg} (HTTP 404) on {url}"
-                        break
-                    raise AuthApiError(f"{msg} (HTTP {resp.status_code})")
+            return data
 
-                return data
+        except (requests.Timeout, requests.ConnectionError) as e:
+            last_err = f"Network error: {e}"
+            time.sleep(min(0.8 * attempt, 4.0))
+            continue
 
-            except (requests.Timeout, requests.ConnectionError) as e:
-                last_err = f"Network error on {url}: {e}"
-                if attempt < MAX_RETRIES:
-                    time.sleep(0.6 * (2 ** (attempt - 1)))
-                    continue
-                # network error on this url → try next url
-                break
-
-            except AuthApiError:
-                raise
-
-            except Exception as e:
-                last_err = f"Unexpected error on {url}: {e}"
-                if attempt < MAX_RETRIES:
-                    time.sleep(0.6 * (2 ** (attempt - 1)))
-                    continue
-                break
-
-    tried = ", ".join(urls)
-    raise AuthApiError(
-        f"Auth API endpoint not found / not responding. Tried: {tried}. Last: {last_err}"
-    )
+    raise AuthApiError(f"Auth API not responding at {url}. Last: {last_err}")
 
 
-def login(email: str, password: str, role: str | None = None) -> Dict[str, Any]:
-    payload = {"email": email, "password": password}
-    if role:
-        payload["role"] = role
-    return _post_any("/auth/login", payload)
+def login(email: str, password: str, role: str) -> Dict[str, Any]:
+    return _post("/auth/login", {"email": email, "password": password, "role": role})
 
 
 def register(payload: dict) -> Dict[str, Any]:
-    return _post_any("/auth/register", payload)
-
-
-def refresh(refresh_token: str) -> Dict[str, Any]:
-    return _post_any("/auth/refresh", {"refresh_token": refresh_token})
+    # IMPORTANT: payload must include userId if your auth_api enforces it
+    return _post("/auth/register", payload)
