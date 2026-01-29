@@ -204,7 +204,7 @@ class RFIDService:
 # backend/rfid_service.py
 import re
 from typing import Dict, Any, List, Tuple
-from backend.blockchain import register_rfid_onchain, get_rfid_epcs_by_crop, get_rfid_record
+from backend.blockchain import register_rfids_onchain, get_rfid_epcs_by_crop, get_rfid_record
 
 EXACT_HEX = 24  # typical EPC length (your Mongo code used this)
 
@@ -281,7 +281,7 @@ def register_epcs_onchain(payload: Dict[str, Any]) -> Tuple[bool, str, Dict[str,
     # Send tx per EPC (since contract stores per EPC)
     tx_hashes = []
     for epc in cleaned:
-        txh = register_rfid_onchain(
+        txh = register_rfids_onchain(
             user_id=user_id,
             username=username,
             crop_type=crop_type,
