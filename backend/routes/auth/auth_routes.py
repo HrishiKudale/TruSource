@@ -84,20 +84,6 @@ def _issue_tokens(user: dict):
 def _norm(v: str | None) -> str:
     return (v or "").strip().lower()
 
-def generate_user_id(role: str) -> str | None:
-    prefix_map = {
-        "farmer": "FRM",
-        "manufacturer": "MFG",
-        "distributor": "DIST",
-        "retailer": "RET",
-        "transporter": "TRN",
-        "warehousing": "WRH",
-    }
-    prefix = prefix_map.get(role.lower())
-    if not prefix:
-        return None
-    # random + timestamp to keep IDs fairly unique
-    return f"{prefix}{str(os.urandom(3).hex()).upper()}{int(time.time())}"
 
 # -------------------------------------------------------------------
 # HTML: Login
@@ -164,36 +150,97 @@ def newlogin():
     return render_template("newlogin.html")
 
 
-# -------------------------------------------------------------------
-# HTML: Registration
-# -------------------------------------------------------------------
+# trusource-main backend/routes/auth/auth_routes.py (inside /newregister POST)
+from backend.services.auth_api_client import register as auth_api_register, AuthApiError
+from backend.blockchain import anchor_user_id_onchain
+
+def should_anchor_user(role: str) -> bool:
+    return (role or "").lower() in ["farmer", "manufacturer", "distributor", "retailer"]
+
+def generate_user_id(role: str) -> str | None:
+    prefix_map = {
+        "farmer": "FRM",
+        "manufacturer": "MFG",
+        "distributor": "DIST",
+        "retailer": "RET",
+        "transporter": "TRN",
+        "warehousing": "WRH",
+        "warehouse": "WRH",
+    }
+    prefix = prefix_map.get((role or "").lower())
+    if not prefix:
+        return None
+    import os, time
+    return f"{prefix}{os.urandom(3).hex().upper()}{int(time.time())}"
+
 @auth_bp.route("/newregister", methods=["GET", "POST"])
 def newregister():
     if request.method == "POST":
-        form = request.form.to_dict()
-        form["email"] = _norm(form.get("email"))
-        form["role"] = _norm(form.get("role"))
+        # HTML FORM
+        name = request.form.get("name")
+        email = (request.form.get("email") or "").strip().lower()
+        password = request.form.get("password") or ""
+        phone = request.form.get("phone")
+        location = request.form.get("location")
+        role = (request.form.get("role") or "").strip().lower()
+        address = request.form.get("address")
+        office_name = request.form.get("officeName")
+        office_address = request.form.get("officeAddress")
+        gst_number = request.form.get("gstNumber")
+        warehouse_type = request.form.get("warehouseType")
 
-        if USE_REMOTE_AUTH_API:
-            try:
-                out = auth_api_register(form)
-            except AuthApiError as e:
-                return jsonify(message=str(e)), 400
-            except Exception as e:
-                return jsonify(message=f"Auth API error: {e}"), 500
+        # validate
+        if not name or not email or not password or not role:
+            return jsonify(message="name, email, password, role are required"), 400
 
-            user = out.get("user", {})
-            user_id = user.get("userId")
-            session["user_id"] = user_id
-            session["user_role"] = user.get("role")
-            session["user_name"] = user.get("name")
+        # ✅ generate userId in main
+        user_id = generate_user_id(role)
+        if not user_id:
+            return jsonify(message="Invalid role provided."), 400
 
-            return redirect(url_for("auth.registration_success"))
+        # ✅ blockchain stores ONLY userId (selected roles)
+        chain_tx_hash = None
+        if should_anchor_user(role):
+            chain_res = anchor_user_id_onchain(user_id)
+            if not chain_res.get("ok"):
+                return jsonify(message=f"Blockchain error: {chain_res.get('error')}"), 500
+            chain_tx_hash = chain_res.get("tx_hash")
 
-        # LOCAL DEV ONLY
-        return jsonify(message="Local registration disabled in production"), 400
+        # ✅ build payload for auth service mongo (full profile)
+        payload = {
+            "userId": user_id,
+            "name": name,
+            "email": email,
+            "password": password,        # auth service will hash
+            "phone": phone,
+            "location": location,
+            "role": role,
+            "address": address if role == "farmer" else None,
+            "officeAddress": office_address if role != "farmer" else None,
+            "officeName": office_name if role != "farmer" else None,
+            "gstNumber": gst_number if role != "farmer" else None,
+            "warehouseType": warehouse_type if role in ("warehousing", "warehouse") else None,
+            "chain_tx_hash": chain_tx_hash,  # optional
+        }
+
+        # ✅ call auth service to store in mongo
+        try:
+            out = auth_api_register(payload)
+        except AuthApiError as e:
+            return jsonify(message=str(e)), 400
+        except Exception as e:
+            return jsonify(message=f"Auth API error: {e}"), 500
+
+        # ✅ session etc (same as before)
+        user = out.get("user", {})
+        session["user_id"] = user.get("userId") or user_id
+        session["user_role"] = user.get("role") or role
+        session["user_name"] = user.get("name") or name
+
+        return redirect(url_for("auth.registration_success"))
 
     return render_template("newregister.html")
+
 
 
 @auth_bp.route("/registration-success")
