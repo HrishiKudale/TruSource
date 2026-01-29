@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timezone
+import time
 
 from flask import Blueprint, request, jsonify
 from flask_bcrypt import Bcrypt
@@ -35,6 +36,20 @@ def _norm(v):
 def _norm_email(v):
     return (v or "").strip().lower()
 
+def generate_user_id(role: str) -> str | None:
+    prefix_map = {
+        "farmer": "FRM",
+        "manufacturer": "MFG",
+        "distributor": "DIST",
+        "retailer": "RET",
+        "transporter": "TRN",
+        "warehousing": "WRH",
+    }
+    prefix = prefix_map.get(role.lower())
+    if not prefix:
+        return None
+    # random + timestamp to keep IDs fairly unique
+    return f"{prefix}{str(os.urandom(3).hex()).upper()}{int(time.time())}"
 
 @auth_bp.post("/auth/register")
 def register_user():
