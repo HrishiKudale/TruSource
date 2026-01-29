@@ -660,14 +660,14 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 6px 10px;
 }
 
 .my-crop .caret-down-wrapper {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 4px 5px;
+  padding: 6px 7px;
   background-color: var(--grey-100);
   border-color:var(--grey-100);
 }
