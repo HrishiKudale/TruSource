@@ -2,7 +2,8 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from auth_routes import auth_bp, bcrypt
+
+from auth_routes import auth_bp, bcrypt  # ✅ correct for Root Directory = auth_api
 
 def create_app():
     app = Flask(__name__)
@@ -13,6 +14,11 @@ def create_app():
 
     bcrypt.init_app(app)
     app.register_blueprint(auth_bp)
+
+    # ✅ Debug: print all registered routes once at boot
+    print("✅ Registered routes:")
+    for r in app.url_map.iter_rules():
+        print(r, r.methods)
 
     return app
 
