@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone
 import time
 
-import qrcode
+
 
 from backend.services.auth_api_client import register as auth_api_register, AuthApiError
 
@@ -96,13 +96,6 @@ def newregister():
 
             user = out.get("user", {})
             user_id = user.get("userId") or form["userId"]
-
-            # 4) QR + session
-            profile_url = url_for("auth.user_profile", user_id=user_id, _external=True)
-            os.makedirs("static/qrcodes", exist_ok=True)
-            qr_path = f"static/qrcodes/{user_id}.png"
-            qrcode.make(profile_url).save(qr_path)
-
             session["user_id"] = user_id
             session["user_role"] = user.get("role") or form.get("role")
             session["user_name"] = user.get("name") or form.get("name")
