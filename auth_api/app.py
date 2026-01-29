@@ -23,9 +23,4 @@ def create_app():
     return app
 
 app = create_app()
-from backend.services import auth_api_client
 
-@app.before_request
-def _wake_auth_service():
-    if os.getenv("USE_REMOTE_AUTH_API", "0") == "1":
-        auth_api_client.warmup(force=False)
