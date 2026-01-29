@@ -9,6 +9,11 @@ to the Flask app config.
 
 from typing import Any
 
+from __future__ import annotations
+
+import os
+import time
+from typing import Optional
 from blockchain_setup import (
     web3,
     account,
@@ -358,3 +363,62 @@ __all__ = [
     "get_rfid_record",
 ]
 
+
+
+# ✅ IMPORT / SETUP from your existing blockchain.py
+# You already have: web3, contract, account, suggest_fees, _raw_tx_bytes etc.
+# Keep them as-is, just add the functions below.
+
+def generate_user_id(role: str) -> Optional[str]:
+    prefix_map = {
+        "farmer": "FRM",
+        "manufacturer": "MFG",
+        "distributor": "DIST",
+        "retailer": "RET",
+        "transporter": "TRN",
+        "warehouse": "WRH",
+        "warehousing": "WRH",
+    }
+    prefix = prefix_map.get((role or "").strip().lower())
+    if not prefix:
+        return None
+    return f"{prefix}{os.urandom(3).hex().upper()}{int(time.time())}"
+
+
+def should_anchor_user(role: str) -> bool:
+    return (role or "").strip().lower() in {"farmer", "manufacturer", "distributor", "retailer"}
+
+
+def anchor_user_id_onchain(user_id: str) -> dict:
+    """
+    Anchors userId on-chain using registerUserId(userId).
+    Returns: {"ok": True, "tx_hash": "..."} or {"ok": False, "error": "..."}
+    """
+    try:
+        fn = contract.functions.registerUserId(user_id)
+
+        gas_est = fn.estimate_gas({"from": account.address})
+        prio, max_fee = suggest_fees()
+
+        txn = fn.build_transaction(
+            {
+                "from": account.address,
+                "nonce": web3.eth.get_transaction_count(account.address, "pending"),
+                "chainId": 80002,  # Polygon Amoy
+                "gas": int(gas_est * 1.20),
+                "maxPriorityFeePerGas": prio,
+                "maxFeePerGas": max_fee,
+            }
+        )
+
+        signed = account.sign_transaction(txn)
+        tx_hash = web3.eth.send_raw_transaction(_raw_tx_bytes(signed))
+        receipt = web3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
+
+        if not receipt or receipt.status != 1:
+            return {"ok": False, "error": "Blockchain transaction failed (receipt.status != 1)"}
+
+        return {"ok": True, "tx_hash": web3.to_hex(tx_hash)}
+
+    except Exception as e:
+        return {"ok": False, "error": f"Blockchain error: {e}"}
