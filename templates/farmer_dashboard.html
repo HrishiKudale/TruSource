@@ -1,16 +1,15 @@
 {% extends "farmer_base.html" %}
 {% block title %}Dashboard{% endblock %}
 
-
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='farmer_dashboard.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <div class="dash-wrap">
   <!-- Page Header -->
   <div class="dash-header">
     <div class="dash-title">
       <span class="grid-ico" aria-hidden="true">
-        <!-- grid icon -->
         <img src="{{ url_for('static', filename='svg-icons/Dashboard/Dashboard.svg') }}" alt="Back">
       </span>
       <h1>Dashboard</h1>
@@ -93,150 +92,156 @@
         </div>
 
         <div class="card-body">
-          <!-- SOIL TAB -->
-          <div class="tab-panel active" id="tab-soil">
-            <div class="tab-top">
-              <div class="tab-label">Soil Data</div>
-              <div class="tab-filters">
-                <select class="select-ghost" id="soilMetricSelect">
-                  <option value="soil_temp">Soil Temperature</option>
-                  <option value="soil_moisture">Soil Moisture</option>
-                  <option value="ph">pH</option>
-                  <option value="npk">NPK Level</option>
-                </select>
-
-                <select class="select-ghost" id="soilRangeSelect">
-                  <option value="week">This Week</option>
-                  <option value="month">This Month</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="chart-wrap">
-              <canvas id="soilLineChart" height="120"; width="950"></canvas>
-            </div>
-
-            <div class="metric-grid">
-              <div class="metric-item">
-                <span class="dot" aria-hidden="true"></span>
-                <div class="metric-name">Soil Temperature</div>
-                <div class="metric-value" id="mSoilTemp">25.7°C</div>
-              </div>
-              <div class="metric-item">
-                <span class="dot" aria-hidden="true"></span>
-                <div class="metric-name">pH</div>
-                <div class="metric-value" id="mPh">6.11</div>
-              </div>
-              <div class="metric-item">
-                <span class="dot" aria-hidden="true"></span>
-                <div class="metric-name">Soil Moisture</div>
-                <div class="metric-value" id="mMoisture">25.7%</div>
-              </div>
-              <div class="metric-item">
-                <span class="dot" aria-hidden="true"></span>
-                <div class="metric-name">Soil EC</div>
-                <div class="metric-value" id="mEc">0.046 ds/m</div>
-              </div>
-
-              <div class="metric-item">
-                <span class="dot" aria-hidden="true"></span>
-                <div class="metric-name">NPK Level</div>
-                <div class="metric-value" id="mNpk">Moderate</div>
-              </div>
-              <div class="metric-item">
-                <span class="dot" aria-hidden="true"></span>
-                <div class="metric-name">Phosphorus</div>
-                <div class="metric-value" id="mP">3.0mg/kg</div>
-              </div>
-              <div class="metric-item">
-                <span class="dot" aria-hidden="true"></span>
-                <div class="metric-name">Nitrogen</div>
-                <div class="metric-value" id="mN">3.0mg/kg</div>
-              </div>
-              <div class="metric-item">
-                <span class="dot" aria-hidden="true"></span>
-                <div class="metric-name">Potassium</div>
-                <div class="metric-value" id="mK">3.0mg/kg</div>
-              </div>
-            </div>
+          <!-- ✅ EMPTY STATE (Weather & Crop Health) -->
+          <div class="empty-state" id="emptyWeatherCard" style="display:none;">
+            <img src="{{ url_for('static', filename='illustrations/empty-weather.svg') }}" alt="No weather data">
+            <div class="empty-title">No data yet</div>
+            <div class="empty-sub">Connect a device or add a crop to see weather and soil insights.</div>
           </div>
 
-          <!-- WEATHER TAB -->
-          <div class="tab-panel" id="tab-weather">
-            <div class="tab-top">
-              <div class="tab-label">Weather</div>
-            </div>
+          <!-- ✅ CONTENT WRAPPER (hide when empty) -->
+          <div id="weatherCardContent">
+            <!-- SOIL TAB -->
+            <div class="tab-panel active" id="tab-soil">
+              <div class="tab-top">
+                <div class="tab-label">Soil Data</div>
+                <div class="tab-filters">
+                  <select class="select-ghost" id="soilMetricSelect">
+                    <option value="soil_temp">Soil Temperature</option>
+                    <option value="soil_moisture">Soil Moisture</option>
+                    <option value="ph">pH</option>
+                    <option value="npk">NPK Level</option>
+                  </select>
 
-            <div class="weather-hero">
-              <!-- Replace with your own satellite/weather image -->
-              <img
-                src="{{ (dashboard.weather_image_url if dashboard and dashboard.weather_image_url else url_for('static', filename='img/farm_map_placeholder.jpg')) }}"
-                alt="Weather / Field Map"
-                onerror="this.style.display='none'; document.getElementById('weatherFallback').style.display='flex';"
-              />
-              <div id="weatherFallback" class="weather-fallback" style="display:none;">
-                <div class="muted">No image available</div>
-              </div>
-            </div>
-
-            <div class="info-cards-row">
-              <div class="info-card">
-                <div class="info-label">Geo-Location</div>
-                <div class="info-value">
-                  Latitude: {{ dashboard.geo.lat if dashboard and dashboard.geo else "19.2046" }}° N
-                  Longitude: {{ dashboard.geo.lng if dashboard and dashboard.geo else "73.8745" }}° E
-                </div>
-                <div class="info-sub muted">
-                  {{ dashboard.geo.address if dashboard and dashboard.geo else "Kudoshi, adjacent to the Jagbudi River..." }}
+                  <select class="select-ghost" id="soilRangeSelect">
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                  </select>
                 </div>
               </div>
 
-              <div class="info-card">
-                <div class="info-label">Crop</div>
-                <div class="info-grid2">
-                  <div>
-                    <div class="muted small">Crop ID</div>
-                    <div>{{ dashboard.crop_meta.crop_id if dashboard and dashboard.crop_meta else "1002-Wheat" }}</div>
+              <div class="chart-wrap">
+                <canvas id="soilLineChart" height="200" width="600"></canvas>
+              </div>
+
+              <div class="metric-grid">
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">Soil Temperature</div>
+                  <div class="metric-value" id="mSoilTemp">25.7°C</div>
+                </div>
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">pH</div>
+                  <div class="metric-value" id="mPh">6.11</div>
+                </div>
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">Soil Moisture</div>
+                  <div class="metric-value" id="mMoisture">25.7%</div>
+                </div>
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">Soil EC</div>
+                  <div class="metric-value" id="mEc">0.046 ds/m</div>
+                </div>
+
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">NPK Level</div>
+                  <div class="metric-value" id="mNpk">Moderate</div>
+                </div>
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">Phosphorus</div>
+                  <div class="metric-value" id="mP">3.0mg/kg</div>
+                </div>
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">Nitrogen</div>
+                  <div class="metric-value" id="mN">3.0mg/kg</div>
+                </div>
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">Potassium</div>
+                  <div class="metric-value" id="mK">3.0mg/kg</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- WEATHER TAB -->
+            <div class="tab-panel" id="tab-weather">
+              <div class="tab-top">
+                <div class="tab-label">Weather</div>
+              </div>
+
+              <div class="weather-hero">
+                <img
+                  src="{{ (dashboard.weather_image_url if dashboard and dashboard.weather_image_url else url_for('static', filename='img/farm_map_placeholder.jpg')) }}"
+                  alt="Weather / Field Map"
+                  onerror="this.style.display='none'; document.getElementById('weatherFallback').style.display='flex';"
+                />
+                <div id="weatherFallback" class="weather-fallback" style="display:none;">
+                  <div class="muted">No image available</div>
+                </div>
+              </div>
+
+              <div class="info-cards-row">
+                <div class="info-card">
+                  <div class="info-label">Geo-Location</div>
+                  <div class="info-value">
+                    Latitude: {{ dashboard.geo.lat if dashboard and dashboard.geo else "19.2046" }}° N
+                    Longitude: {{ dashboard.geo.lng if dashboard and dashboard.geo else "73.8745" }}° E
                   </div>
-                  <div>
-                    <div class="muted small">Crop Name</div>
-                    <div>{{ dashboard.crop_meta.crop_name if dashboard and dashboard.crop_meta else "Wheat" }}</div>
+                  <div class="info-sub muted">
+                    {{ dashboard.geo.address if dashboard and dashboard.geo else "Kudoshi, adjacent to the Jagbudi River..." }}
                   </div>
-                  <div>
-                    <div class="muted small">Crop Type</div>
-                    <div>{{ dashboard.crop_meta.crop_type if dashboard and dashboard.crop_meta else "Grain" }}</div>
-                  </div>
-                  <div>
-                    <div class="muted small">Crop Grade</div>
-                    <div>{{ dashboard.crop_meta.grade if dashboard and dashboard.crop_meta else "A" }}</div>
-                  </div>
-                  <div>
-                    <div class="muted small">Planting Date</div>
-                    <div>{{ dashboard.crop_meta.planting_date if dashboard and dashboard.crop_meta else "12 Mar 2025" }}</div>
-                  </div>
-                  <div>
-                    <div class="muted small">Harvest Date</div>
-                    <div>{{ dashboard.crop_meta.harvest_date if dashboard and dashboard.crop_meta else "20 Dec 2025" }}</div>
+                </div>
+
+                <div class="info-card">
+                  <div class="info-label">Crop</div>
+                  <div class="info-grid2">
+                    <div>
+                      <div class="muted small">Crop ID</div>
+                      <div>{{ dashboard.crop_meta.crop_id if dashboard and dashboard.crop_meta else "1002-Wheat" }}</div>
+                    </div>
+                    <div>
+                      <div class="muted small">Crop Name</div>
+                      <div>{{ dashboard.crop_meta.crop_name if dashboard and dashboard.crop_meta else "Wheat" }}</div>
+                    </div>
+                    <div>
+                      <div class="muted small">Crop Type</div>
+                      <div>{{ dashboard.crop_meta.crop_type if dashboard and dashboard.crop_meta else "Grain" }}</div>
+                    </div>
+                    <div>
+                      <div class="muted small">Crop Grade</div>
+                      <div>{{ dashboard.crop_meta.grade if dashboard and dashboard.crop_meta else "A" }}</div>
+                    </div>
+                    <div>
+                      <div class="muted small">Planting Date</div>
+                      <div>{{ dashboard.crop_meta.planting_date if dashboard and dashboard.crop_meta else "12 Mar 2025" }}</div>
+                    </div>
+                    <div>
+                      <div class="muted small">Harvest Date</div>
+                      <div>{{ dashboard.crop_meta.harvest_date if dashboard and dashboard.crop_meta else "20 Dec 2025" }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- CROP STATUS TAB -->
-          <div class="tab-panel" id="tab-status">
-            <div class="tab-top">
-              
-            <div id="cropStatusPanel" class="crop-status-panel" style="display:none;">
-              <div class="map-wrap">
-                <div id="farmMap" class="farm-map"></div>
+            <!-- CROP STATUS TAB -->
+            <div class="tab-panel" id="tab-status">
+              <div class="tab-top">
+                <div id="cropStatusPanel" class="crop-status-panel" style="display:none;">
+                  <div class="map-wrap">
+                    <div id="farmMap" class="farm-map"></div>
+                  </div>
+                </div>
               </div>
             </div>
-            </div>
 
-
-
-          </div>
+          </div><!-- /#weatherCardContent -->
         </div>
       </div>
 
@@ -246,8 +251,7 @@
         <div class="card">
           <div class="card-head compact">
             <div class="card-head-left">
-                <img src="{{ url_for('static', filename='svg-icons/Dashboard/Order Overview.svg') }}" alt="Back">
-              </span>
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Order Overview.svg') }}" alt="Back">
               <div class="card-title">Order Overview</div>
             </div>
 
@@ -258,20 +262,30 @@
           </div>
 
           <div class="card-body">
-            <div class="donut-wrap">
-              <canvas id="orderDonutChart" height="160" width="160"></canvas>
-              <div class="donut-center">
-                <div class="muted small">Total Order</div>
-                <div class="donut-total" id="orderTotal">0</div>
-              </div>
+            <!-- ✅ EMPTY STATE (Orders) -->
+            <div class="empty-state" id="emptyOrderCard" style="display:none;">
+              <img src="{{ url_for('static', filename='illustrations/empty-orders.svg') }}" alt="No orders">
+              <div class="empty-title">No orders found</div>
+              <div class="empty-sub">Once orders are placed, you’ll see status breakdown here.</div>
             </div>
 
-            <div class="legend-grid">
-              <div class="legend-item"><span class="legend-dot"></span> Requested <span class="legend-val" id="oRequested">0</span></div>
-              <div class="legend-item"><span class="legend-dot"></span> In transit <span class="legend-val" id="oInTransit">0</span></div>
-              <div class="legend-item"><span class="legend-dot"></span> Completed <span class="legend-val" id="oCompleted">0</span></div>
-              <div class="legend-item"><span class="legend-dot"></span> Payment Received <span class="legend-val" id="oPaid">0</span></div>
-            </div>
+            <!-- ✅ CONTENT WRAPPER -->
+            <div id="orderCardContent">
+              <div class="donut-wrap">
+                <canvas id="orderDonutChart" height="160" width="160"></canvas>
+                <div class="donut-center">
+                  <div class="muted small">Total Order</div>
+                  <div class="donut-total" id="orderTotal">0</div>
+                </div>
+              </div>
+
+              <div class="legend-grid">
+                <div class="legend-item"><span class="legend-dot"></span> Requested <span class="legend-val" id="oRequested">0</span></div>
+                <div class="legend-item"><span class="legend-dot"></span> In transit <span class="legend-val" id="oInTransit">0</span></div>
+                <div class="legend-item"><span class="legend-dot"></span> Completed <span class="legend-val" id="oCompleted">0</span></div>
+                <div class="legend-item"><span class="legend-dot"></span> Payment Received <span class="legend-val" id="oPaid">0</span></div>
+              </div>
+            </div><!-- /#orderCardContent -->
           </div>
         </div>
 
@@ -292,15 +306,25 @@
           </div>
 
           <div class="card-body">
-            <canvas id="shipBarChart" height="180"></canvas>
-
-            <div class="legend-row">
-              <div class="legend-item"><span class="legend-dot"></span> Requested <span class="legend-val" id="sRequested">0</span></div>
-              <div class="legend-item"><span class="legend-dot"></span> Pending <span class="legend-val" id="sPending">0</span></div>
-              <div class="legend-item"><span class="legend-dot"></span> In transit <span class="legend-val" id="sInTransit">0</span></div>
-              <div class="legend-item"><span class="legend-dot"></span> Delivered <span class="legend-val" id="sDelivered">0</span></div>
-              <div class="legend-item"><span class="legend-dot"></span> Payment <span class="legend-val" id="sPayment">0</span></div>
+            <!-- ✅ EMPTY STATE (Shipments) -->
+            <div class="empty-state" id="emptyShipmentCard" style="display:none;">
+              <img src="{{ url_for('static', filename='illustrations/empty-shipments.svg') }}" alt="No shipments">
+              <div class="empty-title">No shipments yet</div>
+              <div class="empty-sub">Shipments will appear once you dispatch or receive stock.</div>
             </div>
+
+            <!-- ✅ CONTENT WRAPPER -->
+            <div id="shipmentCardContent">
+              <canvas id="shipBarChart" height="180"></canvas>
+
+              <div class="legend-row">
+                <div class="legend-item"><span class="legend-dot"></span> Requested <span class="legend-val" id="sRequested">0</span></div>
+                <div class="legend-item"><span class="legend-dot"></span> Pending <span class="legend-val" id="sPending">0</span></div>
+                <div class="legend-item"><span class="legend-dot"></span> In transit <span class="legend-val" id="sInTransit">0</span></div>
+                <div class="legend-item"><span class="legend-dot"></span> Delivered <span class="legend-val" id="sDelivered">0</span></div>
+                <div class="legend-item"><span class="legend-dot"></span> Payment <span class="legend-val" id="sPayment">0</span></div>
+              </div>
+            </div><!-- /#shipmentCardContent -->
           </div>
         </div>
       </div>
@@ -321,6 +345,13 @@
           <input type="date" class="date-pill" id="tasksDate">
         </div>
 
+        <!-- ✅ EMPTY STATE (Tasks) -->
+        <div class="empty-state empty-state--compact" id="emptyTasksCard" style="display:none;">
+          <img src="{{ url_for('static', filename='illustrations/empty-tasks.svg') }}" alt="No pending tasks">
+          <div class="empty-title">No pending tasks</div>
+          <div class="empty-sub">You’re all caught up for this date.</div>
+        </div>
+
         <div class="right-list" id="pendingTasksList"></div>
       </div>
 
@@ -334,6 +365,13 @@
             <div class="card-title">Warehouse</div>
           </div>
           <input type="date" class="date-pill" id="warehouseDate">
+        </div>
+
+        <!-- ✅ EMPTY STATE (Warehouse) -->
+        <div class="empty-state empty-state--compact" id="emptyWarehouseCard" style="display:none;">
+          <img src="{{ url_for('static', filename='illustrations/empty-warehouse.svg') }}" alt="No warehouse data">
+          <div class="empty-title">No warehouse activity</div>
+          <div class="empty-sub">Warehouse records will show up once stored/received entries exist.</div>
         </div>
 
         <div class="right-list" id="warehouseList"></div>
@@ -351,6 +389,13 @@
           <input type="date" class="date-pill" id="mfgDate">
         </div>
 
+        <!-- ✅ EMPTY STATE (Manufacturer) -->
+        <div class="empty-state empty-state--compact" id="emptyManufacturerCard" style="display:none;">
+          <img src="{{ url_for('static', filename='illustrations/empty-manufacturer.svg') }}" alt="No manufacturer updates">
+          <div class="empty-title">No manufacturer updates</div>
+          <div class="empty-sub">Processing activity will appear once manufacturing steps are added.</div>
+        </div>
+
         <div class="right-list" id="manufacturerList"></div>
       </div>
 
@@ -361,12 +406,79 @@
 <script id="dashboard-json" type="application/json">
   {{ dashboard|tojson|safe }}
 </script>
+
 <script>
   window.__DASHBOARD__ = JSON.parse(document.getElementById("dashboard-json").textContent || "{}");
 </script>
+
 <script>
+  // ---------------------------
+  // Empty State Helpers
+  // ---------------------------
+  function toggleEmptyState({ emptyElId, contentElId, isEmpty }) {
+    const emptyEl = document.getElementById(emptyElId);
+    const contentEl = contentElId ? document.getElementById(contentElId) : null;
+    if (!emptyEl) return;
+
+    emptyEl.style.display = isEmpty ? "flex" : "none";
+    if (contentEl) contentEl.style.display = isEmpty ? "none" : "block";
+  }
+
+  function applyDashboardEmptyStates(dashboard) {
+    // Weather card empty rule (adjust if your dashboard structure differs)
+    const hasCrops = Array.isArray(dashboard?.crops) && dashboard.crops.length > 0;
+    const hasSoil = !!dashboard?.soil || !!dashboard?.soil_data || !!dashboard?.soilSeries;
+    const hasWeather = !!dashboard?.weather || !!dashboard?.weather_data || !!dashboard?.weather_image_url;
+    const weatherEmpty = !(hasCrops || hasSoil || hasWeather);
+
+    toggleEmptyState({
+      emptyElId: "emptyWeatherCard",
+      contentElId: "weatherCardContent",
+      isEmpty: weatherEmpty
+    });
+
+    // Order Overview empty rule: total orders == 0
+    const totalOrders = Number(document.getElementById("orderTotal")?.textContent || "0");
+    toggleEmptyState({
+      emptyElId: "emptyOrderCard",
+      contentElId: "orderCardContent",
+      isEmpty: totalOrders <= 0
+    });
+
+    // Shipment Overview empty rule: all shipment counts == 0
+    const shipSum =
+      Number(document.getElementById("sRequested")?.textContent || "0") +
+      Number(document.getElementById("sPending")?.textContent || "0") +
+      Number(document.getElementById("sInTransit")?.textContent || "0") +
+      Number(document.getElementById("sDelivered")?.textContent || "0") +
+      Number(document.getElementById("sPayment")?.textContent || "0");
+
+    toggleEmptyState({
+      emptyElId: "emptyShipmentCard",
+      contentElId: "shipmentCardContent",
+      isEmpty: shipSum <= 0
+    });
+
+    // Right cards: check list children
+    const tasksList = document.getElementById("pendingTasksList");
+    const tasksEmpty = !tasksList || tasksList.children.length === 0;
+    toggleEmptyState({ emptyElId: "emptyTasksCard", contentElId: null, isEmpty: tasksEmpty });
+
+    const whList = document.getElementById("warehouseList");
+    const whEmpty = !whList || whList.children.length === 0;
+    toggleEmptyState({ emptyElId: "emptyWarehouseCard", contentElId: null, isEmpty: whEmpty });
+
+    const mfgList = document.getElementById("manufacturerList");
+    const mfgEmpty = !mfgList || mfgList.children.length === 0;
+    toggleEmptyState({ emptyElId: "emptyManufacturerCard", contentElId: null, isEmpty: mfgEmpty });
+  }
+
+  // Run once on initial load (after your JS populates values, run again from farmer_dashboard.js too)
+  document.addEventListener("DOMContentLoaded", function () {
+    applyDashboardEmptyStates(window.__DASHBOARD__ || {});
+  });
+
   window.initFarmMap = function () {
-    // Call your code only after Google Maps is ready
     if (typeof initDashboardFarmMap === "function") {
       initDashboardFarmMap();
     }
@@ -374,11 +486,11 @@
 </script>
 
 <script src="{{ url_for('static', filename='js/farmer_dashboard.js') }}"></script>
+
 <script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDg3eGetNDtVhtw_lfD6Z6O0CfgEgCSaYU&libraries=geometry&loading=async"
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDg3eGetNDtVhtw_lfD6Z6O0CfgEgCSaYU&libraries=geometry&loading=async&callback=initFarmMap"
   async
   defer
 ></script>
 
 {% endblock %}
-
