@@ -116,7 +116,7 @@
                 <!-- Harvest Detail Card -->
                 <div class="card harvest-card">
                     <div class="card-header">
-                        <img src="{{ url_for('static', filename='svg-icons/tractor.svg') }}" class="card-icon">
+                        <img src="{{ url_for('static', filename='svg-icons/Tractor.svg') }}" class="card-icon">
                         <h2 class="section-title">Harvest Detail</h2>
                     </div>
 
@@ -172,7 +172,7 @@
             <!-- Location Card -->
             <div class="card location-card">
                 <div class="card-header">
-                    <img src="{{ url_for('static', filename='svg-icons/location.svg') }}" class="card-icon">
+                    <img src="{{ url_for('static', filename='svg-icons/Location.svg') }}" class="card-icon">
                     <h2 class="section-title">Location</h2>
                 </div>
 
@@ -204,7 +204,7 @@
     <div class="activity-timeline">
 
       {% set ICONS = {
-        "crop_registered": "svg-icons/Timeline/Crop Registered.svg",
+        "crop_registered": "svg-icons/Timeline/Cropregistered.svg",
         "harvesting": "svg-icons/Timeline/Harvesting.svg",
         "stored_warehouse": "svg-icons/Timeline/Stored in Warehouse.svg",
         "listed_sale": "svg-icons/Timeline/Listed for Sale.svg",
@@ -226,7 +226,7 @@
         <div class="activity-icon-wrap">
           <img
             class="activity-illustration"
-            src="{{ url_for('static', filename=ICONS.get(a.key, 'svg-icons/Crop Registered.svg')) }}"
+            src="{{ url_for('static', filename=ICONS.get(a.key, 'svg-icons/Timeline/Cropregistered.svg')) }}"
             alt="{{ a.title }}"
           />
         </div>

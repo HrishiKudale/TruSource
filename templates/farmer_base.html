@@ -92,7 +92,7 @@
                 <li class="{{ 'component-2 submenu-active' if current_submenu == 'warehouse' else 'component' }}">
                   <a href="{{ url_for('farmer_storage.list_storage') }}" class="component-link">
                     <img class="img sidebar-icon {% if current_submenu == 'warehouse' %}active{% endif %}"
-                         src="{{ url_for('static', filename='svg-icons/Warehouse.svg') }}">
+                         src="{{ url_for('static', filename='svg-icons/Warehouses.svg') }}">
                     <span class="{{ 'dashboard' if current_submenu == 'warehouse' else 'text-wrapper-2' }}">Warehouse</span>
                   </a>
                 </li>
@@ -128,7 +128,7 @@
                 <li class="{{ 'component-2 submenu-active' if current_submenu == 'marketplace' else 'component' }}">
                   <a href="{{ url_for('farmer_marketplace_bp.marketplace_home') }}" class="component-link">
                     <img class="img sidebar-icon {% if current_submenu == 'marketplace' %}active{% endif %}"
-                         src="{{ url_for('static', filename='svg-icons/Marketplace.svg') }}">
+                         src="{{ url_for('static', filename='svg-icons/Marketplaces.svg') }}">
                     <span class="{{ 'dashboard' if current_submenu == 'marketplace' else 'text-wrapper-2' }}">Marketplace</span>
                   </a>
                 </li>

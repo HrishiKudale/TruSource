@@ -1,10 +1,3 @@
-/* static/js/farmer_dashboard.js
-   ✅ Dashboard charts + lists remain same
-   ✅ Fixes Crop Status map not loading (hidden container issue)
-   ✅ Initializes map ONLY when Status tab becomes active
-   ✅ Triggers google resize after showing container, then loads polygons
-*/
-
 (function () {
   const data = window.__DASHBOARD__ || {};
 
@@ -45,35 +38,36 @@
     status: $("tab-status"),
   };
 
-  // ✅ IMPORTANT: show status panel + init map after visible
+  function isStatusTabActive() {
+    const statusPanel = $("tab-status");
+    return !!(statusPanel && statusPanel.classList.contains("active"));
+  }
+
+  // ✅ Ensure Crop Status panel becomes visible, then init map + polygons
   function openCropStatusAndRenderMap() {
     const cropStatusPanel = $("cropStatusPanel");
     if (cropStatusPanel) cropStatusPanel.style.display = "block";
 
-    // wait for next paint so div has real size
+    // Wait for layout to apply so map container has width/height
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        // wait until Google Maps script is ready
         const start = Date.now();
         const t = setInterval(() => {
           if (isMapsReady()) {
             clearInterval(t);
 
-            // init map
             initDashboardFarmMap();
 
-            // resize after visible
-            if (window.farmMap && google?.maps?.event) {
+            // ✅ Trigger resize after it becomes visible
+            if (dashboardFarmMap && google?.maps?.event) {
               setTimeout(() => {
-                google.maps.event.trigger(window.farmMap, "resize");
-              }, 150);
+                google.maps.event.trigger(dashboardFarmMap, "resize");
+              }, 120);
             }
 
-            // load polygons
             loadAndRenderFarms();
           }
 
-          // stop after 7s
           if (Date.now() - start > 7000) clearInterval(t);
         }, 150);
       });
@@ -88,21 +82,18 @@
       const tab = btn.dataset.tab;
       Object.keys(panels).forEach((k) => panels[k].classList.toggle("active", k === tab));
 
-      // ✅ Hook only for status
       if (tab === "status") {
         openCropStatusAndRenderMap();
       }
     });
   });
 
-  // Crop type change -> refresh polygons only if status tab is active
+  // crop type change -> refresh polygons only if status tab is active
   document.addEventListener("DOMContentLoaded", () => {
     const cropTypeSelect = $("cropTypeSelect");
     if (cropTypeSelect) {
       cropTypeSelect.addEventListener("change", () => {
-        const statusPanel = $("tab-status");
-        const isActive = statusPanel && statusPanel.classList.contains("active");
-        if (isActive) {
+        if (isStatusTabActive()) {
           openCropStatusAndRenderMap();
         }
       });
@@ -161,8 +152,8 @@
     const canvas = $("orderDonutChart");
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    const o = data.orders || {};
 
+    const o = data.orders || {};
     const values = [
       safeNum(o.requested),
       safeNum(o.in_transit),
@@ -191,8 +182,8 @@
     const canvas = $("shipBarChart");
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    const s = data.shipments || {};
 
+    const s = data.shipments || {};
     const values = [
       safeNum(s.requested),
       safeNum(s.pending),
@@ -225,6 +216,19 @@
   }
 
   // ---------- Lists ----------
+  function cap(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+  }
+
+  function escapeHtml(str) {
+    return String(str || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
   function renderList(containerId, items, selectedDate) {
     const el = $(containerId);
     if (!el) return;
@@ -273,26 +277,12 @@
     });
   }
 
-  function cap(s) {
-    return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
-  }
-
-  function escapeHtml(str) {
-    return String(str || "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
   function initDateFilters() {
     const todayISO = new Date().toISOString().slice(0, 10);
 
     const tasksDate = $("tasksDate");
     const warehouseDate = $("warehouseDate");
     const mfgDate = $("mfgDate");
-
     if (!tasksDate || !warehouseDate || !mfgDate) return;
 
     tasksDate.value = todayISO;
@@ -339,6 +329,7 @@
     });
   }
 
+  // ---------- Boot ----------
   document.addEventListener("DOMContentLoaded", () => {
     initSoilChart();
     initOrderDonut();
@@ -346,11 +337,8 @@
     initDateFilters();
     initSoilSelectors();
 
-    // ✅ If someone opens the page already on status tab (rare), handle it
-    const statusPanel = $("tab-status");
-    if (statusPanel && statusPanel.classList.contains("active")) {
-      openCropStatusAndRenderMap();
-    }
+    // If already on Status tab for any reason
+    if (isStatusTabActive()) openCropStatusAndRenderMap();
   });
 })();
 
@@ -358,7 +346,8 @@
    Dashboard Map + Polygons
    ================================ */
 
-window.farmMap = window.farmMap || null;
+// ✅ DO NOT use window.farmMap because you have <div id="farmMap"> (it becomes window.farmMap element)
+let dashboardFarmMap = null;
 let farmPolygons = [];
 
 function isMapsReady() {
@@ -371,12 +360,12 @@ function clearFarmPolygons() {
 }
 
 function ensureMapInitialized() {
-  if (window.farmMap || !isMapsReady()) return;
+  if (dashboardFarmMap || !isMapsReady()) return;
 
   const el = document.getElementById("farmMap");
   if (!el) return;
 
-  window.farmMap = new google.maps.Map(el, {
+  dashboardFarmMap = new google.maps.Map(el, {
     center: { lat: 20.5937, lng: 78.9629 },
     zoom: 5,
     mapTypeId: "roadmap",
@@ -387,7 +376,8 @@ function ensureMapInitialized() {
 }
 
 function fitPolygons() {
-  if (!window.farmMap || !isMapsReady()) return;
+  if (!dashboardFarmMap || !isMapsReady()) return;
+
   const bounds = new google.maps.LatLngBounds();
   let any = false;
 
@@ -399,12 +389,12 @@ function fitPolygons() {
     }
   });
 
-  if (any) window.farmMap.fitBounds(bounds);
+  if (any) dashboardFarmMap.fitBounds(bounds);
 }
 
 async function loadAndRenderFarms() {
   ensureMapInitialized();
-  if (!window.farmMap) return;
+  if (!dashboardFarmMap) return;
 
   const cropTypeSelect = document.getElementById("cropTypeSelect");
   const cropType = cropTypeSelect ? cropTypeSelect.value : "";
@@ -425,8 +415,8 @@ async function loadAndRenderFarms() {
   clearFarmPolygons();
 
   if (!out?.ok || !Array.isArray(out.farms) || out.farms.length === 0) {
-    window.farmMap.setCenter({ lat: 20.5937, lng: 78.9629 });
-    window.farmMap.setZoom(5);
+    dashboardFarmMap.setCenter({ lat: 20.5937, lng: 78.9629 });
+    dashboardFarmMap.setZoom(5);
     return;
   }
 
@@ -442,8 +432,8 @@ async function loadAndRenderFarms() {
       strokeOpacity: 1,
       strokeWeight: 2,
       fillColor: "#81c784",
-      fillOpacity: 0.45,
-      map: window.farmMap,
+      fillOpacity: 0.55,
+      map: dashboardFarmMap,
     });
 
     farmPolygons.push(poly);
@@ -460,11 +450,11 @@ async function loadAndRenderFarms() {
         `,
         position: e.latLng,
       });
-      info.open(window.farmMap);
+      info.open(dashboardFarmMap);
     });
   });
 
-  // ✅ important after draw
+  // ✅ IMPORTANT: after draw, fit bounds
   fitPolygons();
 }
 
@@ -472,8 +462,8 @@ function initDashboardFarmMap() {
   ensureMapInitialized();
 }
 
-// ✅ called by script callback in HTML: callback=initFarmMap
+// Called by Google Maps script callback in HTML: callback=initFarmMap
 window.initFarmMap = function initFarmMap() {
-  // do NOT force render here (tab might be hidden)
+  // just init; rendering happens when Status tab is opened (because container is hidden otherwise)
   initDashboardFarmMap();
 };
