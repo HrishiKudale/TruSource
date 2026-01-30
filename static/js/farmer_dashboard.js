@@ -280,7 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
     metricSel.addEventListener("change", () => {
       const key = metricSel.value;
       const labels = (data.soil?.labels) || ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-      const series = (data.soil?.[key]) || (data.soil?.soil_temp) || [5.6,5.7,5.65,5.9,6.0,6.35,5.8];
+      const series = (data.soil?.[key]) || (data.soil?.soil_temp) || [25.6,25.7,25.65,25.9,26.0,26.35,25.8];
 
       soilChart.data.labels = labels;
       soilChart.data.datasets[0].data = series;

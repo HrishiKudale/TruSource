@@ -121,7 +121,7 @@
               </div>
 
               <div class="chart-wrap">
-                <canvas id="soilLineChart" height="200" width="500"></canvas>
+                <canvas id="soilLineChart" height="300" width="500"></canvas>
               </div>
 
               <div class="metric-grid">
@@ -265,9 +265,8 @@
             <!-- ✅ EMPTY STATE (Orders) -->
             <div class="empty-state" id="emptyOrderCard" style="display: block;text-align: center;margin: 50px;">
               <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_order_table.svg') }}" alt="No orders"><br>
-              <div class="empty-title">No orders found</div>
             </div>
-
+                          <div class="empty-title">No orders found</div>
             <!-- ✅ CONTENT WRAPPER -->
             <div id="orderCardContent">
               <div class="donut-wrap">
@@ -308,9 +307,8 @@
             <!-- ✅ EMPTY STATE (Shipments) -->
             <div class="empty-state" id="emptyShipmentCard"  style="display: block;text-align: center;margin: 50px;">
               <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_shipment_table.svg') }}" alt="No shipments"><br>
-              <div class="empty-title">No shipments yet</div>
             </div>
-
+            <div class="empty-title">No shipments yet</div>
             <!-- ✅ CONTENT WRAPPER -->
             <div id="shipmentCardContent">
               <canvas id="shipBarChart" height="180"></canvas>
@@ -338,7 +336,6 @@
             <span class="ico-circle purple" aria-hidden="true">
               <img src="{{ url_for('static', filename='svg-icons/Dashboard/Pending Tasks.svg') }}" alt="Back">
             </span>
-            <div class="card-title">Pending Tasks</div>
           </div>
           <input type="date" class="date-pill" id="tasksDate">
         </div>
@@ -368,7 +365,6 @@
         <!-- ✅ EMPTY STATE (Warehouse) -->
         <div class="empty-state empty-state--compact" id="emptyWarehouseCard"  style="display: block;text-align: center;margin: 50px;">
           <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_warehouse_table.svg') }}" alt="No warehouse data"><br>
-          <div class="empty-title">No warehouse activity</div>
         </div>
 
         <div class="right-list" id="warehouseList"></div>
@@ -389,7 +385,6 @@
         <!-- ✅ EMPTY STATE (Manufacturer) -->
         <div class="empty-state empty-state--compact" id="emptyManufacturerCard"  style="display: block;text-align: center;margin: 50px;">
           <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_manufacturer_table.svg') }}" alt="No manufacturer updates"><br>
-          <div class="empty-title">No manufacturer updates</div>
         </div>
 
         <div class="right-list" id="manufacturerList"></div>
