@@ -11,7 +11,7 @@
 *{box-sizing:border-box}
 .dash-wrap{ background:var(--bg);}
 
-.dash-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.dash-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px;}
 .dash-title{display:flex; align-items:center; gap:10px;}
 .dash-title h1{font-size:32px; margin:0; font-weight:500;}
 .grid-ico{display:inline-flex; color:#111;}
@@ -71,7 +71,7 @@
 }
 .card-head.compact{padding:12px 14px;}
 .card-head-left{display:flex; align-items:center; gap:10px;}
-.card-title{font-weight:700; color:#111; font-size: 18px;}
+.card-title{font-weight:600; color:#111; font-size: 16px;}
 .card-body{padding:12px 14px;}
 
 .ico-circle{
@@ -292,12 +292,12 @@
 .legend-val{color:var(--muted); font-weight:700; margin-left:auto;}
 
 /* RIGHT */
-.right-card{position:relative;}
+.right-card{position:relative;max-width: 320px; margin-bottom: 12px;}
 .date-pill{
   border:1px solid var(--line);
   background:#fff;
   border-radius:10px;
-  padding:6px 10px;
+  padding:6px 5px;
   font-size:12px;
   color:#111;
 }

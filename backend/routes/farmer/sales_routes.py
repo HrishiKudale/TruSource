@@ -1,25 +1,39 @@
 # backend/routes/farmer/sales_routes.py
+
 from flask import Blueprint, render_template, session, redirect, url_for, request, jsonify
 from datetime import datetime
 import random
 
-from backend.mongo import mongo
+from backend.mongo_safe import get_col
 from backend.services.farmer.orders_service import OrderService
-from backend.services.farmer.crop_service import CropService  # if you use blockchain crops
+from backend.services.farmer.crop_service import CropService
 
 sales_bp = Blueprint("farmer_sales_bp", __name__, url_prefix="/farmer/sales")
+
+
+# -------------------- HELPERS --------------------
+
+def _require_farmer_session():
+    if session.get("role") != "farmer" or not session.get("user_id"):
+        return None
+    return session["user_id"]
+
+
+def _safe_list(cursor):
+    try:
+        return list(cursor)
+    except Exception:
+        return []
 
 
 # -------------------- PAGES --------------------
 
 @sales_bp.get("/orders")
 def orders_page():
-    if session.get("role") != "farmer":
-        return redirect(url_for("auth.new_login"))
-
-    farmer_id = session.get("user_id")
+    farmer_id = _require_farmer_session()
     if not farmer_id:
-        return redirect(url_for("auth.new_login"))
+        # keep same as your app behavior
+        return redirect("/newlogin")
 
     orders = OrderService.list_orders_for_farmer(farmer_id)
     total_active, total_pending, total_delivered, total_revenue = OrderService.get_kpis(farmer_id)
@@ -36,73 +50,82 @@ def orders_page():
     )
 
 
-# ✅ FIX 405: add GET route for create page
 @sales_bp.get("/order/create")
 def create_order_page():
-    if session.get("role") != "farmer":
-        return redirect(url_for("auth.new_login"))
-
-    farmer_id = session.get("user_id")
+    farmer_id = _require_farmer_session()
     if not farmer_id:
-        return redirect(url_for("auth.new_login"))
+        return redirect("/newlogin")
 
-    # requestId comes from URL: /farmer/sales/order/create?requestId=XXXX
-    request_id = request.args.get("requestId", "").strip()
+    request_id = (request.args.get("requestId") or "").strip()
 
-    # buyers from users collection
-    buyers = list(
-        mongo.db.users.find(
-            {"role": {"$in": ["manufacturer", "retailer"]}},
-            {
-                "_id": 0,
-                "userId": 1,
-                "name": 1,
-                "officeName": 1,
-                "role": 1,
-                "location": 1,
-                "address": 1,
-                "contactPerson": 1,
-                "phone": 1,
-                "email": 1
-            }
+    users_col = get_col("users")
+
+    # -------------------
+    # Buyers (users)
+    # -------------------
+    buyers = []
+    if users_col:
+        buyers = _safe_list(
+            users_col.find(
+                {"role": {"$in": ["manufacturer", "retailer"]}},
+                {
+                    "_id": 0,
+                    "userId": 1,
+                    "name": 1,
+                    "officeName": 1,
+                    "role": 1,
+                    "location": 1,
+                    "address": 1,
+                    "contactPerson": 1,
+                    "phone": 1,
+                    "email": 1,
+                },
+            )
         )
-    )
 
-    # crops (blockchain-backed crops)
+    # -------------------
+    # Crops (blockchain-backed)
+    # -------------------
     crop_data = CropService.get_my_crops(farmer_id)
     crops = crop_data.get("crops", [])
 
-    # warehouses if you want (optional) - keep empty if not needed
-    # ✅ warehouses
-    warehouses = list(
-        mongo.db.users.find(
-            {},
-            {"_id": 0, "warehouseId": 1, "userId": 1, "name": 1}
+    # -------------------
+    # Warehouses (optional)
+    # -------------------
+    warehouses = []
+    if users_col:
+        warehouses = _safe_list(
+            users_col.find(
+                {"role": "warehouse"},
+                {"_id": 0, "warehouseId": 1, "userId": 1, "name": 1, "officeName": 1},
+            )
         )
-    )
 
-    # ✅ farms (farmer’s own farms OR farmer profile address)
-    # If you store farms in a collection, use it; otherwise load farmer profile
-    farms = list(
-        mongo.db.users.find(
-            {"farmerId": farmer_id},
-            {"_id": 0, "farmId": 1, "name": 1}
+    # -------------------
+    # Farms (optional)
+    # NOTE: Your query {"farmerId": farmer_id} inside users collection might not exist.
+    # Keeping it mongo-safe. If you actually store farms in another collection, switch here.
+    # -------------------
+    farms = []
+    if users_col:
+        farms = _safe_list(
+            users_col.find(
+                {"farmerId": farmer_id},
+                {"_id": 0, "farmId": 1, "name": 1},
+            )
         )
-    )
 
     return render_template(
         "AddOrder.html",
         buyers=buyers,
         crops=crops,
         warehouses=warehouses,
+        farms=farms,
+        request_id=request_id,
         active_page="sales",
         active_submenu="orders",
-        farms=farms,
-        request_id=request_id
+        mongo_enabled=bool(users_col),
     )
-
-
-
 
 
 # -------------------- APIs --------------------
@@ -112,16 +135,20 @@ def api_generate_order_id():
     return jsonify({"orderId": OrderService.generate_order_id()})
 
 
-# ✅ requestId format: REQ-<FARMER_INITIALS>-<YYYYMMDD>-<5digits>
 @sales_bp.get("/api/generate_request_id")
 def api_generate_request_id():
-    farmer_id = session.get("user_id")
+    farmer_id = _require_farmer_session()
     if not farmer_id:
         return jsonify({"error": "unauthorized"}), 401
 
-    user = mongo.db.users.find_one({"userId": farmer_id}, {"_id": 0, "name": 1})
-    name = (user or {}).get("name", "") or ""
-    initials = "".join([p[0].upper() for p in name.split()[:2]]) or "FRM"
+    users_col = get_col("users")
+    if not users_col:
+        # Fallback if Mongo off: still generate an ID
+        initials = "FRM"
+    else:
+        user = users_col.find_one({"userId": farmer_id}, {"_id": 0, "name": 1}) or {}
+        name = (user.get("name") or "").strip()
+        initials = "".join([p[0].upper() for p in name.split()[:2]]) or "FRM"
 
     date_part = datetime.utcnow().strftime("%Y%m%d")
     rand_part = str(random.randint(10000, 99999))
@@ -129,29 +156,31 @@ def api_generate_request_id():
     return jsonify({"requestId": f"REQ-{initials}-{date_part}-{rand_part}"})
 
 
-# Prefill from farmer_request
 @sales_bp.get("/api/request/<request_id>")
 def api_request_prefill(request_id):
+    # This likely uses Mongo inside OrderService; keep behavior unchanged.
     data = OrderService.get_farmer_request(request_id)
     if data.get("error"):
         return jsonify(data), 404
     return jsonify(data)
 
 
-# Buyer details from users collection
 @sales_bp.get("/api/buyer/<buyer_id>")
 def api_buyer_details(buyer_id):
-    buyer_type = request.args.get("buyerType", "").strip().lower()
+    buyer_type = (request.args.get("buyerType") or "").strip().lower()
+
+    users_col = get_col("users")
+    if not users_col:
+        return jsonify({"error": "mongo disabled/unavailable"}), 503
 
     q = {"userId": buyer_id}
     if buyer_type in ["manufacturer", "retailer"]:
         q["role"] = buyer_type
 
-    u = mongo.db.users.find_one(q, {"_id": 0})
+    u = users_col.find_one(q, {"_id": 0})
     if not u:
         return jsonify({"error": "buyer not found"}), 404
 
-    # normalize fields (support multiple schemas)
     address = u.get("address") or u.get("location") or "-"
     contact_person = u.get("contactPerson") or u.get("contact_person") or u.get("name") or "-"
     phone = u.get("phone") or u.get("contact") or "-"
@@ -165,7 +194,7 @@ def api_buyer_details(buyer_id):
         "address": address,
         "contactPerson": contact_person,
         "phone": phone,
-        "email": email
+        "email": email,
     })
 
 
@@ -173,10 +202,7 @@ def api_buyer_details(buyer_id):
 
 @sales_bp.post("/order/create")
 def create_order():
-    if session.get("role") != "farmer":
-        return jsonify({"error": "unauthorized"}), 401
-
-    farmer_id = session.get("user_id")
+    farmer_id = _require_farmer_session()
     if not farmer_id:
         return jsonify({"error": "unauthorized"}), 401
 
@@ -192,10 +218,9 @@ def create_order():
 
 @sales_bp.get("/order/<order_id>")
 def orders_info_page(order_id: str):
-    if session.get("role") != "farmer" or not session.get("user_id"):
+    farmer_id = _require_farmer_session()
+    if not farmer_id:
         return redirect("/newlogin")
-
-    farmer_id = session["user_id"]
 
     order = OrderService.get_order_for_farmer(farmer_id, order_id)
     if not order:
@@ -213,4 +238,3 @@ def orders_info_page(order_id: str):
         active_submenu="orders",
         order=order,
     )
-

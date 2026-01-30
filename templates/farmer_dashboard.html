@@ -121,7 +121,7 @@
               </div>
 
               <div class="chart-wrap">
-                <canvas id="soilLineChart" height="200" width="600"></canvas>
+                <canvas id="soilLineChart" height="200" width="500"></canvas>
               </div>
 
               <div class="metric-grid">
@@ -263,10 +263,9 @@
 
           <div class="card-body">
             <!-- ✅ EMPTY STATE (Orders) -->
-            <div class="empty-state" id="emptyOrderCard" style="display:none;">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_order_table.svg') }}" alt="No orders">
+            <div class="empty-state" id="emptyOrderCard" style="display: block;text-align: center;margin: 50px;">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_order_table.svg') }}" alt="No orders"><br>
               <div class="empty-title">No orders found</div>
-              <div class="empty-sub">Once orders are placed, you’ll see status breakdown here.</div>
             </div>
 
             <!-- ✅ CONTENT WRAPPER -->
@@ -307,10 +306,9 @@
 
           <div class="card-body">
             <!-- ✅ EMPTY STATE (Shipments) -->
-            <div class="empty-state" id="emptyShipmentCard" style="display:none;">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_shipment_table.svg') }}" alt="No shipments">
+            <div class="empty-state" id="emptyShipmentCard"  style="display: block;text-align: center;margin: 50px;">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_shipment_table.svg') }}" alt="No shipments"><br>
               <div class="empty-title">No shipments yet</div>
-              <div class="empty-sub">Shipments will appear once you dispatch or receive stock.</div>
             </div>
 
             <!-- ✅ CONTENT WRAPPER -->
@@ -346,10 +344,10 @@
         </div>
 
         <!-- ✅ EMPTY STATE (Tasks) -->
-        <div class="empty-state empty-state--compact" id="emptyTasksCard" style="display:none;">
-          <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_pending_tasks.svg') }}" alt="No pending tasks">
+        <div class="empty-state empty-state--compact" id="emptyTasksCard" style="display: block;text-align: center;margin: 50px;">
+          <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_pending_tasks.svg') }}" alt="No pending tasks"><br>
           <div class="empty-title">No pending tasks</div>
-          <div class="empty-sub">You’re all caught up for this date.</div>
+
         </div>
 
         <div class="right-list" id="pendingTasksList"></div>
@@ -368,10 +366,9 @@
         </div>
 
         <!-- ✅ EMPTY STATE (Warehouse) -->
-        <div class="empty-state empty-state--compact" id="emptyWarehouseCard" style="display:none;">
-          <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_warehouse_table.svg') }}" alt="No warehouse data">
+        <div class="empty-state empty-state--compact" id="emptyWarehouseCard"  style="display: block;text-align: center;margin: 50px;">
+          <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_warehouse_table.svg') }}" alt="No warehouse data"><br>
           <div class="empty-title">No warehouse activity</div>
-          <div class="empty-sub">Warehouse records will show up once stored/received entries exist.</div>
         </div>
 
         <div class="right-list" id="warehouseList"></div>
@@ -390,10 +387,9 @@
         </div>
 
         <!-- ✅ EMPTY STATE (Manufacturer) -->
-        <div class="empty-state empty-state--compact" id="emptyManufacturerCard" style="display:none;">
-          <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_manufacturer_table.svg') }}" alt="No manufacturer updates">
+        <div class="empty-state empty-state--compact" id="emptyManufacturerCard"  style="display: block;text-align: center;margin: 50px;">
+          <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_manufacturer_table.svg') }}" alt="No manufacturer updates"><br>
           <div class="empty-title">No manufacturer updates</div>
-          <div class="empty-sub">Processing activity will appear once manufacturing steps are added.</div>
         </div>
 
         <div class="right-list" id="manufacturerList"></div>

@@ -220,24 +220,21 @@ class DashboardService:
     # KPIs
     # -----------------------------
     @staticmethod
-    def _count_active_crops_best_effort(farmer_id: str) -> int:
+    def _count_active_crops(farmer_id: str) -> int:
         db = _mongo_db()
         if db is None:
             return 0
 
-        candidates = ["registered_crops", "register_crop", "blockchain_crops", "crops"]
-        for col_name in candidates:
-            try:
-                col = db[col_name]
-                c = col.count_documents({"farmer_id": farmer_id})
-                if c:
-                    return int(c)
-                c2 = col.count_documents({"farmerId": farmer_id})
-                if c2:
-                    return int(c2)
-            except Exception:
-                continue
-        return 0
+        try:
+            collection = db["farmer_coordinates"]
+            count = collection.count_documents({
+                "user_id": farmer_id
+            })
+            return count
+        except Exception as e:
+            print(f"Error counting crops: {e}")
+            return 0
+
 
     @staticmethod
     def _count_pending_payments(farmer_id: str) -> int:
@@ -259,24 +256,29 @@ class DashboardService:
                 count += 1
         return count
 
+
     @staticmethod
     def _count_buyer_offers(farmer_id: str) -> int:
         db = _mongo_db()
         if db is None:
             return 0
 
-        # you used both names in code; support both
-        col = _get_collection(db, ["market_place", "marketplace_requests"])
-        if col is None:
-            return 0
-
-        query = {
-            "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
-            "status": {"$nin": ["rejected"]},
-        }
         try:
-            return int(col.count_documents(query))
-        except Exception:
+            col = db["marketplace"]
+
+            query = {
+                "$or": [
+                    {"farmer_id": farmer_id},
+                    {"last_negotiation.farmer_id": farmer_id},
+                    {"negotiations.farmer_id": farmer_id}
+                ],
+                "status": {"$in": ["Active", "Open"]}
+            }
+
+            return col.count_documents(query)
+
+        except Exception as e:
+            print(f"Error counting buyer offers: {e}")
             return 0
 
     @staticmethod
@@ -285,18 +287,27 @@ class DashboardService:
         if db is None:
             return 0
 
-        col = _get_collection(db, ["transport_request", "transporter_request"])
-        if col is None:
+        try:
+            col = db["transporter_request"]
+
+            query = {
+                "farmer_id": farmer_id,
+                "status": {
+                    "$in": [
+                        "pending",
+                        "pending_pickup",
+                        "assigned",
+                        "in_transit"
+                    ]
+                }
+            }
+
+            return col.count_documents(query)
+
+        except Exception as e:
+            print(f"Error counting shipments: {e}")
             return 0
 
-        query = {
-            "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
-            "status": {"$in": ["pending", "Pending", "PENDING", "pending_pickup"]},
-        }
-        try:
-            return int(col.count_documents(query))
-        except Exception:
-            return 0
 
     # -----------------------------
     # Polygons
@@ -307,9 +318,8 @@ class DashboardService:
         if db is None:
             return []
 
-        col = _get_collection(db, ["farm_coordinates"])
-        if col is None:
-            return []
+        # ✅ correct collection
+        col = db["farmer_coordinates"]
 
         q = {"user_id": user_id}
         if crop_id:
@@ -323,25 +333,38 @@ class DashboardService:
         for d in docs:
             coords = d.get("coordinates", []) or []
             poly = []
+
             for p in coords:
                 try:
-                    poly.append({"lat": float(p.get("lat")), "lng": float(p.get("lng"))})
-                except Exception:
-                    pass
+                    lat = p.get("lat")
+                    lng = p.get("lng") or p.get("long")  # ✅ handle bad key
 
-            out.append(
-                {
-                    "id": str(d.get("_id")),
-                    "crop_id": d.get("crop_id", ""),
-                    "cropType": d.get("cropType", ""),
-                    "area_size": d.get("area_size", ""),
-                    "date_planted": d.get("date_planted", ""),
-                    "created_at": d.get("created_at", ""),
-                    "coordinates": poly,
-                }
-            )
+                    if lat is None or lng is None:
+                        continue
+
+                    poly.append({
+                        "lat": float(lat),
+                        "lng": float(lng)
+                    })
+                except Exception:
+                    continue
+
+            # ✅ polygon must have at least 3 points
+            if len(poly) < 3:
+                continue
+
+            out.append({
+                "id": str(d.get("_id")),
+                "crop_id": d.get("crop_id", ""),
+                "cropType": d.get("cropType", ""),
+                "area_size": d.get("area_size", ""),
+                "date_planted": d.get("date_planted", ""),
+                "created_at": d.get("created_at", ""),
+                "coordinates": poly,
+            })
 
         return out
+
 
     # -----------------------------
     # Overview blocks
@@ -543,26 +566,38 @@ class DashboardService:
         return tasks[:40]
 
     @staticmethod
-    def _farmer_requests_by_kind(farmer_id: str, kind: str, till_dt: Optional[datetime]) -> List[TaskItem]:
+    def _farmer_requests_by_kind(
+        farmer_id: str, kind: str, till_dt: Optional[datetime]
+    ) -> List[TaskItem]:
+
         db = _mongo_db()
         if db is None:
             return []
 
-        farmer_request = _get_collection(db, ["farmer_request"])
-        if farmer_request is None:
-            return []
+        farmer_request = db["farmer_request"]
 
-        out: List[TaskItem] = []
         kind = _safe_lower(kind)
+        out: List[TaskItem] = []
 
-        docs = list(
-            farmer_request.find(
+        query = {
+            "$and": [
                 {
-                    "$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}],
-                    "$or": [{"requestKind": kind}, {"request_kind": kind}, {"requestKind": kind.upper()}],
-                }
-            )
-        )
+                    "$or": [
+                        {"farmer_id": farmer_id},
+                        {"farmerId": farmer_id},
+                    ]
+                },
+                {
+                    "$or": [
+                        {"requestKind": kind},
+                        {"request_kind": kind},
+                        {"requestKind": kind.upper()},
+                    ]
+                },
+            ]
+        }
+
+        docs = list(farmer_request.find(query))
 
         for fr in docs:
             dt = _extract_dt(fr)
@@ -571,7 +606,8 @@ class DashboardService:
 
             crop = _first(fr, ["crop_name", "cropName", "cropType"], "Wheat")
             entity = (
-                _first(fr, ["warehouseName", "warehouse_name"], "") if kind == "storage"
+                _first(fr, ["warehouseName", "warehouse_name"], "")
+                if kind == "storage"
                 else _first(fr, ["manufacturerName", "manufacturer_name"], "")
             )
             status = _first(fr, ["status"], "requested")
@@ -588,10 +624,16 @@ class DashboardService:
             )
 
         out.sort(
-            key=lambda x: (to_dt(x.due_at) or to_dt(x.created_at) or datetime(1970, 1, 1, tzinfo=timezone.utc)),
+            key=lambda x: (
+                to_dt(x.due_at)
+                or to_dt(x.created_at)
+                or datetime(1970, 1, 1, tzinfo=timezone.utc)
+            ),
             reverse=True,
         )
+
         return out[:40]
+
 
     # -----------------------------
     # Crop list for dropdown

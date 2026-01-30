@@ -83,8 +83,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function initSoilChart() {
     const ctx = $("soilLineChart").getContext("2d");
-    const labels = (data.soil?.labels) || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const points = (data.soil?.soil_temp) || [5.6, 5.7, 5.65, 5.9, 6.0, 6.35, 5.8];
+
+    const labels = data.soil?.labels || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const points = data.soil?.soil_temp || [5.6, 5.7, 5.65, 5.9, 6.0, 6.35, 5.8];
+
+    // ✅ create vertical gradient (top → bottom)
+    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+    gradient.addColorStop(0, "rgba(124, 58, 237, 0.55)"); // dark violet
+    gradient.addColorStop(0.6, "rgba(124, 58, 237, 0.20)");
+    gradient.addColorStop(1, "rgba(124, 58, 237, 0.02)"); // almost transparent
 
     soilChart = new Chart(ctx, {
       type: "line",
@@ -96,20 +103,33 @@ document.addEventListener("DOMContentLoaded", () => {
           tension: 0.35,
           pointRadius: 4,
           pointHoverRadius: 5,
-          fill: true
+          fill: true,
+
+          // 🎨 colors
+          borderColor: "#7C3AED",
+          backgroundColor: gradient,
+          pointBackgroundColor: "#7C3AED",
+          pointBorderColor: "#fff",
+          borderWidth: 2
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: { display: false }
+        },
         scales: {
           x: { grid: { display: false } },
-          y: { grid: { display: false } }
+          y: {
+            grid: { display: false },
+            ticks: { display: false }
+          }
         }
       }
     });
   }
+
 
   function initOrderDonut() {
     const ctx = $("orderDonutChart").getContext("2d");
