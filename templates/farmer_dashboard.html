@@ -266,7 +266,6 @@
             <div class="empty-state" id="emptyOrderCard" style="display: block;text-align: center;margin: 50px;">
               <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_order_table.svg') }}" alt="No orders"><br>
             </div>
-                          <div class="empty-title">No orders found</div>
             <!-- ✅ CONTENT WRAPPER -->
             <div id="orderCardContent">
               <div class="donut-wrap">
@@ -308,7 +307,6 @@
             <div class="empty-state" id="emptyShipmentCard"  style="display: block;text-align: center;margin: 50px;">
               <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_shipment_table.svg') }}" alt="No shipments"><br>
             </div>
-            <div class="empty-title">No shipments yet</div>
             <!-- ✅ CONTENT WRAPPER -->
             <div id="shipmentCardContent">
               <canvas id="shipBarChart" height="180"></canvas>
@@ -336,6 +334,7 @@
             <span class="ico-circle purple" aria-hidden="true">
               <img src="{{ url_for('static', filename='svg-icons/Dashboard/Pending Tasks.svg') }}" alt="Back">
             </span>
+            <div class="card-title">Pending Tasks</div>
           </div>
           <input type="date" class="date-pill" id="tasksDate">
         </div>
@@ -343,8 +342,6 @@
         <!-- ✅ EMPTY STATE (Tasks) -->
         <div class="empty-state empty-state--compact" id="emptyTasksCard" style="display: block;text-align: center;margin: 50px;">
           <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_pending_tasks.svg') }}" alt="No pending tasks"><br>
-          <div class="empty-title">No pending tasks</div>
-
         </div>
 
         <div class="right-list" id="pendingTasksList"></div>
