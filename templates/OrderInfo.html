@@ -193,7 +193,7 @@
           </div>
 
           <div class="payment-illustration">
-            <img src="{{ url_for('static', filename='illustrations/Payment Details.svg') }}" alt="Payment Illustration">
+            <img src="{{ url_for('static', filename='svg-icons/Order/PaymentDetails.svg') }}" alt="Payment Illustration">
           </div>
 
           <p class="activity-title1">Payment Pending</p>
@@ -212,7 +212,7 @@
             <h2 class="section-title">Shipment Details</h2>
           </div>
           <div class="shipment-illustration">
-            <img src="{{ url_for('static', filename='illustrations/Shipment Details.svg') }}" alt="Shipment Illustration">
+            <img src="{{ url_for('static', filename='svg-icons/Order/ShipmentDetails.svg') }}" alt="Shipment Illustration">
           </div>
           <p class="activity-title1">Shipment not started</p>
           <p class="no-data-text">Create a shipment to begin tracking the journey.</p>
@@ -225,7 +225,7 @@
             <h2 class="section-title">Delivery Details</h2>
           </div>
           <div class="delivery-illustration">
-            <img src="{{ url_for('static', filename='illustrations/Delivery Details.svg') }}" alt="Delivery Illustration">
+            <img src="{{ url_for('static', filename='svg-icons/Order/DeliveryDetails.svg') }}" alt="Delivery Illustration">
           </div>
           <p class="activity-title1">Waiting for Delivery Confirmation</p>
           <p class="no-data-text">The shipment is still in transit or not yet confirmed.</p>
@@ -259,7 +259,7 @@
   {% else %}
   <!-- EMPTY STATE -->
   <div class="empty-state-container">
-    <img src="{{ url_for('static', filename='illustrations/Empty order table.svg') }}" alt="No orders">
+    <img src="{{ url_for('static', filename='svg-icons/Order/Emptyordertable.svg') }}" alt="No orders">
     <p class="no-data-text">{{ error or "No order found." }}</p>
     <a href="{{ url_for('farmer_sales_bp.create_order_page') }}">
       <button class="button">Create Order</button>

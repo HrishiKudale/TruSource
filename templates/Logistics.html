@@ -184,7 +184,7 @@
 
             {% if not transporter_request or transporter_request|length == 0 %}
             <div class="empty-state-inside">
-                <img src="{{ url_for('static', filename='illustrations/Empty Transport Table.svg') }}">
+                <img src="{{ url_for('static', filename='svg-icons/Logistics/EmptyTransportTable.svg') }}">
                 <h2>No Shipment Activity Yet</h2>
                 <p>Your shipment records will appear here once you schedule or dispatch an order.</p>
                 <a href="{{ url_for('farmer_crop_bp.register_crop_api') }}">
