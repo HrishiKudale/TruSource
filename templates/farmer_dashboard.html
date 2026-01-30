@@ -94,7 +94,7 @@
         <div class="card-body">
           <!-- ✅ EMPTY STATE (Weather & Crop Health) -->
           <div class="empty-state" id="emptyWeatherCard" style="display:none;">
-            <img src="{{ url_for('static', filename='illustrations/empty-weather.svg') }}" alt="No weather data">
+            <img src="{{ url_for('static', filename='illustrations/Empty_crop_table.svg') }}" alt="No weather data">
             <div class="empty-title">No data yet</div>
             <div class="empty-sub">Connect a device or add a crop to see weather and soil insights.</div>
           </div>
@@ -233,7 +233,7 @@
             <!-- CROP STATUS TAB -->
             <div class="tab-panel" id="tab-status">
               <div class="tab-top">
-                <div id="cropStatusPanel" class="crop-status-panel" style="display:none;">
+                <div id="cropStatusPanel" class="crop-status-panel">
                   <div class="map-wrap">
                     <div id="farmMap" class="farm-map"></div>
                   </div>
@@ -263,7 +263,7 @@
 
           <div class="card-body">
             <!-- ✅ EMPTY STATE (Orders) -->
-            <div class="empty-state" id="emptyOrderCard" style="display: block;text-align: center;margin: 50px;">
+            <div class="empty-state" id="emptyOrderCard" style="text-align: center;margin: 50px;">
               <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_order_table.svg') }}" alt="No orders"><br>
             </div>
             <!-- ✅ CONTENT WRAPPER -->
@@ -304,7 +304,7 @@
 
           <div class="card-body">
             <!-- ✅ EMPTY STATE (Shipments) -->
-            <div class="empty-state" id="emptyShipmentCard"  style="display: block;text-align: center;margin: 50px;">
+            <div class="empty-state" id="emptyShipmentCard"  style="text-align: center;margin: 50px;">
               <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_shipment_table.svg') }}" alt="No shipments"><br>
             </div>
             <!-- ✅ CONTENT WRAPPER -->
@@ -340,7 +340,7 @@
         </div>
 
         <!-- ✅ EMPTY STATE (Tasks) -->
-        <div class="empty-state empty-state--compact" id="emptyTasksCard" style="display: block;text-align: center;margin: 50px;">
+        <div class="empty-state empty-state--compact" id="emptyTasksCard" style="text-align: center;margin: 50px;">
           <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_pending_tasks.svg') }}" alt="No pending tasks"><br>
         </div>
 
@@ -360,7 +360,7 @@
         </div>
 
         <!-- ✅ EMPTY STATE (Warehouse) -->
-        <div class="empty-state empty-state--compact" id="emptyWarehouseCard"  style="display: block;text-align: center;margin: 50px;">
+        <div class="empty-state empty-state--compact" id="emptyWarehouseCard"  style="text-align: center;margin: 50px;">
           <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_warehouse_table.svg') }}" alt="No warehouse data"><br>
         </div>
 
@@ -380,7 +380,7 @@
         </div>
 
         <!-- ✅ EMPTY STATE (Manufacturer) -->
-        <div class="empty-state empty-state--compact" id="emptyManufacturerCard"  style="display: block;text-align: center;margin: 50px;">
+        <div class="empty-state empty-state--compact" id="emptyManufacturerCard"  style="text-align: center;margin: 50px;">
           <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_manufacturer_table.svg') }}" alt="No manufacturer updates"><br>
         </div>
 
