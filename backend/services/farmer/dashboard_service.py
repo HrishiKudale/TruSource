@@ -175,7 +175,7 @@ class DashboardService:
         d = DashboardData()
 
         # 1) KPIs
-        active_crops = DashboardService._count_active_crops_best_effort(farmer_id)
+        active_crops = DashboardService._count_active_crops(farmer_id)
         pending_payments = DashboardService._count_pending_payments(farmer_id)
         buyer_offers = DashboardService._count_buyer_offers(farmer_id)
         upcoming_shipments = DashboardService._count_upcoming_shipments(farmer_id)
