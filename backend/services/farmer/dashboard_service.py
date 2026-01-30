@@ -312,20 +312,30 @@ class DashboardService:
     # -----------------------------
     # Polygons
     # -----------------------------
+
     @staticmethod
     def get_farm_polygons(user_id: str, crop_type: str = None, crop_id: str = None):
         db = _mongo_db()
         if db is None:
             return []
 
-        # ✅ correct collection
         col = db["farmer_coordinates"]
 
         q = {"user_id": user_id}
+
+        # ✅ Most specific filter first
         if crop_id:
             q["crop_id"] = crop_id
         elif crop_type:
-            q["cropType"] = crop_type
+            # ✅ IMPORTANT:
+            # UI might send crop name (Wheat) while DB stores cropType as category (Cash Crops).
+            # So match across possible fields using $or.
+            q["$or"] = [
+                {"cropType": crop_type},       # category (Cash Crops)
+                {"crop_type": crop_type},      # if older docs
+                {"cropName": crop_type},       # if you store name in some docs
+                {"crop_name": crop_type},      # if older naming
+            ]
 
         docs = list(col.find(q).sort("created_at", -1))
 
@@ -336,16 +346,25 @@ class DashboardService:
 
             for p in coords:
                 try:
-                    lat = p.get("lat")
-                    lng = p.get("lng") or p.get("long")  # ✅ handle bad key
-
-                    if lat is None or lng is None:
+                    if not isinstance(p, dict):
                         continue
 
-                    poly.append({
-                        "lat": float(lat),
-                        "lng": float(lng)
-                    })
+                    lat_raw = p.get("lat")
+                    lng_raw = p.get("lng")
+                    if lng_raw is None:
+                        lng_raw = p.get("long")  # ✅ handle bad key
+
+                    if lat_raw is None or lng_raw is None:
+                        continue
+
+                    lat = float(str(lat_raw).strip())
+                    lng = float(str(lng_raw).strip())
+
+                    # ✅ Avoid InvalidValueError: finite coords check
+                    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+                        continue
+
+                    poly.append({"lat": lat, "lng": lng})
                 except Exception:
                     continue
 
@@ -356,7 +375,7 @@ class DashboardService:
             out.append({
                 "id": str(d.get("_id")),
                 "crop_id": d.get("crop_id", ""),
-                "cropType": d.get("cropType", ""),
+                "cropType": d.get("cropType", "") or d.get("crop_type", "") or d.get("cropName", "") or d.get("crop_name", ""),
                 "area_size": d.get("area_size", ""),
                 "date_planted": d.get("date_planted", ""),
                 "created_at": d.get("created_at", ""),
@@ -364,6 +383,7 @@ class DashboardService:
             })
 
         return out
+
 
 
     # -----------------------------
