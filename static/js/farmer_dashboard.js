@@ -43,33 +43,19 @@
     return !!(statusPanel && statusPanel.classList.contains("active"));
   }
 
-  // ✅ Ensure Crop Status panel becomes visible, then init map + polygons
+  // ✅ Called when user opens "Crop Status" tab
   function openCropStatusAndRenderMap() {
+    // Ensure panel is visible (your HTML already keeps it visible, but safe)
     const cropStatusPanel = $("cropStatusPanel");
     if (cropStatusPanel) cropStatusPanel.style.display = "block";
 
-    // Wait for layout to apply so map container has width/height
+    // Wait for the tab to be displayed (layout must exist)
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const start = Date.now();
-        const t = setInterval(() => {
-          if (isMapsReady()) {
-            clearInterval(t);
-
-            initDashboardFarmMap();
-
-            // ✅ Trigger resize after it becomes visible
-            if (dashboardFarmMap && google?.maps?.event) {
-              setTimeout(() => {
-                google.maps.event.trigger(dashboardFarmMap, "resize");
-              }, 120);
-            }
-
-            loadAndRenderFarms();
-          }
-
-          if (Date.now() - start > 7000) clearInterval(t);
-        }, 150);
+        // Ask map module to init+render (global function defined below)
+        if (typeof window.openDashboardStatusMap === "function") {
+          window.openDashboardStatusMap();
+        }
       });
     });
   }
@@ -337,21 +323,28 @@
     initDateFilters();
     initSoilSelectors();
 
-    // If already on Status tab for any reason
+    // If user refreshes while Status tab is already active
     if (isStatusTabActive()) openCropStatusAndRenderMap();
   });
 })();
 
 /* ================================
-   Dashboard Map + Polygons
+   Dashboard Map + Polygons (WORKING)
    ================================ */
 
-// ✅ DO NOT use window.farmMap because you have <div id="farmMap"> (it becomes window.farmMap element)
+// IMPORTANT:
+// Do NOT use "farmMap" variable name because <div id="farmMap"> creates window.farmMap element.
 let dashboardFarmMap = null;
 let farmPolygons = [];
+let mapsLoaded = false;
+
+// Google Maps callback
+window.initFarmMap = function initFarmMap() {
+  mapsLoaded = true;
+};
 
 function isMapsReady() {
-  return typeof google !== "undefined" && !!google.maps;
+  return mapsLoaded && typeof window.google !== "undefined" && !!window.google.maps;
 }
 
 function clearFarmPolygons() {
@@ -363,7 +356,10 @@ function ensureMapInitialized() {
   if (dashboardFarmMap || !isMapsReady()) return;
 
   const el = document.getElementById("farmMap");
-  if (!el) return;
+  if (!el) {
+    console.warn("❌ #farmMap div not found");
+    return;
+  }
 
   dashboardFarmMap = new google.maps.Map(el, {
     center: { lat: 20.5937, lng: 78.9629 },
@@ -414,6 +410,7 @@ async function loadAndRenderFarms() {
 
   clearFarmPolygons();
 
+  // Your API returns: { ok:true, farms:[...] }
   if (!out?.ok || !Array.isArray(out.farms) || out.farms.length === 0) {
     dashboardFarmMap.setCenter({ lat: 20.5937, lng: 78.9629 });
     dashboardFarmMap.setZoom(5);
@@ -421,9 +418,16 @@ async function loadAndRenderFarms() {
   }
 
   out.farms.forEach((farm) => {
-    const coords = (farm.coordinates || []).filter(
-      (p) => p && typeof p.lat === "number" && typeof p.lng === "number"
-    );
+    // Safety: force numbers (prevents "lat not a number" errors)
+    const coords = (farm.coordinates || [])
+      .map((p) => {
+        const lat = Number(p?.lat);
+        const lng = Number(p?.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        return { lat, lng };
+      })
+      .filter(Boolean);
+
     if (coords.length < 3) return;
 
     const poly = new google.maps.Polygon({
@@ -454,16 +458,28 @@ async function loadAndRenderFarms() {
     });
   });
 
-  // ✅ IMPORTANT: after draw, fit bounds
   fitPolygons();
 }
 
-function initDashboardFarmMap() {
-  ensureMapInitialized();
-}
+// Called by the main module when Status tab opens
+window.openDashboardStatusMap = function openDashboardStatusMap() {
+  const start = Date.now();
+  const t = setInterval(() => {
+    if (isMapsReady()) {
+      clearInterval(t);
 
-// Called by Google Maps script callback in HTML: callback=initFarmMap
-window.initFarmMap = function initFarmMap() {
-  // just init; rendering happens when Status tab is opened (because container is hidden otherwise)
-  initDashboardFarmMap();
+      ensureMapInitialized();
+
+      // Force render after visible
+      setTimeout(() => {
+        google.maps.event.trigger(dashboardFarmMap, "resize");
+        loadAndRenderFarms();
+      }, 150);
+    }
+
+    if (Date.now() - start > 7000) {
+      clearInterval(t);
+      console.warn("⚠️ Google Maps not ready. Check API key / referer restrictions.");
+    }
+  }, 150);
 };
