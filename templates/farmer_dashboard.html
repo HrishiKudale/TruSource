@@ -10,7 +10,7 @@
   <div class="dash-header">
     <div class="dash-title">
       <span class="grid-ico" aria-hidden="true">
-        <img src="{{ url_for('static', filename='svg-icons/Dashboard/Dashboard.svg') }}" alt="Back">
+        <img src="{{ url_for('static', filename='svg-icons/Dashboard/Dashboard.svg') }}" alt="Dashboard">
       </span>
       <h1>Dashboard</h1>
     </div>
@@ -64,11 +64,11 @@
       </div>
 
       <!-- Weather & Crop Health Card -->
-      <div class="card big-card">
+      <div class="card big-card" id="weatherHealthCard">
         <div class="card-head">
           <div class="card-head-left">
             <span class="ico-circle green" aria-hidden="true">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Weather & Crop Health.svg') }}" alt="Back">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Weather & Crop Health.svg') }}" alt="Weather">
             </span>
             <div>
               <div class="card-title">Weather &amp; Crop Health</div>
@@ -94,13 +94,13 @@
         <div class="card-body">
           <!-- ✅ EMPTY STATE (Weather & Crop Health) -->
           <div class="empty-state" id="emptyWeatherCard" style="display:none;">
-            <img src="{{ url_for('static', filename='illustrations/Empty_crop_table.svg') }}" alt="No weather data">
+            <img src="{{ url_for('static', filename='illustrations/Empty_crop_table.svg') }}" alt="No data">
             <div class="empty-title">No data yet</div>
             <div class="empty-sub">Connect a device or add a crop to see weather and soil insights.</div>
           </div>
 
           <!-- ✅ CONTENT WRAPPER (hide when empty) -->
-          <div id="weatherCardContent">
+          <div id="weatherCardContent" style="display:block;">
             <!-- SOIL TAB -->
             <div class="tab-panel active" id="tab-soil">
               <div class="tab-top">
@@ -177,9 +177,9 @@
 
               <div class="weather-hero">
                 <img
-                  src="{{ (dashboard.weather_image_url if dashboard and dashboard.weather_image_url else url_for('static', filename='img/farm_map_placeholder.jpg')) }}"
+                  id="weatherHeroImg"
+                  src="{{ (dashboard.weather_image_url if dashboard and dashboard.weather_image_url else '') }}"
                   alt="Weather / Field Map"
-                  onerror="this.style.display='none'; document.getElementById('weatherFallback').style.display='flex';"
                 />
                 <div id="weatherFallback" class="weather-fallback" style="display:none;">
                   <div class="muted">No image available</div>
@@ -190,11 +190,11 @@
                 <div class="info-card">
                   <div class="info-label">Geo-Location</div>
                   <div class="info-value">
-                    Latitude: {{ dashboard.geo.lat if dashboard and dashboard.geo else "19.2046" }}° N
-                    Longitude: {{ dashboard.geo.lng if dashboard and dashboard.geo else "73.8745" }}° E
+                    Latitude: {{ dashboard.geo.lat if dashboard and dashboard.geo else "—" }}° N
+                    Longitude: {{ dashboard.geo.lng if dashboard and dashboard.geo else "—" }}° E
                   </div>
                   <div class="info-sub muted">
-                    {{ dashboard.geo.address if dashboard and dashboard.geo else "Kudoshi, adjacent to the Jagbudi River..." }}
+                    {{ dashboard.geo.address if dashboard and dashboard.geo else "—" }}
                   </div>
                 </div>
 
@@ -203,27 +203,27 @@
                   <div class="info-grid2">
                     <div>
                       <div class="muted small">Crop ID</div>
-                      <div>{{ dashboard.crop_meta.crop_id if dashboard and dashboard.crop_meta else "1002-Wheat" }}</div>
+                      <div>{{ dashboard.crop_meta.crop_id if dashboard and dashboard.crop_meta else "—" }}</div>
                     </div>
                     <div>
                       <div class="muted small">Crop Name</div>
-                      <div>{{ dashboard.crop_meta.crop_name if dashboard and dashboard.crop_meta else "Wheat" }}</div>
+                      <div>{{ dashboard.crop_meta.crop_name if dashboard and dashboard.crop_meta else "—" }}</div>
                     </div>
                     <div>
                       <div class="muted small">Crop Type</div>
-                      <div>{{ dashboard.crop_meta.crop_type if dashboard and dashboard.crop_meta else "Grain" }}</div>
+                      <div>{{ dashboard.crop_meta.crop_type if dashboard and dashboard.crop_meta else "—" }}</div>
                     </div>
                     <div>
                       <div class="muted small">Crop Grade</div>
-                      <div>{{ dashboard.crop_meta.grade if dashboard and dashboard.crop_meta else "A" }}</div>
+                      <div>{{ dashboard.crop_meta.grade if dashboard and dashboard.crop_meta else "—" }}</div>
                     </div>
                     <div>
                       <div class="muted small">Planting Date</div>
-                      <div>{{ dashboard.crop_meta.planting_date if dashboard and dashboard.crop_meta else "12 Mar 2025" }}</div>
+                      <div>{{ dashboard.crop_meta.planting_date if dashboard and dashboard.crop_meta else "—" }}</div>
                     </div>
                     <div>
                       <div class="muted small">Harvest Date</div>
-                      <div>{{ dashboard.crop_meta.harvest_date if dashboard and dashboard.crop_meta else "20 Dec 2025" }}</div>
+                      <div>{{ dashboard.crop_meta.harvest_date if dashboard and dashboard.crop_meta else "—" }}</div>
                     </div>
                   </div>
                 </div>
@@ -232,11 +232,19 @@
 
             <!-- CROP STATUS TAB -->
             <div class="tab-panel" id="tab-status">
-              <div class="tab-top">
-                <div id="cropStatusPanel" class="crop-status-panel">
-                  <div class="map-wrap">
-                    <div id="farmMap" class="farm-map"></div>
-                  </div>
+              <div class="tab-top" style="justify-content:flex-start;">
+                <div class="tab-label">Crop Status</div>
+              </div>
+
+              <div id="cropStatusPanel" class="crop-status-panel" style="display:block;">
+                <div class="map-wrap">
+                  <!-- ✅ inline height ensures it never starts 0 -->
+                  <div id="farmMap" class="farm-map" style="height:320px; min-height:320px;"></div>
+                </div>
+
+                <!-- Optional small hint -->
+                <div id="mapHint" class="muted" style="font-size:12px; margin-top:10px; display:none;">
+                  No farm polygons found for the selected crop.
                 </div>
               </div>
             </div>
@@ -248,13 +256,12 @@
       <!-- Bottom two cards -->
       <div class="bottom-row">
         <!-- Order Overview -->
-        <div class="card">
+        <div class="card" id="orderOverviewCard">
           <div class="card-head compact">
             <div class="card-head-left">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Order Overview.svg') }}" alt="Back">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Order Overview.svg') }}" alt="Orders">
               <div class="card-title">Order Overview</div>
             </div>
-
             <select class="select-ghost" id="orderRangeSelect">
               <option value="week">This Week</option>
               <option value="month">This Month</option>
@@ -263,11 +270,12 @@
 
           <div class="card-body">
             <!-- ✅ EMPTY STATE (Orders) -->
-            <div class="empty-state" id="emptyOrderCard" style="text-align: center;margin: 50px;">
+            <div class="empty-state" id="emptyOrderCard" style="display:none; text-align:center; margin:50px;">
               <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_order_table.svg') }}" alt="No orders"><br>
             </div>
+
             <!-- ✅ CONTENT WRAPPER -->
-            <div id="orderCardContent">
+            <div id="orderCardContent" style="display:block;">
               <div class="donut-wrap">
                 <canvas id="orderDonutChart" height="160" width="160"></canvas>
                 <div class="donut-center">
@@ -287,15 +295,14 @@
         </div>
 
         <!-- Shipment Overview -->
-        <div class="card">
+        <div class="card" id="shipmentOverviewCard">
           <div class="card-head compact">
             <div class="card-head-left">
               <span class="ico-circle yellow" aria-hidden="true">
-                <img src="{{ url_for('static', filename='svg-icons/Dashboard/Shipment Overview.svg') }}" alt="Back">
+                <img src="{{ url_for('static', filename='svg-icons/Dashboard/Shipment Overview.svg') }}" alt="Shipments">
               </span>
               <div class="card-title">Shipment Overview</div>
             </div>
-
             <select class="select-ghost" id="shipRangeSelect">
               <option value="week">This Week</option>
               <option value="month">This Month</option>
@@ -304,11 +311,12 @@
 
           <div class="card-body">
             <!-- ✅ EMPTY STATE (Shipments) -->
-            <div class="empty-state" id="emptyShipmentCard"  style="text-align: center;margin: 50px;">
+            <div class="empty-state" id="emptyShipmentCard" style="display:none; text-align:center; margin:50px;">
               <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_shipment_table.svg') }}" alt="No shipments"><br>
             </div>
+
             <!-- ✅ CONTENT WRAPPER -->
-            <div id="shipmentCardContent">
+            <div id="shipmentCardContent" style="display:block;">
               <canvas id="shipBarChart" height="180"></canvas>
 
               <div class="legend-row">
@@ -328,19 +336,18 @@
     <div class="dash-right">
 
       <!-- Pending Tasks -->
-      <div class="card right-card">
+      <div class="card right-card" id="tasksCard">
         <div class="card-head compact">
           <div class="card-head-left">
             <span class="ico-circle purple" aria-hidden="true">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Pending Tasks.svg') }}" alt="Back">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Pending Tasks.svg') }}" alt="Tasks">
             </span>
             <div class="card-title">Pending Tasks</div>
           </div>
           <input type="date" class="date-pill" id="tasksDate">
         </div>
 
-        <!-- ✅ EMPTY STATE (Tasks) -->
-        <div class="empty-state empty-state--compact" id="emptyTasksCard" style="text-align: center;margin: 50px;">
+        <div class="empty-state empty-state--compact" id="emptyTasksCard" style="display:none; text-align:center; margin:50px;">
           <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_pending_tasks.svg') }}" alt="No pending tasks"><br>
         </div>
 
@@ -348,19 +355,18 @@
       </div>
 
       <!-- Warehouses -->
-      <div class="card right-card">
+      <div class="card right-card" id="warehouseCard">
         <div class="card-head compact">
           <div class="card-head-left">
             <span class="ico-circle amber" aria-hidden="true">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Warehouse.svg') }}" alt="Back">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Warehouse.svg') }}" alt="Warehouse">
             </span>
             <div class="card-title">Warehouse</div>
           </div>
           <input type="date" class="date-pill" id="warehouseDate">
         </div>
 
-        <!-- ✅ EMPTY STATE (Warehouse) -->
-        <div class="empty-state empty-state--compact" id="emptyWarehouseCard"  style="text-align: center;margin: 50px;">
+        <div class="empty-state empty-state--compact" id="emptyWarehouseCard" style="display:none; text-align:center; margin:50px;">
           <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_warehouse_table.svg') }}" alt="No warehouse data"><br>
         </div>
 
@@ -368,19 +374,18 @@
       </div>
 
       <!-- Manufacturer -->
-      <div class="card right-card">
+      <div class="card right-card" id="manufacturerCard">
         <div class="card-head compact">
           <div class="card-head-left">
             <span class="ico-circle orange" aria-hidden="true">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Manufacturer.svg') }}" alt="Back">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Manufacturer.svg') }}" alt="Manufacturer">
             </span>
             <div class="card-title">Manufacturer</div>
           </div>
           <input type="date" class="date-pill" id="mfgDate">
         </div>
 
-        <!-- ✅ EMPTY STATE (Manufacturer) -->
-        <div class="empty-state empty-state--compact" id="emptyManufacturerCard"  style="text-align: center;margin: 50px;">
+        <div class="empty-state empty-state--compact" id="emptyManufacturerCard" style="display:none; text-align:center; margin:50px;">
           <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_manufacturer_table.svg') }}" alt="No manufacturer updates"><br>
         </div>
 
@@ -400,10 +405,14 @@
 </script>
 
 <script>
-  // ---------------------------
-  // Empty State Helpers
-  // ---------------------------
-  function toggleEmptyState({ emptyElId, contentElId, isEmpty }) {
+  /**
+   * ✅ Correct empty-state rule:
+   * Show empty illustration only if that card has no data.
+   *
+   * Note: charts/list rendering happens inside farmer_dashboard.js after DOMContentLoaded,
+   * so we call applyEmptyStates twice: once on load, and again after a short delay.
+   */
+  function toggleEmptyState(emptyElId, contentElId, isEmpty) {
     const emptyEl = document.getElementById(emptyElId);
     const contentEl = contentElId ? document.getElementById(contentElId) : null;
     if (!emptyEl) return;
@@ -412,67 +421,86 @@
     if (contentEl) contentEl.style.display = isEmpty ? "none" : "block";
   }
 
+  function hasAnySoilData(d) {
+    const s = d?.soil || d?.soil_data || null;
+    if (!s) return false;
+    // any numeric array present
+    const keys = ["soil_temp","soil_moisture","ph","npk"];
+    return keys.some(k => Array.isArray(s?.[k]) && s[k].length > 0);
+  }
+
+  function hasAnyWeatherData(d) {
+    return !!(d?.weather || d?.weather_data || d?.weather_image_url || d?.geo);
+  }
+
+  function hasAnyFarms(d) {
+    // if you inject farms in dashboard JSON later; otherwise map API fetch handles it.
+    return Array.isArray(d?.farms) && d.farms.length > 0;
+  }
+
   function applyDashboardEmptyStates(dashboard) {
-    // Weather card empty rule (adjust if your dashboard structure differs)
+    // Weather & Crop Health: empty only if nothing for soil/weather and no crops
     const hasCrops = Array.isArray(dashboard?.crops) && dashboard.crops.length > 0;
-    const hasSoil = !!dashboard?.soil || !!dashboard?.soil_data || !!dashboard?.soilSeries;
-    const hasWeather = !!dashboard?.weather || !!dashboard?.weather_data || !!dashboard?.weather_image_url;
-    // if you always want the tabs to stay visible:
-    const weatherEmpty = false;
+    const soilOk = hasAnySoilData(dashboard);
+    const weatherOk = hasAnyWeatherData(dashboard);
+    const weatherHealthEmpty = !(hasCrops || soilOk || weatherOk);
 
+    toggleEmptyState("emptyWeatherCard", "weatherCardContent", weatherHealthEmpty);
 
-    toggleEmptyState({
-      emptyElId: "emptyWeatherCard",
-      contentElId: "weatherCardContent",
-      isEmpty: weatherEmpty
-    });
-
-    // Order Overview empty rule: total orders == 0
+    // Orders: empty if total orders is 0 (values set by JS)
     const totalOrders = Number(document.getElementById("orderTotal")?.textContent || "0");
-    toggleEmptyState({
-      emptyElId: "emptyOrderCard",
-      contentElId: "orderCardContent",
-      isEmpty: totalOrders <= 0
-    });
+    toggleEmptyState("emptyOrderCard", "orderCardContent", totalOrders <= 0);
 
-    // Shipment Overview empty rule: all shipment counts == 0
+    // Shipments: empty if sum is 0
     const shipSum =
       Number(document.getElementById("sRequested")?.textContent || "0") +
       Number(document.getElementById("sPending")?.textContent || "0") +
       Number(document.getElementById("sInTransit")?.textContent || "0") +
       Number(document.getElementById("sDelivered")?.textContent || "0") +
       Number(document.getElementById("sPayment")?.textContent || "0");
+    toggleEmptyState("emptyShipmentCard", "shipmentCardContent", shipSum <= 0);
 
-    toggleEmptyState({
-      emptyElId: "emptyShipmentCard",
-      contentElId: "shipmentCardContent",
-      isEmpty: shipSum <= 0
-    });
+    // Tasks/Warehouse/Manufacturer: empty if list has no items
+    const tasksEmpty = (document.getElementById("pendingTasksList")?.children?.length || 0) === 0;
+    const whEmpty = (document.getElementById("warehouseList")?.children?.length || 0) === 0;
+    const mfgEmpty = (document.getElementById("manufacturerList")?.children?.length || 0) === 0;
 
-    // Right cards: check list children
-    const tasksList = document.getElementById("pendingTasksList");
-    const tasksEmpty = !tasksList || tasksList.children.length === 0;
-    toggleEmptyState({ emptyElId: "emptyTasksCard", contentElId: null, isEmpty: tasksEmpty });
+    toggleEmptyState("emptyTasksCard", null, tasksEmpty);
+    toggleEmptyState("emptyWarehouseCard", null, whEmpty);
+    toggleEmptyState("emptyManufacturerCard", null, mfgEmpty);
 
-    const whList = document.getElementById("warehouseList");
-    const whEmpty = !whList || whList.children.length === 0;
-    toggleEmptyState({ emptyElId: "emptyWarehouseCard", contentElId: null, isEmpty: whEmpty });
-
-    const mfgList = document.getElementById("manufacturerList");
-    const mfgEmpty = !mfgList || mfgList.children.length === 0;
-    toggleEmptyState({ emptyElId: "emptyManufacturerCard", contentElId: null, isEmpty: mfgEmpty });
+    // Weather image: if src empty, show fallback
+    const img = document.getElementById("weatherHeroImg");
+    const fb = document.getElementById("weatherFallback");
+    if (img && fb) {
+      if (!img.getAttribute("src")) {
+        img.style.display = "none";
+        fb.style.display = "flex";
+      } else {
+        img.onerror = () => { img.style.display = "none"; fb.style.display = "flex"; };
+      }
+    }
   }
 
-  // Run once on initial load (after your JS populates values, run again from farmer_dashboard.js too)
   document.addEventListener("DOMContentLoaded", function () {
+    // initial pass
     applyDashboardEmptyStates(window.__DASHBOARD__ || {});
+    // second pass after charts/lists fill
+    setTimeout(() => applyDashboardEmptyStates(window.__DASHBOARD__ || {}), 800);
+    setTimeout(() => applyDashboardEmptyStates(window.__DASHBOARD__ || {}), 1800);
   });
 
-
+  // ✅ Google maps callback hook (maps script loads this)
+  window.initFarmMap = function () {
+    if (typeof initDashboardFarmMap === "function") {
+      initDashboardFarmMap();
+    }
+  };
 </script>
 
 <script src="{{ url_for('static', filename='js/farmer_dashboard.js') }}"></script>
 
+<!-- ✅ IMPORTANT: keep geometry (for area/bounds if used), no need drawing here -->
 <script
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDg3eGetNDtVhtw_lfD6Z6O0CfgEgCSaYU&libraries=geometry&loading=async&callback=initFarmMap"
   async
