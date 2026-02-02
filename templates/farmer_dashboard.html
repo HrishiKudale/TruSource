@@ -171,56 +171,29 @@
             </div>
 
           <!-- WEATHER TAB -->
-              <div class="tab-panel" id="tab-weather">
-                <div class="tab-top">
-                  <div class="tab-label">Weather</div>
-                </div>
+          <div class="tab-panel" id="tab-weather">
+            <div class="tab-top">
+              <div class="tab-label">Weather</div>
+              <button id="weatherRefreshBtn" class="select-ghost" type="button" style="padding:8px 12px;">
+                Refresh
+              </button>
+            </div>
 
-                <!-- ✅ Professional Weather Card (WEB) -->
-                <div id="weatherProCard" class="wcard">
-                  <!-- loading / content will be injected by JS -->
-                  <div class="wcard-loading">
-                    <div class="wspin" aria-hidden="true"></div>
-                    <div class="wloading-text">Fetching weather...</div>
-                  </div>
-                </div>
-
-                <!-- Optional: keep your info cards below if you want -->
-                <div class="info-cards-row" style="margin-top:12px;">
-                  <div class="info-card">
-                    <div class="info-label">Geo-Location</div>
-                    <div class="info-value">
-                      Latitude: {{ dashboard.geo.lat if dashboard and dashboard.geo else "—" }}° N
-                      Longitude: {{ dashboard.geo.lng if dashboard and dashboard.geo else "—" }}° E
-                    </div>
-                    <div class="info-sub muted">
-                      {{ dashboard.geo.address if dashboard and dashboard.geo else "—" }}
-                    </div>
-                  </div>
-
-                  <div class="info-card">
-                    <div class="info-label">Crop</div>
-                    <div class="info-grid2">
-                      <div>
-                        <div class="muted small">Crop ID</div>
-                        <div>{{ dashboard.crop_meta.crop_id if dashboard and dashboard.crop_meta else "—" }}</div>
-                      </div>
-                      <div>
-                        <div class="muted small">Crop Name</div>
-                        <div>{{ dashboard.crop_meta.crop_name if dashboard and dashboard.crop_meta else "—" }}</div>
-                      </div>
-                      <div>
-                        <div class="muted small">Crop Type</div>
-                        <div>{{ dashboard.crop_meta.crop_type if dashboard and dashboard.crop_meta else "—" }}</div>
-                      </div>
-                      <div>
-                        <div class="muted small">Planting Date</div>
-                        <div>{{ dashboard.crop_meta.planting_date if dashboard and dashboard.crop_meta else "—" }}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <!-- ✅ AccuWeather-like Weather Card -->
+            <div id="weatherAccuCard" class="wx-card">
+              <!-- JS will render content -->
+              <div class="wx-loading">
+                <div class="wx-spinner" aria-hidden="true"></div>
+                <div class="wx-loading-text">Fetching weather…</div>
               </div>
+            </div>
+
+            <!-- Optional: keep geo text below if you want -->
+            <div class="muted" style="margin-top:10px; font-size:12px;">
+              Location: <span id="wxLocText">—</span>
+            </div>
+          </div>
+
 
 
             <!-- CROP STATUS TAB -->

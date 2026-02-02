@@ -216,126 +216,217 @@
 .status-pill .big{font-size:18px; font-weight:800; color:#111; margin-top:4px;}
 
 
-
 /* =========================
-   Professional Weather Card
+   AccuWeather-style Weather
    ========================= */
-.wcard{
-  background:#ffffff;
-  border-radius:16px;
-  padding:16px;
-  margin-top:10px;
-  border:1px solid #eef2f7;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+
+.wx-card{
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.10);
+  background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 45%, #22c55e 100%);
+  position:relative;
+  min-height: 260px;
 }
 
-.wcard-loading{
+.wx-card::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(circle at 20% 25%, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 45%),
+    radial-gradient(circle at 75% 20%, rgba(255,255,255,.25) 0%, rgba(255,255,255,0) 40%),
+    radial-gradient(circle at 60% 85%, rgba(255,255,255,.20) 0%, rgba(255,255,255,0) 45%);
+  pointer-events:none;
+}
+
+.wx-inner{
+  position:relative;
+  padding:16px;
   display:flex;
   flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  padding:16px 0;
-  gap:10px;
-}
-
-.wspin{
-  width:34px;height:34px;
-  border-radius:999px;
-  border:3px solid rgba(22,163,74,.20);
-  border-top-color: rgba(22,163,74,.95);
-  animation: wspin 0.9s linear infinite;
-}
-@keyframes wspin{ to{ transform: rotate(360deg);} }
-
-.wloading-text{
-  font-size:13px;
-  color:#334155;
-}
-
-.wcard-head{
-  display:flex;
-  align-items:center;
   gap:12px;
-  margin-bottom:12px;
 }
 
-.wicon-circle{
-  width:56px;height:56px;
-  border-radius:999px;
+.wx-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.wx-now{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.wx-hero-icon{
+  width:64px; height:64px;
+  border-radius:16px;
+  background: rgba(255,255,255,.22);
+  border:1px solid rgba(255,255,255,.25);
   display:flex;
   align-items:center;
   justify-content:center;
-  flex:0 0 56px;
+  backdrop-filter: blur(10px);
 }
 
-.wicon{
-  font-size:40px;
+.wx-hero-icon i{
+  font-size:44px;
+  color:#fff;
+  text-shadow: 0 8px 18px rgba(0,0,0,.18);
+}
+
+.wx-temp{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.wx-temp .big{
+  font-size:34px;
+  font-weight:900;
+  color:#fff;
   line-height:1;
+  letter-spacing:-0.5px;
 }
 
-.wtitle{
-  font-size:18px;
-  font-weight:800;
-  color:#0f172a;
-}
-
-.wsubtitle{
+.wx-temp .small{
   font-size:13px;
-  color:#64748b;
-  margin-top:2px;
+  color: rgba(255,255,255,.88);
+  text-align:left;
 }
 
-.wgrid{
+.wx-badges{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.wx-badge{
+  padding:8px 10px;
+  border-radius:999px;
+  background: rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.24);
+  color:#fff;
+  font-size:12px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  backdrop-filter: blur(10px);
+}
+
+.wx-badge i{ font-size:16px; opacity:.95; }
+
+.wx-forecast{
+  background: rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:16px;
+  backdrop-filter: blur(12px);
+  overflow:hidden;
+}
+
+.wx-forecast-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 12px;
+  color:#fff;
+  font-weight:800;
+  font-size:13px;
+  border-bottom:1px solid rgba(255,255,255,.18);
+}
+
+.wx-days{
   display:grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap:10px;
-  margin-top:10px;
+  grid-template-columns: repeat(7, 1fr);
+  gap:0;
+}
+
+@media (max-width: 980px){
+  .wx-days{
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 @media (max-width: 520px){
-  .wgrid{ grid-template-columns: 1fr; }
+  .wx-days{
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.witem{
-  background:#f8fafc;
-  border:1px solid #eef2f7;
-  border-radius:12px;
-  padding:12px;
+.wx-day{
+  padding:10px 10px;
+  border-right:1px solid rgba(255,255,255,.14);
+  border-bottom:1px solid rgba(255,255,255,.14);
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:4px;
+  gap:6px;
+  color:#fff;
 }
 
-.witem i{
-  font-size:22px;
+.wx-day:nth-child(7n){
+  border-right:none;
 }
 
-.wlabel{
+.wx-day .d{
   font-size:12px;
-  color:#475569;
-}
-
-.wvalue{
-  font-size:15px;
   font-weight:800;
-  color:#0f172a;
+  opacity:.95;
 }
 
-.wmuted{
-  color:#64748b;
-  font-size:13px;
-  text-align:center;
+.wx-day i{
+  font-size:22px;
+  opacity:.95;
 }
 
-.werror{
-  background:#fff7ed;
-  border:1px solid #fed7aa;
+.wx-day .mm{
+  display:flex;
+  gap:8px;
+  font-size:12px;
+  font-weight:800;
+}
+
+.wx-day .mm span{
+  opacity:.92;
+}
+
+.wx-loading{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  position:relative;
+  z-index:1;
+  color:#fff;
+}
+
+.wx-spinner{
+  width:36px;height:36px;
+  border-radius:999px;
+  border:3px solid rgba(255,255,255,.25);
+  border-top-color: rgba(255,255,255,.95);
+  animation: wxspin .9s linear infinite;
+}
+@keyframes wxspin{ to{ transform: rotate(360deg); } }
+
+.wx-loading-text{ font-size:13px; opacity:.95; margin-top:10px; }
+
+.wx-error{
+  position:relative;
+  z-index:1;
+  padding:14px;
+  margin:14px;
+  border-radius:14px;
+  background: rgba(255, 247, 237, .92);
+  border: 1px solid #fed7aa;
   color:#9a3412;
-  border-radius:12px;
-  padding:12px;
-  margin-top:6px;
   font-size:13px;
 }
+
 
 
 .map-wrap {
