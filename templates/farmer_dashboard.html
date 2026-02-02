@@ -469,17 +469,6 @@
   });
 
 
-  // Google Maps callback
-  window.initFarmMap = function () {
-    window.__MAPS_READY__ = true;
-
-    // if your JS has a hook, call it
-    if (typeof window.onDashboardMapsReady === "function") {
-      window.onDashboardMapsReady();
-    }
-  };
-
-
 </script>
 
 <script src="{{ url_for('static', filename='js/farmer_dashboard.js') }}"></script>

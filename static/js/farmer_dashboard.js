@@ -43,21 +43,25 @@
     return !!(statusPanel && statusPanel.classList.contains("active"));
   }
 
-  // ✅ Called when user opens "Crop Status" tab
-  function openCropStatusAndRenderMap() {
-    // Ensure panel is visible (your HTML already keeps it visible, but safe)
-    const cropStatusPanel = $("cropStatusPanel");
-    if (cropStatusPanel) cropStatusPanel.style.display = "block";
+  // ✅ When user opens Crop Status tab: wait for layout, then init map + polygons
+  async function openCropStatusAndRenderMap() {
+    // Ensure container exists
+    const farmMapEl = $("farmMap");
+    if (!farmMapEl) return;
 
-    // Wait for the tab to be displayed (layout must exist)
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        // Ask map module to init+render (global function defined below)
-        if (typeof window.openDashboardStatusMap === "function") {
-          window.openDashboardStatusMap();
-        }
-      });
-    });
+    // Wait for tab to be visible + layout to settle
+    await waitForVisible(farmMapEl, 7000);
+
+    // Now init map (only now)
+    await ensureMapInitialized();
+
+    // Trigger resize (Google maps needs this after show/hide)
+    if (dashboardFarmMap && window.google?.maps?.event) {
+      setTimeout(() => google.maps.event.trigger(dashboardFarmMap, "resize"), 100);
+    }
+
+    // Draw polygons
+    await loadAndRenderFarms();
   }
 
   tabBtns.forEach((btn) => {
@@ -66,10 +70,10 @@
       btn.classList.add("active");
 
       const tab = btn.dataset.tab;
-      Object.keys(panels).forEach((k) => panels[k].classList.toggle("active", k === tab));
+      Object.keys(panels).forEach((k) => panels[k]?.classList.toggle("active", k === tab));
 
       if (tab === "status") {
-        openCropStatusAndRenderMap();
+        openCropStatusAndRenderMap().catch((e) => console.warn("Map render failed:", e));
       }
     });
   });
@@ -80,7 +84,7 @@
     if (cropTypeSelect) {
       cropTypeSelect.addEventListener("change", () => {
         if (isStatusTabActive()) {
-          openCropStatusAndRenderMap();
+          openCropStatusAndRenderMap().catch((e) => console.warn("Map render failed:", e));
         }
       });
     }
@@ -323,12 +327,13 @@
     initDateFilters();
     initSoilSelectors();
 
-    // If user refreshes while Status tab is already active
-    if (isStatusTabActive()) openCropStatusAndRenderMap();
+    // IMPORTANT: Do NOT auto-init map here.
+    // Map should only init when user opens Status tab (because other tabs hide it).
   });
 })();
+
 /* ================================
-   Dashboard Map + Polygons (FIXED)
+   Dashboard Map + Polygons (SAFE)
    ================================ */
 
 let dashboardFarmMap = null;
@@ -338,11 +343,6 @@ function isMapsReady() {
   return typeof google !== "undefined" && !!google.maps;
 }
 
-function clearFarmPolygons() {
-  farmPolygons.forEach((p) => p.setMap(null));
-  farmPolygons = [];
-}
-
 function waitForVisible(el, timeoutMs = 5000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
@@ -350,6 +350,7 @@ function waitForVisible(el, timeoutMs = 5000) {
       const h = el?.offsetHeight || 0;
       const w = el?.offsetWidth || 0;
       const visible = h > 0 && w > 0 && el.offsetParent !== null;
+
       if (visible) {
         clearInterval(t);
         resolve(true);
@@ -357,23 +358,19 @@ function waitForVisible(el, timeoutMs = 5000) {
         clearInterval(t);
         reject(new Error("Map container never became visible (height stayed 0)."));
       }
-    }, 100);
+    }, 120);
   });
 }
 
 async function ensureMapInitialized() {
-  if (dashboardFarmMap || !isMapsReady()) return dashboardFarmMap;
+  if (dashboardFarmMap) return dashboardFarmMap;
+  if (!isMapsReady()) return null;
 
   const el = document.getElementById("farmMap");
   if (!el) return null;
 
-  // ✅ Wait until visible (height > 0)
-  try {
-    await waitForVisible(el, 7000);
-  } catch (e) {
-    console.warn("❌ farmMap still hidden:", e.message);
-    return null;
-  }
+  // Must be visible before creating map
+  await waitForVisible(el, 7000);
 
   dashboardFarmMap = new google.maps.Map(el, {
     center: { lat: 20.5937, lng: 78.9629 },
@@ -384,19 +381,19 @@ async function ensureMapInitialized() {
     fullscreenControl: false,
   });
 
-  // Helpful for debugging
+  // expose for debugging
   window.dashboardFarmMap = dashboardFarmMap;
-
-  // ✅ Force resize once it’s created
-  setTimeout(() => {
-    google.maps.event.trigger(dashboardFarmMap, "resize");
-  }, 150);
 
   return dashboardFarmMap;
 }
 
+function clearFarmPolygons() {
+  farmPolygons.forEach((p) => p.setMap(null));
+  farmPolygons = [];
+}
+
 function fitPolygons() {
-  if (!dashboardFarmMap || !isMapsReady()) return;
+  if (!dashboardFarmMap) return;
 
   const bounds = new google.maps.LatLngBounds();
   let any = false;
@@ -441,12 +438,10 @@ async function loadAndRenderFarms() {
   }
 
   out.farms.forEach((farm) => {
-    // ✅ Validate lat/lng strictly
-    const coords = (farm.coordinates || []).filter((p) => {
-      const lat = Number(p?.lat);
-      const lng = Number(p?.lng);
-      return Number.isFinite(lat) && Number.isFinite(lng);
-    }).map(p => ({ lat: Number(p.lat), lng: Number(p.lng) }));
+    // strict numeric lat/lng
+    const coords = (farm.coordinates || [])
+      .map((p) => ({ lat: Number(p?.lat), lng: Number(p?.lng) }))
+      .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
 
     if (coords.length < 3) return;
 
@@ -480,13 +475,12 @@ async function loadAndRenderFarms() {
   fitPolygons();
 }
 
-function initDashboardFarmMap() {
-  // only initializes map when visible
-  ensureMapInitialized();
-}
-
-// Called by your Google Maps callback in HTML
+/**
+ * IMPORTANT:
+ * Google callback should ONLY set a ready flag.
+ * Do not init map here because tab might be hidden.
+ */
 window.initFarmMap = function initFarmMap() {
-  initDashboardFarmMap();
+  window.__MAPS_READY__ = true;
+  // Do nothing else here.
 };
-
