@@ -328,17 +328,14 @@
   });
 })();
 /* ================================
-   Dashboard Map + Polygons (FINAL FIX)
+   Dashboard Map + Polygons (FIXED)
    ================================ */
 
-// IMPORTANT: <div id="farmMap"> creates window.farmMap (HTMLDivElement).
-// Never use variable name "farmMap" in JS.
 let dashboardFarmMap = null;
 let farmPolygons = [];
-let mapInitializedOnce = false;
 
 function isMapsReady() {
-  return !!window.__MAPS_READY__ && typeof google !== "undefined" && !!google.maps;
+  return typeof google !== "undefined" && !!google.maps;
 }
 
 function clearFarmPolygons() {
@@ -346,13 +343,36 @@ function clearFarmPolygons() {
   farmPolygons = [];
 }
 
-function ensureMapInitialized() {
-  if (dashboardFarmMap || !isMapsReady()) return;
+function waitForVisible(el, timeoutMs = 5000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const t = setInterval(() => {
+      const h = el?.offsetHeight || 0;
+      const w = el?.offsetWidth || 0;
+      const visible = h > 0 && w > 0 && el.offsetParent !== null;
+      if (visible) {
+        clearInterval(t);
+        resolve(true);
+      } else if (Date.now() - start > timeoutMs) {
+        clearInterval(t);
+        reject(new Error("Map container never became visible (height stayed 0)."));
+      }
+    }, 100);
+  });
+}
+
+async function ensureMapInitialized() {
+  if (dashboardFarmMap || !isMapsReady()) return dashboardFarmMap;
 
   const el = document.getElementById("farmMap");
-  if (!el) {
-    console.warn("❌ #farmMap element not found");
-    return;
+  if (!el) return null;
+
+  // ✅ Wait until visible (height > 0)
+  try {
+    await waitForVisible(el, 7000);
+  } catch (e) {
+    console.warn("❌ farmMap still hidden:", e.message);
+    return null;
   }
 
   dashboardFarmMap = new google.maps.Map(el, {
@@ -364,14 +384,15 @@ function ensureMapInitialized() {
     fullscreenControl: false,
   });
 
-  mapInitializedOnce = true;
-}
+  // Helpful for debugging
+  window.dashboardFarmMap = dashboardFarmMap;
 
-function forceMapResize() {
-  if (!dashboardFarmMap || !google?.maps?.event) return;
+  // ✅ Force resize once it’s created
   setTimeout(() => {
     google.maps.event.trigger(dashboardFarmMap, "resize");
-  }, 100);
+  }, 150);
+
+  return dashboardFarmMap;
 }
 
 function fitPolygons() {
@@ -392,8 +413,8 @@ function fitPolygons() {
 }
 
 async function loadAndRenderFarms() {
-  ensureMapInitialized();
-  if (!dashboardFarmMap) return;
+  const map = await ensureMapInitialized();
+  if (!map) return;
 
   const cropTypeSelect = document.getElementById("cropTypeSelect");
   const cropType = cropTypeSelect ? cropTypeSelect.value : "";
@@ -414,21 +435,18 @@ async function loadAndRenderFarms() {
   clearFarmPolygons();
 
   if (!out?.ok || !Array.isArray(out.farms) || out.farms.length === 0) {
-    dashboardFarmMap.setCenter({ lat: 20.5937, lng: 78.9629 });
-    dashboardFarmMap.setZoom(5);
+    map.setCenter({ lat: 20.5937, lng: 78.9629 });
+    map.setZoom(5);
     return;
   }
 
   out.farms.forEach((farm) => {
-    // Safety: always convert to Number (prevents "lat not a number")
-    const coords = (farm.coordinates || [])
-      .map((p) => {
-        const lat = Number(p?.lat);
-        const lng = Number(p?.lng);
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-        return { lat, lng };
-      })
-      .filter(Boolean);
+    // ✅ Validate lat/lng strictly
+    const coords = (farm.coordinates || []).filter((p) => {
+      const lat = Number(p?.lat);
+      const lng = Number(p?.lng);
+      return Number.isFinite(lat) && Number.isFinite(lng);
+    }).map(p => ({ lat: Number(p.lat), lng: Number(p.lng) }));
 
     if (coords.length < 3) return;
 
@@ -438,14 +456,14 @@ async function loadAndRenderFarms() {
       strokeOpacity: 1,
       strokeWeight: 2,
       fillColor: "#81c784",
-      fillOpacity: 0.55,
-      map: dashboardFarmMap,
+      fillOpacity: 0.45,
+      map,
     });
 
     farmPolygons.push(poly);
 
     poly.addListener("click", (e) => {
-      const info = new google.maps.InfoWindow({
+      new google.maps.InfoWindow({
         content: `
           <div style="font-size:13px">
             <b>${farm.cropType || "Farm"}</b><br/>
@@ -455,58 +473,20 @@ async function loadAndRenderFarms() {
           </div>
         `,
         position: e.latLng,
-      });
-      info.open(dashboardFarmMap);
+      }).open(map);
     });
   });
 
   fitPolygons();
 }
 
-/**
- * This is called when user opens "Crop Status" tab.
- * It guarantees:
- * 1) tab is visible
- * 2) map is initialized
- * 3) resize is triggered
- * 4) polygons drawn
- */
-window.openDashboardStatusMap = function openDashboardStatusMap() {
-  const statusPanel = document.getElementById("tab-status");
-  const wrapper = document.getElementById("weatherCardContent");
+function initDashboardFarmMap() {
+  // only initializes map when visible
+  ensureMapInitialized();
+}
 
-  // If empty state hid the entire card, map can never render.
-  if (wrapper && wrapper.style.display === "none") {
-    console.warn("⚠️ weatherCardContent is hidden by empty-state logic. Map cannot render.");
-    return;
-  }
-
-  const start = Date.now();
-  const t = setInterval(() => {
-    if (isMapsReady()) {
-      clearInterval(t);
-
-      ensureMapInitialized();
-      forceMapResize();
-
-      // draw polygons AFTER resize
-      setTimeout(() => {
-        loadAndRenderFarms();
-      }, 150);
-    }
-
-    if (Date.now() - start > 8000) {
-      clearInterval(t);
-      console.warn("⚠️ Google Maps not ready. Check API key referer & script callback.");
-    }
-  }, 150);
+// Called by your Google Maps callback in HTML
+window.initFarmMap = function initFarmMap() {
+  initDashboardFarmMap();
 };
 
-/**
- * Optional hook called by initFarmMap callback (when google script loads)
- */
-window.onDashboardMapsReady = function () {
-  // if user is already on status tab and refreshed
-  const isStatusActive = document.getElementById("tab-status")?.classList.contains("active");
-  if (isStatusActive) window.openDashboardStatusMap();
-};
