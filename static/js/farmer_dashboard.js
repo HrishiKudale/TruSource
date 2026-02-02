@@ -77,9 +77,14 @@
       const tab = btn.dataset.tab;
       setActiveTab(tab);
 
-      if (tab === "status") {
-        openCropStatusAndRenderMap().catch((e) => console.warn("Map render failed:", e));
-      }
+    if (tab === "status") {
+      openCropStatusAndRenderMap().catch((e) => console.warn("Map render failed:", e));
+    }
+
+    if (tab === "weather") {
+      loadAndRenderWeather();
+    }
+
     });
   });
 
@@ -343,6 +348,141 @@
     // Do not auto-init map. Only on Status tab.
   });
 })();
+
+
+/* =========================
+   Weather Card (Open-Meteo)
+   ========================= */
+
+function getWeatherIconAndTheme(code) {
+  // Web version using MDI icons + theme colors
+  if ([0, 1].includes(code)) return { icon: "mdi-weather-sunny", color: "#facc15" };
+  if ([2, 3].includes(code)) return { icon: "mdi-weather-partly-cloudy", color: "#94a3b8" };
+  if ([45, 48].includes(code)) return { icon: "mdi-weather-fog", color: "#64748b" };
+  if ([51, 53, 55, 56, 57, 61, 63, 65].includes(code)) return { icon: "mdi-weather-rainy", color: "#38bdf8" };
+  if ([66, 67, 71, 73, 75, 77, 85, 86].includes(code)) return { icon: "mdi-weather-snowy", color: "#bae6fd" };
+  if ([95, 96, 99].includes(code)) return { icon: "mdi-weather-lightning-rainy", color: "#fbbf24" };
+  return { icon: "mdi-weather-cloudy", color: "#94a3b8" };
+}
+
+function setWeatherCardLoading() {
+  const card = document.getElementById("weatherProCard");
+  if (!card) return;
+  card.innerHTML = `
+    <div class="wcard-loading">
+      <div class="wspin" aria-hidden="true"></div>
+      <div class="wloading-text">Fetching weather...</div>
+    </div>
+  `;
+}
+
+function setWeatherCardError(msg) {
+  const card = document.getElementById("weatherProCard");
+  if (!card) return;
+  card.innerHTML = `
+    <div class="wmuted">Weather data unavailable</div>
+    <div class="werror">${msg || "Unable to fetch weather right now."}</div>
+  `;
+}
+
+function renderWeatherCard(weather) {
+  const card = document.getElementById("weatherProCard");
+  if (!card) return;
+
+  const code = Number(weather?.code ?? 0);
+  const temp = Number(weather?.temp ?? 0);
+  const wind = Number(weather?.wind ?? 0);
+  const rain = Number(weather?.rain ?? 0);
+
+  const theme = getWeatherIconAndTheme(code);
+  const bg = `${theme.color}33`; // alpha bg like RN
+
+  card.innerHTML = `
+    <div class="wcard-head">
+      <div class="wicon-circle" style="background:${bg};">
+        <i class="mdi ${theme.icon} wicon" style="color:${theme.color};"></i>
+      </div>
+      <div>
+        <div class="wtitle">Current Weather</div>
+        <div class="wsubtitle">${temp.toFixed(1)}°C • Feels like field conditions</div>
+      </div>
+    </div>
+
+    <div class="wgrid">
+      <div class="witem">
+        <i class="mdi mdi-weather-rainy" style="color:#0ea5e9;"></i>
+        <div class="wlabel">Rain</div>
+        <div class="wvalue">${rain.toFixed(1)} mm</div>
+      </div>
+
+      <div class="witem">
+        <i class="mdi mdi-weather-windy" style="color:#22c55e;"></i>
+        <div class="wlabel">Wind</div>
+        <div class="wvalue">${wind.toFixed(1)} km/h</div>
+      </div>
+
+      <div class="witem">
+        <i class="mdi mdi-thermometer" style="color:#f97316;"></i>
+        <div class="wlabel">Temp</div>
+        <div class="wvalue">${temp.toFixed(1)}°C</div>
+      </div>
+    </div>
+  `;
+}
+
+async function fetchOpenMeteoCurrentWeather(lat, lng) {
+  // Open-Meteo current_weather=true
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lng)}&current_weather=true`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`Weather API failed: ${res.status}`);
+  const data = await res.json();
+  const cur = data?.current_weather;
+
+  if (!cur) return null;
+
+  // Open-Meteo current_weather usually has temperature, windspeed, weathercode
+  // precipitation may not be present in current_weather depending on API fields.
+  // We'll fallback to 0 if missing.
+  return {
+    temp: cur.temperature ?? 0,
+    wind: cur.windspeed ?? 0,
+    rain: cur.precipitation ?? 0,
+    code: cur.weathercode ?? 0,
+  };
+}
+
+async function loadAndRenderWeather() {
+  const d = window.__DASHBOARD__ || {};
+  const geo = d?.geo || {};
+
+  const lat = Number(geo?.lat);
+  const lng = Number(geo?.lng);
+
+  // fallback if dashboard geo missing
+  const latOk = Number.isFinite(lat);
+  const lngOk = Number.isFinite(lng);
+
+  if (!latOk || !lngOk) {
+    setWeatherCardError("No geo-location found. Please add a farm or enable location for your crop.");
+    return;
+  }
+
+  setWeatherCardLoading();
+
+  try {
+    const w = await fetchOpenMeteoCurrentWeather(lat, lng);
+    if (!w) {
+      setWeatherCardError("Weather data not available for this location.");
+      return;
+    }
+    renderWeatherCard(w);
+  } catch (e) {
+    console.error("Weather fetch failed:", e);
+    setWeatherCardError(e?.message || "Weather fetch failed.");
+  }
+}
+
+
 
 /* ================================
    Leaflet Farm Map + Polygons (Dashboard)

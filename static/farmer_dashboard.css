@@ -217,6 +217,127 @@
 
 
 
+/* =========================
+   Professional Weather Card
+   ========================= */
+.wcard{
+  background:#ffffff;
+  border-radius:16px;
+  padding:16px;
+  margin-top:10px;
+  border:1px solid #eef2f7;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.wcard-loading{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:16px 0;
+  gap:10px;
+}
+
+.wspin{
+  width:34px;height:34px;
+  border-radius:999px;
+  border:3px solid rgba(22,163,74,.20);
+  border-top-color: rgba(22,163,74,.95);
+  animation: wspin 0.9s linear infinite;
+}
+@keyframes wspin{ to{ transform: rotate(360deg);} }
+
+.wloading-text{
+  font-size:13px;
+  color:#334155;
+}
+
+.wcard-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.wicon-circle{
+  width:56px;height:56px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 56px;
+}
+
+.wicon{
+  font-size:40px;
+  line-height:1;
+}
+
+.wtitle{
+  font-size:18px;
+  font-weight:800;
+  color:#0f172a;
+}
+
+.wsubtitle{
+  font-size:13px;
+  color:#64748b;
+  margin-top:2px;
+}
+
+.wgrid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:10px;
+  margin-top:10px;
+}
+@media (max-width: 520px){
+  .wgrid{ grid-template-columns: 1fr; }
+}
+
+.witem{
+  background:#f8fafc;
+  border:1px solid #eef2f7;
+  border-radius:12px;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+}
+
+.witem i{
+  font-size:22px;
+}
+
+.wlabel{
+  font-size:12px;
+  color:#475569;
+}
+
+.wvalue{
+  font-size:15px;
+  font-weight:800;
+  color:#0f172a;
+}
+
+.wmuted{
+  color:#64748b;
+  font-size:13px;
+  text-align:center;
+}
+
+.werror{
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#9a3412;
+  border-radius:12px;
+  padding:12px;
+  margin-top:6px;
+  font-size:13px;
+}
+
+
 .map-wrap {
   width: 100%;
   border-radius: 14px;

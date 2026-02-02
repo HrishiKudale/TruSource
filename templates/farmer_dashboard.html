@@ -4,6 +4,7 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='farmer_dashboard.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 
 <div class="dash-wrap">
   <!-- Page Header -->
@@ -169,66 +170,58 @@
               </div>
             </div>
 
-            <!-- WEATHER TAB -->
-            <div class="tab-panel" id="tab-weather">
-              <div class="tab-top">
-                <div class="tab-label">Weather</div>
-              </div>
-
-              <div class="weather-hero">
-                <img
-                  id="weatherHeroImg"
-                  src="{{ (dashboard.weather_image_url if dashboard and dashboard.weather_image_url else '') }}"
-                  alt="Weather / Field Map"
-                />
-                <div id="weatherFallback" class="weather-fallback" style="display:none;">
-                  <div class="muted">No image available</div>
+          <!-- WEATHER TAB -->
+              <div class="tab-panel" id="tab-weather">
+                <div class="tab-top">
+                  <div class="tab-label">Weather</div>
                 </div>
-              </div>
 
-              <div class="info-cards-row">
-                <div class="info-card">
-                  <div class="info-label">Geo-Location</div>
-                  <div class="info-value">
-                    Latitude: {{ dashboard.geo.lat if dashboard and dashboard.geo else "—" }}° N
-                    Longitude: {{ dashboard.geo.lng if dashboard and dashboard.geo else "—" }}° E
-                  </div>
-                  <div class="info-sub muted">
-                    {{ dashboard.geo.address if dashboard and dashboard.geo else "—" }}
+                <!-- ✅ Professional Weather Card (WEB) -->
+                <div id="weatherProCard" class="wcard">
+                  <!-- loading / content will be injected by JS -->
+                  <div class="wcard-loading">
+                    <div class="wspin" aria-hidden="true"></div>
+                    <div class="wloading-text">Fetching weather...</div>
                   </div>
                 </div>
 
-                <div class="info-card">
-                  <div class="info-label">Crop</div>
-                  <div class="info-grid2">
-                    <div>
-                      <div class="muted small">Crop ID</div>
-                      <div>{{ dashboard.crop_meta.crop_id if dashboard and dashboard.crop_meta else "—" }}</div>
+                <!-- Optional: keep your info cards below if you want -->
+                <div class="info-cards-row" style="margin-top:12px;">
+                  <div class="info-card">
+                    <div class="info-label">Geo-Location</div>
+                    <div class="info-value">
+                      Latitude: {{ dashboard.geo.lat if dashboard and dashboard.geo else "—" }}° N
+                      Longitude: {{ dashboard.geo.lng if dashboard and dashboard.geo else "—" }}° E
                     </div>
-                    <div>
-                      <div class="muted small">Crop Name</div>
-                      <div>{{ dashboard.crop_meta.crop_name if dashboard and dashboard.crop_meta else "—" }}</div>
+                    <div class="info-sub muted">
+                      {{ dashboard.geo.address if dashboard and dashboard.geo else "—" }}
                     </div>
-                    <div>
-                      <div class="muted small">Crop Type</div>
-                      <div>{{ dashboard.crop_meta.crop_type if dashboard and dashboard.crop_meta else "—" }}</div>
-                    </div>
-                    <div>
-                      <div class="muted small">Crop Grade</div>
-                      <div>{{ dashboard.crop_meta.grade if dashboard and dashboard.crop_meta else "—" }}</div>
-                    </div>
-                    <div>
-                      <div class="muted small">Planting Date</div>
-                      <div>{{ dashboard.crop_meta.planting_date if dashboard and dashboard.crop_meta else "—" }}</div>
-                    </div>
-                    <div>
-                      <div class="muted small">Harvest Date</div>
-                      <div>{{ dashboard.crop_meta.harvest_date if dashboard and dashboard.crop_meta else "—" }}</div>
+                  </div>
+
+                  <div class="info-card">
+                    <div class="info-label">Crop</div>
+                    <div class="info-grid2">
+                      <div>
+                        <div class="muted small">Crop ID</div>
+                        <div>{{ dashboard.crop_meta.crop_id if dashboard and dashboard.crop_meta else "—" }}</div>
+                      </div>
+                      <div>
+                        <div class="muted small">Crop Name</div>
+                        <div>{{ dashboard.crop_meta.crop_name if dashboard and dashboard.crop_meta else "—" }}</div>
+                      </div>
+                      <div>
+                        <div class="muted small">Crop Type</div>
+                        <div>{{ dashboard.crop_meta.crop_type if dashboard and dashboard.crop_meta else "—" }}</div>
+                      </div>
+                      <div>
+                        <div class="muted small">Planting Date</div>
+                        <div>{{ dashboard.crop_meta.planting_date if dashboard and dashboard.crop_meta else "—" }}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+
 
             <!-- CROP STATUS TAB -->
             <div class="tab-panel" id="tab-status">
