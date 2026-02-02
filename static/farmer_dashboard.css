@@ -215,7 +215,6 @@
 }
 .status-pill .big{font-size:18px; font-weight:800; color:#111; margin-top:4px;}
 
-
 /* =========================
    Clean Hourly Weather Card
    ========================= */
@@ -293,7 +292,7 @@
   letter-spacing:-0.4px;
 }
 
-/* Subtle motion for SVG icons (clean) */
+/* Subtle motion (not flashy) */
 .wx-anim-float{
   animation: wxFloat 2.8s ease-in-out infinite;
   transform-origin:center;
@@ -312,11 +311,8 @@
   50%{ transform: rotate(2deg); }
 }
 
-/* Skeleton loading */
-.wx-hourly-skeleton{
-  display:flex;
-  gap:22px;
-}
+/* Skeleton */
+.wx-hourly-skeleton{ display:flex; gap:22px; }
 .wx-skel-item{
   width:92px;
   height:118px;
@@ -329,6 +325,7 @@
   0%{ background-position: 0% 0%; }
   100%{ background-position: 200% 0%; }
 }
+
 
 
 

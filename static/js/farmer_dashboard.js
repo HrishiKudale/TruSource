@@ -84,6 +84,11 @@
     if (tab === "weather") {
       loadAccuWeatherCard();
     }
+    if (tab === "weather") {
+      // allow DOM paint first
+      requestAnimationFrame(() => loadCleanWeatherCard());
+    }
+
 
 
     });
@@ -346,12 +351,26 @@ async function loadCleanWeatherCard() {
     wxSetError("wxWeeklyRow", "Weather unavailable right now.");
   }
 }
+function weatherTabIsActive() {
+  const p = document.getElementById("tab-weather");
+  return !!(p && p.classList.contains("active"));
+}
 
-/* Call on Weather tab open + refresh */
-document.addEventListener("DOMContentLoaded", () => {
+function initWeatherUI() {
   const refreshBtn = document.getElementById("weatherRefreshBtn");
-  if (refreshBtn) refreshBtn.addEventListener("click", loadCleanWeatherCard);
-});
+  if (refreshBtn && !refreshBtn.__bound) {
+    refreshBtn.__bound = true;
+    refreshBtn.addEventListener("click", loadCleanWeatherCard);
+  }
+
+  // If Weather tab is already active on load, render once
+  if (weatherTabIsActive()) {
+    requestAnimationFrame(() => loadCleanWeatherCard());
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initWeatherUI);
+
 
 
   // ---------- Charts ----------
