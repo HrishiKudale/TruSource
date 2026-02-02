@@ -38,39 +38,44 @@
     status: $("tab-status"),
   };
 
-  function isStatusTabActive() {
-    const statusPanel = $("tab-status");
-    return !!(statusPanel && statusPanel.classList.contains("active"));
+  function setActiveTab(tabKey) {
+    tabBtns.forEach((b) => b.classList.toggle("active", b.dataset.tab === tabKey));
+    Object.keys(panels).forEach((k) => panels[k]?.classList.toggle("active", k === tabKey));
   }
 
-  // ✅ When user opens Crop Status tab: wait for layout, then init map + polygons
+  function isStatusTabActive() {
+    return !!$("tab-status")?.classList.contains("active");
+  }
+
+  // ✅ When user opens Crop Status tab: wait for visible, then render polygons
   async function openCropStatusAndRenderMap() {
-    // Ensure container exists
     const farmMapEl = $("farmMap");
     if (!farmMapEl) return;
 
-    // Wait for tab to be visible + layout to settle
-    await waitForVisible(farmMapEl, 7000);
+    // Make sure Status tab is actually active (otherwise height may be 0)
+    setActiveTab("status");
 
-    // Now init map (only now)
-    await ensureMapInitialized();
+    // Wait for tab panel to become visible
+    await waitForVisible(farmMapEl, 8000);
 
-    // Trigger resize (Google maps needs this after show/hide)
-    if (dashboardFarmMap && window.google?.maps?.event) {
-      setTimeout(() => google.maps.event.trigger(dashboardFarmMap, "resize"), 100);
-    }
+    // Init leaflet map (only when visible)
+    await ensureLeafletMapInitialized();
+
+    // Refresh size (critical when map was hidden)
+    setTimeout(() => {
+      try {
+        dashboardLeafletMap.invalidateSize();
+      } catch (e) {}
+    }, 80);
 
     // Draw polygons
-    await loadAndRenderFarms();
+    await loadAndRenderFarmsLeaflet();
   }
 
   tabBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      tabBtns.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-
       const tab = btn.dataset.tab;
-      Object.keys(panels).forEach((k) => panels[k]?.classList.toggle("active", k === tab));
+      setActiveTab(tab);
 
       if (tab === "status") {
         openCropStatusAndRenderMap().catch((e) => console.warn("Map render failed:", e));
@@ -283,6 +288,13 @@
       renderList("pendingTasksList", data.pending_tasks, tasksDate.value);
       renderList("warehouseList", data.warehouse_requests, warehouseDate.value);
       renderList("manufacturerList", data.manufacturer_requests, mfgDate.value);
+
+      // 🔥 Update empty states after lists are rendered (so illustrations show/hide correctly)
+      try {
+        if (typeof window.applyDashboardEmptyStates === "function") {
+          window.applyDashboardEmptyStates(window.__DASHBOARD__ || {});
+        }
+      } catch (e) {}
     }
 
     tasksDate.addEventListener("change", refreshAll);
@@ -327,91 +339,109 @@
     initDateFilters();
     initSoilSelectors();
 
-    // IMPORTANT: Do NOT auto-init map here.
-    // Map should only init when user opens Status tab (because other tabs hide it).
+    // Do not auto-init map. Only on Status tab.
   });
 })();
 
 /* ================================
-   Dashboard Map + Polygons (SAFE)
+   Leaflet Farm Map + Polygons (Dashboard)
    ================================ */
 
-let dashboardFarmMap = null;
-let farmPolygons = [];
+let dashboardLeafletMap = null;
+let dashboardPolygonLayers = [];
 
-function isMapsReady() {
-  return typeof google !== "undefined" && !!google.maps;
+function isLeafletReady() {
+  return typeof L !== "undefined";
 }
 
-function waitForVisible(el, timeoutMs = 5000) {
+function waitForVisible(el, timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const t = setInterval(() => {
-      const h = el?.offsetHeight || 0;
-      const w = el?.offsetWidth || 0;
-      const visible = h > 0 && w > 0 && el.offsetParent !== null;
+      const style = el ? getComputedStyle(el) : null;
+      const visible =
+        !!el &&
+        style &&
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        el.offsetWidth > 0 &&
+        el.offsetHeight > 0 &&
+        el.offsetParent !== null;
 
       if (visible) {
         clearInterval(t);
         resolve(true);
       } else if (Date.now() - start > timeoutMs) {
         clearInterval(t);
-        reject(new Error("Map container never became visible (height stayed 0)."));
+        reject(new Error("Map container never became visible"));
       }
     }, 120);
   });
 }
 
-async function ensureMapInitialized() {
-  if (dashboardFarmMap) return dashboardFarmMap;
-  if (!isMapsReady()) return null;
+async function ensureLeafletMapInitialized() {
+  if (dashboardLeafletMap) return dashboardLeafletMap;
 
   const el = document.getElementById("farmMap");
   if (!el) return null;
 
-  // Must be visible before creating map
-  await waitForVisible(el, 7000);
+  await waitForVisible(el, 8000);
 
-  dashboardFarmMap = new google.maps.Map(el, {
-    center: { lat: 20.5937, lng: 78.9629 },
+  // Wait until Leaflet script loads (defer)
+  const start = Date.now();
+  while (!isLeafletReady()) {
+    await new Promise((r) => setTimeout(r, 50));
+    if (Date.now() - start > 8000) throw new Error("Leaflet not loaded");
+  }
+
+  dashboardLeafletMap = L.map("farmMap", {
+    center: [20.5937, 78.9629],
     zoom: 5,
-    mapTypeId: "roadmap",
-    mapTypeControl: false,
-    streetViewControl: false,
-    fullscreenControl: false,
+    zoomControl: true,
   });
 
-  // expose for debugging
-  window.dashboardFarmMap = dashboardFarmMap;
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap contributors",
+  }).addTo(dashboardLeafletMap);
 
-  return dashboardFarmMap;
+  window.dashboardLeafletMap = dashboardLeafletMap; // debug
+
+  return dashboardLeafletMap;
 }
 
-function clearFarmPolygons() {
-  farmPolygons.forEach((p) => p.setMap(null));
-  farmPolygons = [];
-}
-
-function fitPolygons() {
-  if (!dashboardFarmMap) return;
-
-  const bounds = new google.maps.LatLngBounds();
-  let any = false;
-
-  farmPolygons.forEach((poly) => {
-    const path = poly.getPath();
-    for (let i = 0; i < path.getLength(); i++) {
-      bounds.extend(path.getAt(i));
-      any = true;
-    }
+function clearLeafletPolygons() {
+  if (!dashboardLeafletMap) return;
+  dashboardPolygonLayers.forEach((layer) => {
+    try {
+      dashboardLeafletMap.removeLayer(layer);
+    } catch (e) {}
   });
-
-  if (any) dashboardFarmMap.fitBounds(bounds);
+  dashboardPolygonLayers = [];
 }
 
-async function loadAndRenderFarms() {
-  const map = await ensureMapInitialized();
+function normalizeCoords(coords) {
+  if (!Array.isArray(coords)) return [];
+  return coords
+    .map((p) => {
+      const lat = Number(p?.lat);
+      const lng = Number(p?.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+      return [lat, lng];
+    })
+    .filter(Boolean);
+}
+
+async function loadAndRenderFarmsLeaflet() {
+  const map = await ensureLeafletMapInitialized();
   if (!map) return;
+
+  // Fix size after hidden->visible
+  setTimeout(() => {
+    try {
+      map.invalidateSize();
+    } catch (e) {}
+  }, 60);
 
   const cropTypeSelect = document.getElementById("cropTypeSelect");
   const cropType = cropTypeSelect ? cropTypeSelect.value : "";
@@ -429,58 +459,52 @@ async function loadAndRenderFarms() {
     return;
   }
 
-  clearFarmPolygons();
+  clearLeafletPolygons();
 
   if (!out?.ok || !Array.isArray(out.farms) || out.farms.length === 0) {
-    map.setCenter({ lat: 20.5937, lng: 78.9629 });
-    map.setZoom(5);
+    map.setView([20.5937, 78.9629], 5);
     return;
   }
 
-  out.farms.forEach((farm) => {
-    // strict numeric lat/lng
-    const coords = (farm.coordinates || [])
-      .map((p) => ({ lat: Number(p?.lat), lng: Number(p?.lng) }))
-      .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+  const allBounds = [];
 
+  out.farms.forEach((farm) => {
+    const coords = normalizeCoords(farm.coordinates);
     if (coords.length < 3) return;
 
-    const poly = new google.maps.Polygon({
-      paths: coords,
-      strokeColor: "#388e3c",
-      strokeOpacity: 1,
-      strokeWeight: 2,
-      fillColor: "#81c784",
-      fillOpacity: 0.45,
-      map,
-    });
+    const polygon = L.polygon(coords, {
+      color: "#0f913d",
+      weight: 2,
+      fillColor: "#0f913d",
+      fillOpacity: 0.3,
+    }).addTo(map);
 
-    farmPolygons.push(poly);
+    dashboardPolygonLayers.push(polygon);
 
-    poly.addListener("click", (e) => {
-      new google.maps.InfoWindow({
-        content: `
-          <div style="font-size:13px">
-            <b>${farm.cropType || "Farm"}</b><br/>
-            Crop ID: ${farm.crop_id || "-"}<br/>
-            Area: ${farm.area_size || "-"} acres<br/>
-            Planted: ${farm.date_planted || "-"}
-          </div>
-        `,
-        position: e.latLng,
-      }).open(map);
-    });
+    const infoHtml = `
+      <div style="font-size:13px;">
+        <strong>${farm.cropType || "Crop"}</strong><br/>
+        Crop ID: ${farm.crop_id || "-"}<br/>
+        Area: ${farm.area_size || "-"} acres<br/>
+        Planted: ${farm.date_planted || "-"}
+      </div>
+    `;
+
+    polygon.bindPopup(infoHtml);
+
+    coords.forEach((c) => allBounds.push(c));
   });
 
-  fitPolygons();
+  if (allBounds.length) {
+    map.fitBounds(allBounds, { padding: [20, 20] });
+  }
 }
 
 /**
- * IMPORTANT:
- * Google callback should ONLY set a ready flag.
- * Do not init map here because tab might be hidden.
+ * Keeping this so your existing HTML callback won't break
+ * (even if you removed Google Maps script, no issue)
  */
 window.initFarmMap = function initFarmMap() {
-  window.__MAPS_READY__ = true;
-  // Do nothing else here.
+  // For Leaflet dashboard we do nothing here.
+  // Rendering will happen when user opens Status tab.
 };

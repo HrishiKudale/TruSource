@@ -400,18 +400,33 @@
   {{ dashboard|tojson|safe }}
 </script>
 
-<script>
-  window.__DASHBOARD__ = JSON.parse(document.getElementById("dashboard-json").textContent || "{}");
+<script id="dashboard-json" type="application/json">
+  {{ dashboard|tojson|safe }}
 </script>
 
 <script>
+  window.__DASHBOARD__ = JSON.parse(
+    document.getElementById("dashboard-json")?.textContent || "{}"
+  );
+</script>
+
+<!-- ✅ Leaflet must load BEFORE farmer_dashboard.js -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  defer
+></script>
+
+<script>
   /**
-   * ✅ Correct empty-state rule:
-   * Show empty illustration only if that card has no data.
-   *
-   * Note: charts/list rendering happens inside farmer_dashboard.js after DOMContentLoaded,
-   * so we call applyEmptyStates twice: once on load, and again after a short delay.
+   * ✅ Empty-state rule:
+   * Each card shows illustration only if its own data is missing.
+   * IMPORTANT: Do not break tabs/map by hiding parent containers incorrectly.
    */
+
   function toggleEmptyState(emptyElId, contentElId, isEmpty) {
     const emptyEl = document.getElementById(emptyElId);
     const contentEl = contentElId ? document.getElementById(contentElId) : null;
@@ -424,30 +439,32 @@
   function hasAnySoilData(d) {
     const s = d?.soil || d?.soil_data || null;
     if (!s) return false;
-    // any numeric array present
-    const keys = ["soil_temp","soil_moisture","ph","npk"];
-    return keys.some(k => Array.isArray(s?.[k]) && s[k].length > 0);
+    const keys = ["soil_temp", "soil_moisture", "ph", "npk"];
+    return keys.some((k) => Array.isArray(s?.[k]) && s[k].length > 0);
   }
 
   function hasAnyWeatherData(d) {
     return !!(d?.weather || d?.weather_data || d?.weather_image_url || d?.geo);
   }
 
-  function hasAnyFarms(d) {
-    // if you inject farms in dashboard JSON later; otherwise map API fetch handles it.
-    return Array.isArray(d?.farms) && d.farms.length > 0;
-  }
-
-  function applyDashboardEmptyStates(dashboard) {
-    // Weather & Crop Health: empty only if nothing for soil/weather and no crops
+  /**
+   * ✅ Main empty-state applier
+   * Note:
+   * - Weather card should NOT hide tabs if at least crops exist
+   * - Map loads via API fetch, so farms are not required in dashboard JSON
+   */
+  window.applyDashboardEmptyStates = function applyDashboardEmptyStates(dashboard) {
+    // Weather & Crop Health: empty only if truly no crops, no soil series, no weather info
     const hasCrops = Array.isArray(dashboard?.crops) && dashboard.crops.length > 0;
     const soilOk = hasAnySoilData(dashboard);
     const weatherOk = hasAnyWeatherData(dashboard);
+
     const weatherHealthEmpty = !(hasCrops || soilOk || weatherOk);
 
+    // ✅ If empty, show illustration; if not empty, show normal content (tabs)
     toggleEmptyState("emptyWeatherCard", "weatherCardContent", weatherHealthEmpty);
 
-    // Orders: empty if total orders is 0 (values set by JS)
+    // Orders: empty if total is 0
     const totalOrders = Number(document.getElementById("orderTotal")?.textContent || "0");
     toggleEmptyState("emptyOrderCard", "orderCardContent", totalOrders <= 0);
 
@@ -469,42 +486,33 @@
     toggleEmptyState("emptyWarehouseCard", null, whEmpty);
     toggleEmptyState("emptyManufacturerCard", null, mfgEmpty);
 
-    // Weather image: if src empty, show fallback
+    // Weather image fallback (optional)
     const img = document.getElementById("weatherHeroImg");
     const fb = document.getElementById("weatherFallback");
     if (img && fb) {
-      if (!img.getAttribute("src")) {
+      const src = img.getAttribute("src");
+      if (!src) {
         img.style.display = "none";
         fb.style.display = "flex";
       } else {
-        img.onerror = () => { img.style.display = "none"; fb.style.display = "flex"; };
+        img.onerror = () => {
+          img.style.display = "none";
+          fb.style.display = "flex";
+        };
       }
     }
-  }
+  };
 
   document.addEventListener("DOMContentLoaded", function () {
     // initial pass
-    applyDashboardEmptyStates(window.__DASHBOARD__ || {});
-    // second pass after charts/lists fill
-    setTimeout(() => applyDashboardEmptyStates(window.__DASHBOARD__ || {}), 800);
-    setTimeout(() => applyDashboardEmptyStates(window.__DASHBOARD__ || {}), 1800);
+    window.applyDashboardEmptyStates(window.__DASHBOARD__ || {});
+    // repeat after charts/lists fill
+    setTimeout(() => window.applyDashboardEmptyStates(window.__DASHBOARD__ || {}), 800);
+    setTimeout(() => window.applyDashboardEmptyStates(window.__DASHBOARD__ || {}), 1800);
   });
-
-  // ✅ Google maps callback hook (maps script loads this)
-  window.initFarmMap = function () {
-    if (typeof initDashboardFarmMap === "function") {
-      initDashboardFarmMap();
-    }
-  };
 </script>
 
-<script src="{{ url_for('static', filename='js/farmer_dashboard.js') }}"></script>
-
-<!-- ✅ IMPORTANT: keep geometry (for area/bounds if used), no need drawing here -->
-<script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDg3eGetNDtVhtw_lfD6Z6O0CfgEgCSaYU&libraries=geometry&loading=async&callback=initFarmMap"
-  async
-  defer
-></script>
+<!-- ✅ farmer_dashboard.js should run AFTER leaflet is available (defer ensures order) -->
+<script src="{{ url_for('static', filename='js/farmer_dashboard.js') }}" defer></script>
 
 {% endblock %}
