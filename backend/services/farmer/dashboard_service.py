@@ -319,7 +319,7 @@ class DashboardService:
         if db is None:
             return []
 
-        col = db["farmer_coordinates"]
+        col = db["farm_coordinates"]
 
         q = {"user_id": user_id}
 
