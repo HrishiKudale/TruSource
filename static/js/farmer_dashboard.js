@@ -101,6 +101,210 @@
     }
   });
 
+
+
+
+
+  /* ======================================
+   Clean Hourly Weather (Open-Meteo)
+   ====================================== */
+
+function wxFmtHourLabel(dateObj, isNow) {
+  if (isNow) return "Now";
+  return dateObj.toLocaleTimeString([], { hour: "numeric" }).replace(" ", "");
+}
+
+// ---- Minimal animated SVG icon set (clean line style) ----
+function wxSvgIcon(code) {
+  // Return inline SVG strings. Keep them clean (stroke, minimal fill).
+  // Add wx-anim-float / wx-anim-wiggle classes for gentle motion.
+  const common = `stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"`;
+
+  // Sunny
+  const sun = `
+    <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="7" ${common}></circle>
+      <path d="M24 4v6" ${common}></path>
+      <path d="M24 38v6" ${common}></path>
+      <path d="M4 24h6" ${common}></path>
+      <path d="M38 24h6" ${common}></path>
+      <path d="M9 9l4 4" ${common}></path>
+      <path d="M35 35l4 4" ${common}></path>
+      <path d="M39 9l-4 4" ${common}></path>
+      <path d="M13 35l-4 4" ${common}></path>
+    </svg>
+  `;
+
+  // Cloud
+  const cloud = `
+    <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M16 34h18a8 8 0 0 0 0-16 10 10 0 0 0-19-3A7 7 0 0 0 16 34Z" ${common}></path>
+    </svg>
+  `;
+
+  // Partly cloudy
+  const partly = `
+    <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M18 14a6 6 0 1 0 0.1 0" ${common}></path>
+      <path d="M18 6v4" ${common}></path>
+      <path d="M8 14h4" ${common}></path>
+      <path d="M30 14h4" ${common}></path>
+      <path d="M11 7l3 3" ${common}></path>
+      <path d="M25 7l-3 3" ${common}></path>
+      <path d="M18 34h18a8 8 0 0 0 0-16 10 10 0 0 0-19-3A7 7 0 0 0 18 34Z" ${common}></path>
+    </svg>
+  `;
+
+  // Rain
+  const rain = `
+    <svg class="wx-anim-wiggle" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M16 28h18a7 7 0 0 0 0-14 10 10 0 0 0-19-3A7 7 0 0 0 16 28Z" ${common}></path>
+      <path d="M18 34l-2 4" ${common}></path>
+      <path d="M26 34l-2 4" ${common}></path>
+      <path d="M34 34l-2 4" ${common}></path>
+    </svg>
+  `;
+
+  // Thunder
+  const thunder = `
+    <svg class="wx-anim-wiggle" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M16 26h18a7 7 0 0 0 0-14 10 10 0 0 0-19-3A7 7 0 0 0 16 26Z" ${common}></path>
+      <path d="M25 26l-6 10h6l-2 10 8-14h-6l2-6" ${common}></path>
+    </svg>
+  `;
+
+  // Fog
+  const fog = `
+    <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M10 18h28" ${common}></path>
+      <path d="M6 24h30" ${common}></path>
+      <path d="M12 30h26" ${common}></path>
+    </svg>
+  `;
+
+  // Open-Meteo codes mapping (simplified)
+  const c = Number(code || 0);
+  if ([0, 1].includes(c)) return sun;
+  if ([2].includes(c)) return partly;
+  if ([3].includes(c)) return cloud;
+  if ([45, 48].includes(c)) return fog;
+  if ([51, 53, 55, 56, 57, 61, 63, 65, 80, 81, 82].includes(c)) return rain;
+  if ([95, 96, 99].includes(c)) return thunder;
+
+  return cloud;
+}
+
+function wxSetHourlySkeleton() {
+  const row = document.getElementById("wxHourlyRow");
+  if (!row) return;
+  row.innerHTML = `
+    <div class="wx-hourly-skeleton">
+      <div class="wx-skel-item"></div><div class="wx-skel-item"></div><div class="wx-skel-item"></div>
+      <div class="wx-skel-item"></div><div class="wx-skel-item"></div><div class="wx-skel-item"></div>
+    </div>
+  `;
+}
+
+function wxSetHourlyError(msg) {
+  const row = document.getElementById("wxHourlyRow");
+  if (!row) return;
+  row.innerHTML = `<div class="muted" style="padding:10px;">${msg || "Weather unavailable"}</div>`;
+}
+
+async function wxFetchHourly(lat, lng) {
+  // Hourly temp + weathercode, pick next hours, timezone auto
+  const url =
+    `https://api.open-meteo.com/v1/forecast` +
+    `?latitude=${encodeURIComponent(lat)}` +
+    `&longitude=${encodeURIComponent(lng)}` +
+    `&current_weather=true` +
+    `&hourly=temperature_2m,weathercode` +
+    `&forecast_days=2` +
+    `&timezone=auto`;
+
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`Weather API failed (${res.status})`);
+  return res.json();
+}
+
+function wxRenderHourly(data) {
+  const row = document.getElementById("wxHourlyRow");
+  const meta = document.getElementById("wxHourlyMeta");
+  if (!row) return;
+
+  const times = data?.hourly?.time || [];
+  const temps = data?.hourly?.temperature_2m || [];
+  const codes = data?.hourly?.weathercode || [];
+
+  // find closest index to now
+  const now = new Date();
+  let startIdx = 0;
+  for (let i = 0; i < times.length; i++) {
+    const t = new Date(times[i]);
+    if (t.getTime() >= now.getTime()) { startIdx = i; break; }
+  }
+
+  // build 6 items: Now + next 5 slots (like screenshot)
+  const items = [];
+  for (let k = 0; k < 6; k++) {
+    const i = startIdx + k;
+    if (!times[i]) break;
+    const t = new Date(times[i]);
+    const isNow = k === 0;
+    const label = wxFmtHourLabel(t, isNow);
+    const temp = Math.round(Number(temps[i] ?? 0));
+    const icon = wxSvgIcon(codes[i]);
+    items.push(`
+      <div class="wx-hour-item">
+        <div class="wx-hour-time">${label}</div>
+        <div class="wx-hour-icon">${icon}</div>
+        <div class="wx-hour-temp">${temp}°</div>
+      </div>
+    `);
+  }
+
+  row.innerHTML = items.join("");
+
+  // meta line
+  if (meta) {
+    const cur = data?.current_weather;
+    const curTemp = Number(cur?.temperature ?? NaN);
+    const curWind = Number(cur?.windspeed ?? NaN);
+    meta.textContent = (Number.isFinite(curTemp) && Number.isFinite(curWind))
+      ? `Now: ${curTemp.toFixed(1)}°C • Wind ${curWind.toFixed(1)} km/h`
+      : "Updated just now";
+  }
+}
+
+async function loadCleanHourlyWeatherCard() {
+  const d = window.__DASHBOARD__ || {};
+  const geo = d?.geo || {};
+
+  const lat = Number(geo?.lat);
+  const lng = Number(geo?.lng);
+
+  const locText = document.getElementById("wxLocText");
+  if (locText) {
+    locText.textContent =
+      (geo?.address && String(geo.address).trim()) ||
+      (Number.isFinite(lat) && Number.isFinite(lng) ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : "—");
+  }
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    wxSetHourlyError("No location found. Add farm coordinates to view weather.");
+    return;
+  }
+
+  wxSetHourlySkeleton();
+  try {
+    const data = await wxFetchHourly(lat, lng);
+    wxRenderHourly(data);
+  } catch (e) {
+    console.error("Hourly weather fetch failed:", e);
+    wxSetHourlyError("Weather data unavailable right now.");
+  }
+}
+
   // ---------- Charts ----------
   let soilChart, orderChart, shipChart;
 

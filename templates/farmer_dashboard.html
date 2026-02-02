@@ -179,20 +179,26 @@
               </button>
             </div>
 
-            <!-- ✅ AccuWeather-like Weather Card -->
-            <div id="weatherAccuCard" class="wx-card">
-              <!-- JS will render content -->
-              <div class="wx-loading">
-                <div class="wx-spinner" aria-hidden="true"></div>
-                <div class="wx-loading-text">Fetching weather…</div>
+            <div class="wx-clean-card" id="wxHourlyCard">
+              <div class="wx-clean-header">
+                <div class="wx-clean-title">Hourly Forecast</div>
+                <div class="wx-clean-sub" id="wxHourlyMeta">—</div>
+              </div>
+
+              <div class="wx-hourly-row" id="wxHourlyRow">
+                <!-- JS fills items -->
+                <div class="wx-hourly-skeleton">
+                  <div class="wx-skel-item"></div><div class="wx-skel-item"></div><div class="wx-skel-item"></div>
+                  <div class="wx-skel-item"></div><div class="wx-skel-item"></div><div class="wx-skel-item"></div>
+                </div>
               </div>
             </div>
 
-            <!-- Optional: keep geo text below if you want -->
             <div class="muted" style="margin-top:10px; font-size:12px;">
               Location: <span id="wxLocText">—</span>
             </div>
           </div>
+
 
 
 
