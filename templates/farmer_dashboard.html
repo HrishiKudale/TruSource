@@ -417,7 +417,9 @@
     const hasCrops = Array.isArray(dashboard?.crops) && dashboard.crops.length > 0;
     const hasSoil = !!dashboard?.soil || !!dashboard?.soil_data || !!dashboard?.soilSeries;
     const hasWeather = !!dashboard?.weather || !!dashboard?.weather_data || !!dashboard?.weather_image_url;
-    const weatherEmpty = !(hasCrops || hasSoil || hasWeather);
+    // if you always want the tabs to stay visible:
+    const weatherEmpty = false;
+
 
     toggleEmptyState({
       emptyElId: "emptyWeatherCard",
@@ -466,11 +468,18 @@
     applyDashboardEmptyStates(window.__DASHBOARD__ || {});
   });
 
+
+  // Google Maps callback
   window.initFarmMap = function () {
-    if (typeof initDashboardFarmMap === "function") {
-      initDashboardFarmMap();
+    window.__MAPS_READY__ = true;
+
+    // if your JS has a hook, call it
+    if (typeof window.onDashboardMapsReady === "function") {
+      window.onDashboardMapsReady();
     }
   };
+
+
 </script>
 
 <script src="{{ url_for('static', filename='js/farmer_dashboard.js') }}"></script>

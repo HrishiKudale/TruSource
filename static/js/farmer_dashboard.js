@@ -327,24 +327,18 @@
     if (isStatusTabActive()) openCropStatusAndRenderMap();
   });
 })();
-
 /* ================================
-   Dashboard Map + Polygons (WORKING)
+   Dashboard Map + Polygons (FINAL FIX)
    ================================ */
 
-// IMPORTANT:
-// Do NOT use "farmMap" variable name because <div id="farmMap"> creates window.farmMap element.
+// IMPORTANT: <div id="farmMap"> creates window.farmMap (HTMLDivElement).
+// Never use variable name "farmMap" in JS.
 let dashboardFarmMap = null;
 let farmPolygons = [];
-let mapsLoaded = false;
-
-// Google Maps callback
-window.initFarmMap = function initFarmMap() {
-  mapsLoaded = true;
-};
+let mapInitializedOnce = false;
 
 function isMapsReady() {
-  return mapsLoaded && typeof window.google !== "undefined" && !!window.google.maps;
+  return !!window.__MAPS_READY__ && typeof google !== "undefined" && !!google.maps;
 }
 
 function clearFarmPolygons() {
@@ -357,7 +351,7 @@ function ensureMapInitialized() {
 
   const el = document.getElementById("farmMap");
   if (!el) {
-    console.warn("❌ #farmMap div not found");
+    console.warn("❌ #farmMap element not found");
     return;
   }
 
@@ -369,6 +363,15 @@ function ensureMapInitialized() {
     streetViewControl: false,
     fullscreenControl: false,
   });
+
+  mapInitializedOnce = true;
+}
+
+function forceMapResize() {
+  if (!dashboardFarmMap || !google?.maps?.event) return;
+  setTimeout(() => {
+    google.maps.event.trigger(dashboardFarmMap, "resize");
+  }, 100);
 }
 
 function fitPolygons() {
@@ -410,7 +413,6 @@ async function loadAndRenderFarms() {
 
   clearFarmPolygons();
 
-  // Your API returns: { ok:true, farms:[...] }
   if (!out?.ok || !Array.isArray(out.farms) || out.farms.length === 0) {
     dashboardFarmMap.setCenter({ lat: 20.5937, lng: 78.9629 });
     dashboardFarmMap.setZoom(5);
@@ -418,7 +420,7 @@ async function loadAndRenderFarms() {
   }
 
   out.farms.forEach((farm) => {
-    // Safety: force numbers (prevents "lat not a number" errors)
+    // Safety: always convert to Number (prevents "lat not a number")
     const coords = (farm.coordinates || [])
       .map((p) => {
         const lat = Number(p?.lat);
@@ -461,25 +463,50 @@ async function loadAndRenderFarms() {
   fitPolygons();
 }
 
-// Called by the main module when Status tab opens
+/**
+ * This is called when user opens "Crop Status" tab.
+ * It guarantees:
+ * 1) tab is visible
+ * 2) map is initialized
+ * 3) resize is triggered
+ * 4) polygons drawn
+ */
 window.openDashboardStatusMap = function openDashboardStatusMap() {
+  const statusPanel = document.getElementById("tab-status");
+  const wrapper = document.getElementById("weatherCardContent");
+
+  // If empty state hid the entire card, map can never render.
+  if (wrapper && wrapper.style.display === "none") {
+    console.warn("⚠️ weatherCardContent is hidden by empty-state logic. Map cannot render.");
+    return;
+  }
+
   const start = Date.now();
   const t = setInterval(() => {
     if (isMapsReady()) {
       clearInterval(t);
 
       ensureMapInitialized();
+      forceMapResize();
 
-      // Force render after visible
+      // draw polygons AFTER resize
       setTimeout(() => {
-        google.maps.event.trigger(dashboardFarmMap, "resize");
         loadAndRenderFarms();
       }, 150);
     }
 
-    if (Date.now() - start > 7000) {
+    if (Date.now() - start > 8000) {
       clearInterval(t);
-      console.warn("⚠️ Google Maps not ready. Check API key / referer restrictions.");
+      console.warn("⚠️ Google Maps not ready. Check API key referer & script callback.");
     }
   }, 150);
+};
+
+/**
+ * Optional hook called by initFarmMap callback (when google script loads)
+ */
+window.onDashboardMapsReady = function () {
+  // if user is already on status tab and refreshed
+  const isStatusActive = document.getElementById("tab-status")?.classList.contains("active");
+  if (isStatusActive) window.openDashboardStatusMap();
 };
