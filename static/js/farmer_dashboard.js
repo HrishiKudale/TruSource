@@ -232,9 +232,10 @@
     const filtered = (items || []).filter((x) => withinTill(x.due_at || x.created_at, selectedDate));
 
     if (!filtered.length) {
-      el.innerHTML = `<div class="muted small" style="padding:10px;">No items</div>`;
+      // Leave empty - empty-state illustration will handle UI
       return;
-    }
+}
+
 
     filtered.forEach((it) => {
       const title = it.title || it.task || "Task";

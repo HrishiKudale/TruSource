@@ -400,10 +400,6 @@
   {{ dashboard|tojson|safe }}
 </script>
 
-<script id="dashboard-json" type="application/json">
-  {{ dashboard|tojson|safe }}
-</script>
-
 <script>
   window.__DASHBOARD__ = JSON.parse(
     document.getElementById("dashboard-json")?.textContent || "{}"
@@ -411,22 +407,10 @@
 </script>
 
 <!-- ✅ Leaflet must load BEFORE farmer_dashboard.js -->
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
-<script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  defer
-></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 
 <script>
-  /**
-   * ✅ Empty-state rule:
-   * Each card shows illustration only if its own data is missing.
-   * IMPORTANT: Do not break tabs/map by hiding parent containers incorrectly.
-   */
-
   function toggleEmptyState(emptyElId, contentElId, isEmpty) {
     const emptyEl = document.getElementById(emptyElId);
     const contentEl = contentElId ? document.getElementById(contentElId) : null;
@@ -447,28 +431,35 @@
     return !!(d?.weather || d?.weather_data || d?.weather_image_url || d?.geo);
   }
 
-  /**
-   * ✅ Main empty-state applier
-   * Note:
-   * - Weather card should NOT hide tabs if at least crops exist
-   * - Map loads via API fetch, so farms are not required in dashboard JSON
-   */
+  // ✅ KPI safety: if backend doesn't send kpis, keep existing DOM numbers
+  function applyKpis(d) {
+    const k = d?.kpis || {};
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (val === undefined || val === null) return; // keep server-rendered fallback
+      el.textContent = String(val);
+    };
+
+    set("kpiActiveCrops", k.active_crops);
+    set("kpiPendingPayments", k.pending_payments);
+    set("kpiBuyerOffers", k.buyer_offers);
+    set("kpiUpcomingShipments", k.upcoming_shipments);
+  }
+
   window.applyDashboardEmptyStates = function applyDashboardEmptyStates(dashboard) {
-    // Weather & Crop Health: empty only if truly no crops, no soil series, no weather info
+    // Weather & Crop Health
     const hasCrops = Array.isArray(dashboard?.crops) && dashboard.crops.length > 0;
     const soilOk = hasAnySoilData(dashboard);
     const weatherOk = hasAnyWeatherData(dashboard);
-
     const weatherHealthEmpty = !(hasCrops || soilOk || weatherOk);
-
-    // ✅ If empty, show illustration; if not empty, show normal content (tabs)
     toggleEmptyState("emptyWeatherCard", "weatherCardContent", weatherHealthEmpty);
 
-    // Orders: empty if total is 0
+    // Orders
     const totalOrders = Number(document.getElementById("orderTotal")?.textContent || "0");
     toggleEmptyState("emptyOrderCard", "orderCardContent", totalOrders <= 0);
 
-    // Shipments: empty if sum is 0
+    // Shipments
     const shipSum =
       Number(document.getElementById("sRequested")?.textContent || "0") +
       Number(document.getElementById("sPending")?.textContent || "0") +
@@ -477,16 +468,16 @@
       Number(document.getElementById("sPayment")?.textContent || "0");
     toggleEmptyState("emptyShipmentCard", "shipmentCardContent", shipSum <= 0);
 
-    // Tasks/Warehouse/Manufacturer: empty if list has no items
-    const tasksEmpty = (document.getElementById("pendingTasksList")?.children?.length || 0) === 0;
-    const whEmpty = (document.getElementById("warehouseList")?.children?.length || 0) === 0;
-    const mfgEmpty = (document.getElementById("manufacturerList")?.children?.length || 0) === 0;
+    // ✅ RIGHT CARDS: use dashboard data, not DOM children
+    const tasksEmpty = !(Array.isArray(dashboard?.pending_tasks) && dashboard.pending_tasks.length > 0);
+    const whEmpty = !(Array.isArray(dashboard?.warehouse_requests) && dashboard.warehouse_requests.length > 0);
+    const mfgEmpty = !(Array.isArray(dashboard?.manufacturer_requests) && dashboard.manufacturer_requests.length > 0);
 
     toggleEmptyState("emptyTasksCard", null, tasksEmpty);
     toggleEmptyState("emptyWarehouseCard", null, whEmpty);
     toggleEmptyState("emptyManufacturerCard", null, mfgEmpty);
 
-    // Weather image fallback (optional)
+    // Weather image fallback
     const img = document.getElementById("weatherHeroImg");
     const fb = document.getElementById("weatherFallback");
     if (img && fb) {
@@ -504,15 +495,17 @@
   };
 
   document.addEventListener("DOMContentLoaded", function () {
-    // initial pass
-    window.applyDashboardEmptyStates(window.__DASHBOARD__ || {});
-    // repeat after charts/lists fill
-    setTimeout(() => window.applyDashboardEmptyStates(window.__DASHBOARD__ || {}), 800);
-    setTimeout(() => window.applyDashboardEmptyStates(window.__DASHBOARD__ || {}), 1800);
+    const d = window.__DASHBOARD__ || {};
+    applyKpis(d);
+
+    // Run empty state logic immediately and after JS renders lists/charts
+    window.applyDashboardEmptyStates(d);
+    setTimeout(() => window.applyDashboardEmptyStates(d), 800);
+    setTimeout(() => window.applyDashboardEmptyStates(d), 1800);
   });
 </script>
 
-<!-- ✅ farmer_dashboard.js should run AFTER leaflet is available (defer ensures order) -->
+<!-- ✅ farmer_dashboard.js should run AFTER leaflet is available -->
 <script src="{{ url_for('static', filename='js/farmer_dashboard.js') }}" defer></script>
 
 {% endblock %}
