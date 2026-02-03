@@ -216,52 +216,118 @@
 .status-pill .big{font-size:18px; font-weight:800; color:#111; margin-top:4px;}
 
 /* =========================
-   Clean Hourly Weather Card
+   Clean Weather Card (Web)
    ========================= */
 
-.wx-clean-card{
+.wx-card{
   background:#fff;
-  border:1px solid #f1f1f1;
+  border:1px solid #eef2f7;
   border-radius:18px;
   padding:16px;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
 }
 
-.wx-clean-header{
+.wx-head{
   display:flex;
-  align-items:flex-end;
   justify-content:space-between;
-  gap:10px;
-  margin-bottom:12px;
+  align-items:center;
+  gap:16px;
 }
 
-.wx-clean-title{
-  font-size:18px;
-  font-weight:800;
+.wx-title{
+  font-size:16px;
+  font-weight:900;
+  color:#0f172a;
+  letter-spacing:-0.2px;
+}
+
+.wx-sub{
+  margin-top:4px;
+  font-size:12px;
+  color:#64748b;
+}
+
+.wx-now{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.wx-nowIcon{
+  width:48px;
+  height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.wx-nowTemp{
+  font-size:28px;
+  font-weight:900;
+  color:#0f172a;
+  letter-spacing:-0.4px;
+}
+
+.wx-stats{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:10px;
+}
+
+.wx-stat{
+  border:1px solid #f1f5f9;
+  background:#fbfdff;
+  border-radius:14px;
+  padding:10px;
+}
+
+.wx-statLabel{
+  font-size:11px;
+  color:#64748b;
+  font-weight:700;
+}
+
+.wx-statVal{
+  margin-top:4px;
+  font-size:14px;
+  font-weight:900;
   color:#0f172a;
 }
 
-.wx-clean-sub{
+.wx-rowHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  margin-bottom:10px;
+  gap:10px;
+}
+
+.wx-rowTitle{
+  font-size:14px;
+  font-weight:900;
+  color:#0f172a;
+}
+
+.wx-rowMeta{
   font-size:12px;
   color:#64748b;
   white-space:nowrap;
 }
 
-.wx-hourly-row{
+.wx-strip{
   display:flex;
-  gap:22px;
+  gap:18px;
   overflow-x:auto;
   padding-bottom:6px;
   scroll-snap-type: x mandatory;
 }
 
-.wx-hourly-row::-webkit-scrollbar{ height:6px; }
-.wx-hourly-row::-webkit-scrollbar-thumb{
-  background:#e5e7eb; border-radius:999px;
-}
-.wx-hourly-row::-webkit-scrollbar-track{ background:transparent; }
+.wx-strip::-webkit-scrollbar{ height:6px; }
+.wx-strip::-webkit-scrollbar-thumb{ background:#e5e7eb; border-radius:999px; }
+.wx-strip::-webkit-scrollbar-track{ background:transparent; }
 
-.wx-hour-item{
+.wx-item{
   min-width:92px;
   display:flex;
   flex-direction:column;
@@ -270,61 +336,98 @@
   scroll-snap-align:start;
 }
 
-.wx-hour-time{
-  font-size:16px;
-  font-weight:800;
-  color:#0f172a;
-  letter-spacing:-0.2px;
-}
-
-.wx-hour-icon{
-  width:48px;
-  height:48px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.wx-hour-temp{
-  font-size:22px;
+.wx-time{
+  font-size:14px;
   font-weight:900;
   color:#0f172a;
-  letter-spacing:-0.4px;
 }
 
-/* Subtle motion (not flashy) */
-.wx-anim-float{
-  animation: wxFloat 2.8s ease-in-out infinite;
-  transform-origin:center;
-}
-@keyframes wxFloat{
-  0%,100%{ transform: translateY(0px); }
-  50%{ transform: translateY(-4px); }
+.wx-icon{
+  width:48px;height:48px;
+  display:flex;align-items:center;justify-content:center;
 }
 
-.wx-anim-wiggle{
-  animation: wxWiggle 2.9s ease-in-out infinite;
-  transform-origin:center;
-}
-@keyframes wxWiggle{
-  0%,100%{ transform: rotate(0deg); }
-  50%{ transform: rotate(2deg); }
+.wx-temp{
+  font-size:18px;
+  font-weight:900;
+  color:#0f172a;
 }
 
-/* Skeleton */
-.wx-hourly-skeleton{ display:flex; gap:22px; }
-.wx-skel-item{
-  width:92px;
-  height:118px;
+.wx-tempSub{
+  font-size:14px;
+  color:#64748b;
+  font-weight:800;
+}
+
+/* subtle svg motion */
+.wx-anim-float{ animation: wxFloat 2.8s ease-in-out infinite; transform-origin:center; }
+@keyframes wxFloat{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+
+.wx-anim-wiggle{ animation: wxWiggle 2.9s ease-in-out infinite; transform-origin:center; }
+@keyframes wxWiggle{ 0%,100%{transform:rotate(0)} 50%{transform:rotate(2deg)} }
+
+/* skeleton */
+.wx-skeleton{
+  display:flex; gap:18px;
+}
+.wx-skel{
+  width:92px;height:118px;
   border-radius:14px;
   background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 45%, #f3f4f6 100%);
   background-size: 200% 100%;
   animation: wxSkel 1.2s linear infinite;
 }
-@keyframes wxSkel{
-  0%{ background-position: 0% 0%; }
-  100%{ background-position: 200% 0%; }
+@keyframes wxSkel{ 0%{background-position:0% 0} 100%{background-position:200% 0} }
+
+/* =========================
+   Location modal
+   ========================= */
+.wx-modal{ position:fixed; inset:0; z-index:9999; }
+.wx-modal-backdrop{
+  position:absolute; inset:0;
+  background:rgba(15, 23, 42, 0.35);
 }
+.wx-modal-box{
+  position:relative;
+  width:min(440px, calc(100% - 28px));
+  margin:10vh auto 0;
+  background:#fff;
+  border-radius:18px;
+  border:1px solid #eef2f7;
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.25);
+  padding:16px;
+}
+.wx-modal-title{
+  font-size:16px; font-weight:900; color:#0f172a;
+}
+.wx-modal-sub{
+  margin-top:6px;
+  font-size:13px;
+  color:#475569;
+  line-height:1.4;
+}
+.wx-modal-actions{
+  margin-top:14px;
+  display:flex; justify-content:flex-end; gap:10px;
+}
+.wx-btn{
+  border-radius:12px;
+  padding:10px 12px;
+  font-weight:800;
+  border:1px solid transparent;
+  cursor:pointer;
+}
+.wx-btn.ghost{
+  background:#fff;
+  border-color:#e2e8f0;
+  color:#0f172a;
+}
+.wx-btn.primary{
+  background:#16a34a;
+  color:#fff;
+}
+.wx-modal-note{ margin-top:10px; font-size:12px; }
+
 
 
 

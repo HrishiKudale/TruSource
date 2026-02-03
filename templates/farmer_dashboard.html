@@ -172,47 +172,90 @@
 
             <!-- WEATHER TAB -->
             <div class="tab-panel" id="tab-weather">
-              <div class="tab-top" style="justify-content:space-between; align-items:center;">
+              <div class="tab-top">
                 <div class="tab-label">Weather</div>
 
-                <button id="weatherRefreshBtn" class="select-ghost" type="button" style="padding:8px 12px;">
-                  Refresh
-                </button>
-              </div>
-
-              <!-- HOURLY STRIP (like your screenshot) -->
-              <div class="wx-clean-card" id="wxCard">
-                <div class="wx-clean-header">
-                  <div>
-                    <div class="wx-clean-title">Now</div>
-                    <div class="wx-clean-sub" id="wxLocText">—</div>
-                  </div>
-                  <div class="wx-clean-sub" id="wxHourlyMeta">—</div>
-                </div>
-
-                <div class="wx-hourly-row" id="wxHourlyRow">
-                  <div class="wx-hourly-skeleton">
-                    <div class="wx-skel-item"></div><div class="wx-skel-item"></div><div class="wx-skel-item"></div>
-                    <div class="wx-skel-item"></div><div class="wx-skel-item"></div><div class="wx-skel-item"></div>
-                  </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                  <button id="weatherUseMyLocationBtn" class="select-ghost" type="button">
+                    Use my location
+                  </button>
+                  <button id="weatherRefreshBtn" class="select-ghost" type="button">
+                    Refresh
+                  </button>
                 </div>
               </div>
 
-              <!-- WEEKLY STRIP -->
-              <div class="wx-clean-card" id="wxWeeklyCard" style="margin-top:12px;">
-                <div class="wx-clean-header">
-                  <div class="wx-clean-title">Next 7 Days</div>
-                  <div class="wx-clean-sub" id="wxWeeklyMeta">—</div>
+              <!-- Location small line -->
+              <div class="muted" style="margin-top:8px; font-size:12px;">
+                Location: <span id="wxLocText">—</span>
+              </div>
+
+              <!-- Current Weather -->
+              <div class="wx-card" style="margin-top:12px;">
+                <div class="wx-head">
+                  <div class="wx-left">
+                    <div class="wx-title">Current Weather</div>
+                    <div class="wx-sub" id="wxNowMeta">—</div>
+                  </div>
+                  <div class="wx-now">
+                    <div class="wx-nowIcon" id="wxNowIcon"></div>
+                    <div class="wx-nowTemp" id="wxNowTemp">—</div>
+                  </div>
                 </div>
 
-                <div class="wx-hourly-row" id="wxWeeklyRow">
-                  <div class="wx-hourly-skeleton">
-                    <div class="wx-skel-item"></div><div class="wx-skel-item"></div><div class="wx-skel-item"></div>
-                    <div class="wx-skel-item"></div><div class="wx-skel-item"></div><div class="wx-skel-item"></div>
+                <div class="wx-stats">
+                  <div class="wx-stat">
+                    <div class="wx-statLabel">Wind</div>
+                    <div class="wx-statVal" id="wxWind">—</div>
                   </div>
+                  <div class="wx-stat">
+                    <div class="wx-statLabel">Direction</div>
+                    <div class="wx-statVal" id="wxWindDir">—</div>
+                  </div>
+                  <div class="wx-stat">
+                    <div class="wx-statLabel">Code</div>
+                    <div class="wx-statVal" id="wxCode">—</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hourly -->
+              <div class="wx-card" style="margin-top:12px;">
+                <div class="wx-rowHead">
+                  <div class="wx-rowTitle">Next Hours</div>
+                  <div class="wx-rowMeta" id="wxHourlyMeta">—</div>
+                </div>
+                <div class="wx-strip" id="wxHourlyRow"></div>
+              </div>
+
+              <!-- Weekly -->
+              <div class="wx-card" style="margin-top:12px;">
+                <div class="wx-rowHead">
+                  <div class="wx-rowTitle">Next 7 Days</div>
+                  <div class="wx-rowMeta" id="wxWeeklyMeta">—</div>
+                </div>
+                <div class="wx-strip" id="wxWeeklyRow"></div>
+              </div>
+            </div>
+
+            <!-- Location Modal -->
+            <div class="wx-modal" id="wxLocModal" style="display:none;">
+              <div class="wx-modal-backdrop" data-close="1"></div>
+              <div class="wx-modal-box" role="dialog" aria-modal="true" aria-label="Location permission">
+                <div class="wx-modal-title">Use your current location?</div>
+                <div class="wx-modal-sub">
+                  We’ll fetch live weather for your exact area to show accurate field conditions.
+                </div>
+                <div class="wx-modal-actions">
+                  <button class="wx-btn ghost" data-close="1" type="button">Not now</button>
+                  <button class="wx-btn primary" id="wxAllowBtn" type="button">Allow location</button>
+                </div>
+                <div class="wx-modal-note muted">
+                  You can change this anytime using “Use my location”.
                 </div>
               </div>
             </div>
+
 
 
 

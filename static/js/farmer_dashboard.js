@@ -82,9 +82,6 @@
     }
 
     if (tab === "weather") {
-      loadAccuWeatherCard();
-    }
-    if (tab === "weather") {
       // allow DOM paint first
       requestAnimationFrame(() => loadCleanWeatherCard());
     }
@@ -108,268 +105,377 @@
 
 
 
+/* ============================================================
+   Clean Weather + Live Location (Open-Meteo)
+   - current + hourly + weekly
+   - clean UI + subtle animated SVG
+   - location modal permission flow
+   ============================================================ */
 
+(function () {
+  // ---------- tiny helpers ----------
+  const wx$ = (id) => document.getElementById(id);
 
-/* ======================================
-   Clean Weather (Open-Meteo) - FIXED
-   Supports: current + hourly + daily
-   ====================================== */
-
-function wxSetSkeleton(rowId) {
-  const row = document.getElementById(rowId);
-  if (!row) return;
-  row.innerHTML = `
-    <div class="wx-hourly-skeleton">
-      <div class="wx-skel-item"></div><div class="wx-skel-item"></div><div class="wx-skel-item"></div>
-      <div class="wx-skel-item"></div><div class="wx-skel-item"></div><div class="wx-skel-item"></div>
-    </div>
-  `;
-}
-
-function wxSetError(rowId, msg) {
-  const row = document.getElementById(rowId);
-  if (!row) return;
-  row.innerHTML = `<div class="muted" style="padding:10px;">${msg || "Weather unavailable"}</div>`;
-}
-
-function wxFmtHourLabel(dateObj, isNow) {
-  if (isNow) return "Now";
-  return dateObj
-    .toLocaleTimeString([], { hour: "numeric" })
-    .replace(" ", "");
-}
-
-function wxFmtDayLabel(dateStr, isToday) {
-  if (isToday) return "Today";
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString([], { weekday: "short" });
-}
-
-// ---- Minimal animated SVG icon set (clean line style) ----
-function wxSvgIcon(code) {
-  const common = `stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"`;
-  const sun = `
-    <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
-      <circle cx="24" cy="24" r="7" ${common}></circle>
-      <path d="M24 4v6" ${common}></path><path d="M24 38v6" ${common}></path>
-      <path d="M4 24h6" ${common}></path><path d="M38 24h6" ${common}></path>
-      <path d="M9 9l4 4" ${common}></path><path d="M35 35l4 4" ${common}></path>
-      <path d="M39 9l-4 4" ${common}></path><path d="M13 35l-4 4" ${common}></path>
-    </svg>
-  `;
-  const cloud = `
-    <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M16 34h18a8 8 0 0 0 0-16 10 10 0 0 0-19-3A7 7 0 0 0 16 34Z" ${common}></path>
-    </svg>
-  `;
-  const partly = `
-    <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M18 14a6 6 0 1 0 0.1 0" ${common}></path>
-      <path d="M18 6v4" ${common}></path><path d="M8 14h4" ${common}></path><path d="M30 14h4" ${common}></path>
-      <path d="M11 7l3 3" ${common}></path><path d="M25 7l-3 3" ${common}></path>
-      <path d="M18 34h18a8 8 0 0 0 0-16 10 10 0 0 0-19-3A7 7 0 0 0 18 34Z" ${common}></path>
-    </svg>
-  `;
-  const rain = `
-    <svg class="wx-anim-wiggle" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M16 28h18a7 7 0 0 0 0-14 10 10 0 0 0-19-3A7 7 0 0 0 16 28Z" ${common}></path>
-      <path d="M18 34l-2 4" ${common}></path>
-      <path d="M26 34l-2 4" ${common}></path>
-      <path d="M34 34l-2 4" ${common}></path>
-    </svg>
-  `;
-  const thunder = `
-    <svg class="wx-anim-wiggle" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M16 26h18a7 7 0 0 0 0-14 10 10 0 0 0-19-3A7 7 0 0 0 16 26Z" ${common}></path>
-      <path d="M25 26l-6 10h6l-2 10 8-14h-6l2-6" ${common}></path>
-    </svg>
-  `;
-  const fog = `
-    <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M10 18h28" ${common}></path>
-      <path d="M6 24h30" ${common}></path>
-      <path d="M12 30h26" ${common}></path>
-    </svg>
-  `;
-
-  const c = Number(code || 0);
-  if ([0, 1].includes(c)) return sun;
-  if ([2].includes(c)) return partly;
-  if ([3].includes(c)) return cloud;
-  if ([45, 48].includes(c)) return fog;
-  if ([51, 53, 55, 56, 57, 61, 63, 65, 80, 81, 82].includes(c)) return rain;
-  if ([95, 96, 99].includes(c)) return thunder;
-  return cloud;
-}
-
-async function wxFetchForecast(lat, lng) {
-  // ✅ Request BOTH hourly + daily so UI always has data
-  const url =
-    `https://api.open-meteo.com/v1/forecast` +
-    `?latitude=${encodeURIComponent(lat)}` +
-    `&longitude=${encodeURIComponent(lng)}` +
-    `&current_weather=true` +
-    `&hourly=temperature_2m,weathercode` +
-    `&daily=temperature_2m_max,temperature_2m_min,weathercode` +
-    `&forecast_days=7` +
-    `&timezone=auto`;
-
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) throw new Error(`Weather API failed (${res.status})`);
-  return res.json();
-}
-
-function wxRenderHourlyStrip(apiData) {
-  const row = document.getElementById("wxHourlyRow");
-  const meta = document.getElementById("wxHourlyMeta");
-  if (!row) return;
-
-  const times = apiData?.hourly?.time || [];
-  const temps = apiData?.hourly?.temperature_2m || [];
-  const codes = apiData?.hourly?.weathercode || [];
-
-  // If hourly not present, show a friendly message (weekly will still render)
-  if (!times.length || !temps.length) {
-    wxSetError("wxHourlyRow", "Hourly data not available. Showing weekly forecast.");
-    if (meta) meta.textContent = "—";
-    return;
-  }
-
-  const now = new Date();
-  let startIdx = 0;
-  for (let i = 0; i < times.length; i++) {
-    const t = new Date(times[i]);
-    if (t.getTime() >= now.getTime()) { startIdx = i; break; }
-  }
-
-  const items = [];
-  for (let k = 0; k < 6; k++) {
-    const i = startIdx + k;
-    if (!times[i]) break;
-
-    const t = new Date(times[i]);
-    const label = wxFmtHourLabel(t, k === 0);
-    const temp = Math.round(Number(temps[i] ?? 0));
-    const icon = wxSvgIcon(codes[i]);
-
-    items.push(`
-      <div class="wx-hour-item">
-        <div class="wx-hour-time">${label}</div>
-        <div class="wx-hour-icon">${icon}</div>
-        <div class="wx-hour-temp">${temp}°</div>
+  function wxSetStripSkeleton(el) {
+    if (!el) return;
+    el.innerHTML = `
+      <div class="wx-skeleton">
+        <div class="wx-skel"></div><div class="wx-skel"></div><div class="wx-skel"></div>
+        <div class="wx-skel"></div><div class="wx-skel"></div><div class="wx-skel"></div>
       </div>
-    `);
+    `;
   }
 
-  row.innerHTML = items.join("");
+  function wxSetStripError(el, msg) {
+    if (!el) return;
+    el.innerHTML = `<div class="muted" style="padding:10px;">${msg || "Weather unavailable"}</div>`;
+  }
 
-  // Meta: current weather summary
-  if (meta) {
+  function wxFmtHourLabel(dateObj, isNow) {
+    if (isNow) return "Now";
+    return dateObj.toLocaleTimeString([], { hour: "numeric" }).replace(" ", "");
+  }
+
+  function wxFmtDayLabel(dateStr, isToday) {
+    if (isToday) return "Today";
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString([], { weekday: "short" });
+  }
+
+  function wxWindDirText(deg) {
+    const d = Number(deg);
+    if (!Number.isFinite(d)) return "—";
+    const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+    return dirs[Math.round(d / 45) % 8] + ` (${Math.round(d)}°)`;
+  }
+
+  // ---- Clean animated SVG icon set ----
+  function wxSvgIcon(code) {
+    const common = `stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"`;
+    const sun = `
+      <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="7" ${common}></circle>
+        <path d="M24 4v6" ${common}></path><path d="M24 38v6" ${common}></path>
+        <path d="M4 24h6" ${common}></path><path d="M38 24h6" ${common}></path>
+        <path d="M9 9l4 4" ${common}></path><path d="M35 35l4 4" ${common}></path>
+        <path d="M39 9l-4 4" ${common}></path><path d="M13 35l-4 4" ${common}></path>
+      </svg>
+    `;
+    const cloud = `
+      <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M16 34h18a8 8 0 0 0 0-16 10 10 0 0 0-19-3A7 7 0 0 0 16 34Z" ${common}></path>
+      </svg>
+    `;
+    const partly = `
+      <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M18 14a6 6 0 1 0 0.1 0" ${common}></path>
+        <path d="M18 6v4" ${common}></path><path d="M8 14h4" ${common}></path><path d="M30 14h4" ${common}></path>
+        <path d="M11 7l3 3" ${common}></path><path d="M25 7l-3 3" ${common}></path>
+        <path d="M18 34h18a8 8 0 0 0 0-16 10 10 0 0 0-19-3A7 7 0 0 0 18 34Z" ${common}></path>
+      </svg>
+    `;
+    const rain = `
+      <svg class="wx-anim-wiggle" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M16 28h18a7 7 0 0 0 0-14 10 10 0 0 0-19-3A7 7 0 0 0 16 28Z" ${common}></path>
+        <path d="M18 34l-2 4" ${common}></path>
+        <path d="M26 34l-2 4" ${common}></path>
+        <path d="M34 34l-2 4" ${common}></path>
+      </svg>
+    `;
+    const thunder = `
+      <svg class="wx-anim-wiggle" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M16 26h18a7 7 0 0 0 0-14 10 10 0 0 0-19-3A7 7 0 0 0 16 26Z" ${common}></path>
+        <path d="M25 26l-6 10h6l-2 10 8-14h-6l2-6" ${common}></path>
+      </svg>
+    `;
+    const fog = `
+      <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M10 18h28" ${common}></path>
+        <path d="M6 24h30" ${common}></path>
+        <path d="M12 30h26" ${common}></path>
+      </svg>
+    `;
+
+    const c = Number(code || 0);
+    if ([0, 1].includes(c)) return sun;
+    if ([2].includes(c)) return partly;
+    if ([3].includes(c)) return cloud;
+    if ([45, 48].includes(c)) return fog;
+    if ([51, 53, 55, 56, 57, 61, 63, 65, 80, 81, 82].includes(c)) return rain;
+    if ([95, 96, 99].includes(c)) return thunder;
+    return cloud;
+  }
+
+  async function wxFetchForecast(lat, lng) {
+    const url =
+      `https://api.open-meteo.com/v1/forecast` +
+      `?latitude=${encodeURIComponent(lat)}` +
+      `&longitude=${encodeURIComponent(lng)}` +
+      `&current_weather=true` +
+      `&hourly=temperature_2m,weathercode` +
+      `&daily=temperature_2m_max,temperature_2m_min,weathercode` +
+      `&forecast_days=7` +
+      `&timezone=auto`;
+
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error(`Weather API failed (${res.status})`);
+    return res.json();
+  }
+
+  function wxRenderCurrent(apiData) {
     const cur = apiData?.current_weather;
-    const curTemp = Number(cur?.temperature ?? NaN);
-    const curWind = Number(cur?.windspeed ?? NaN);
-    const code = Number(cur?.weathercode ?? 0);
+    const nowTemp = wx$("wxNowTemp");
+    const nowIcon = wx$("wxNowIcon");
+    const nowMeta = wx$("wxNowMeta");
+    const wind = wx$("wxWind");
+    const windDir = wx$("wxWindDir");
+    const codeEl = wx$("wxCode");
 
-    meta.textContent =
-      Number.isFinite(curTemp) && Number.isFinite(curWind)
-        ? `Now: ${curTemp.toFixed(1)}°C • Wind ${curWind.toFixed(1)} km/h • Code ${code}`
-        : "Updated just now";
-  }
-}
+    if (!cur || !nowTemp || !nowIcon) return;
 
-function wxRenderWeeklyStrip(apiData) {
-  const row = document.getElementById("wxWeeklyRow");
-  const meta = document.getElementById("wxWeeklyMeta");
-  if (!row) return;
+    const t = Number(cur.temperature);
+    const ws = Number(cur.windspeed);
+    const wd = Number(cur.winddirection);
+    const code = Number(cur.weathercode);
 
-  const days = apiData?.daily?.time || [];
-  const tmax = apiData?.daily?.temperature_2m_max || [];
-  const tmin = apiData?.daily?.temperature_2m_min || [];
-  const codes = apiData?.daily?.weathercode || [];
+    nowTemp.textContent = Number.isFinite(t) ? `${t.toFixed(1)}°C` : "—";
+    nowIcon.innerHTML = wxSvgIcon(code);
+    if (nowMeta) nowMeta.textContent = cur.time ? `Updated: ${cur.time}` : "Updated just now";
 
-  if (!days.length || !tmax.length || !tmin.length) {
-    wxSetError("wxWeeklyRow", "Weekly data not available.");
-    if (meta) meta.textContent = "—";
-    return;
+    if (wind) wind.textContent = Number.isFinite(ws) ? `${ws.toFixed(1)} km/h` : "—";
+    if (windDir) windDir.textContent = wxWindDirText(wd);
+    if (codeEl) codeEl.textContent = Number.isFinite(code) ? String(code) : "—";
   }
 
-  const items = [];
-  for (let i = 0; i < Math.min(7, days.length); i++) {
-    const label = wxFmtDayLabel(days[i], i === 0);
-    const hi = Math.round(Number(tmax[i] ?? 0));
-    const lo = Math.round(Number(tmin[i] ?? 0));
-    const icon = wxSvgIcon(codes[i]);
+  function wxRenderHourly(apiData) {
+    const row = wx$("wxHourlyRow");
+    const meta = wx$("wxHourlyMeta");
+    if (!row) return;
 
-    items.push(`
-      <div class="wx-hour-item">
-        <div class="wx-hour-time">${label}</div>
-        <div class="wx-hour-icon">${icon}</div>
-        <div class="wx-hour-temp">${hi}° <span style="font-size:14px; color:#64748b; font-weight:700;">/${lo}°</span></div>
-      </div>
-    `);
+    const times = apiData?.hourly?.time || [];
+    const temps = apiData?.hourly?.temperature_2m || [];
+    const codes = apiData?.hourly?.weathercode || [];
+
+    if (!times.length || !temps.length) {
+      wxSetStripError(row, "Hourly data not available.");
+      if (meta) meta.textContent = "—";
+      return;
+    }
+
+    const now = new Date();
+    let startIdx = 0;
+    for (let i = 0; i < times.length; i++) {
+      const t = new Date(times[i]);
+      if (t.getTime() >= now.getTime()) { startIdx = i; break; }
+    }
+
+    const items = [];
+    for (let k = 0; k < 6; k++) {
+      const i = startIdx + k;
+      if (!times[i]) break;
+      const t = new Date(times[i]);
+      items.push(`
+        <div class="wx-item">
+          <div class="wx-time">${wxFmtHourLabel(t, k === 0)}</div>
+          <div class="wx-icon">${wxSvgIcon(codes[i])}</div>
+          <div class="wx-temp">${Math.round(Number(temps[i] ?? 0))}°</div>
+        </div>
+      `);
+    }
+
+    row.innerHTML = items.join("");
+    if (meta) meta.textContent = "Next 6 hours";
   }
 
-  row.innerHTML = items.join("");
+  function wxRenderWeekly(apiData) {
+    const row = wx$("wxWeeklyRow");
+    const meta = wx$("wxWeeklyMeta");
+    if (!row) return;
 
-  if (meta) {
-    meta.textContent = apiData?.timezone ? apiData.timezone : "Next 7 days";
-  }
-}
+    const days = apiData?.daily?.time || [];
+    const tmax = apiData?.daily?.temperature_2m_max || [];
+    const tmin = apiData?.daily?.temperature_2m_min || [];
+    const codes = apiData?.daily?.weathercode || [];
 
-async function loadCleanWeatherCard() {
-  const d = window.__DASHBOARD__ || {};
-  const geo = d?.geo || {};
+    if (!days.length || !tmax.length || !tmin.length) {
+      wxSetStripError(row, "Weekly data not available.");
+      if (meta) meta.textContent = "—";
+      return;
+    }
 
-  const lat = Number(geo?.lat);
-  const lng = Number(geo?.lng);
+    const items = [];
+    for (let i = 0; i < Math.min(7, days.length); i++) {
+      items.push(`
+        <div class="wx-item">
+          <div class="wx-time">${wxFmtDayLabel(days[i], i === 0)}</div>
+          <div class="wx-icon">${wxSvgIcon(codes[i])}</div>
+          <div class="wx-temp">
+            ${Math.round(Number(tmax[i] ?? 0))}°
+            <span class="wx-tempSub">/${Math.round(Number(tmin[i] ?? 0))}°</span>
+          </div>
+        </div>
+      `);
+    }
 
-  const locText = document.getElementById("wxLocText");
-  if (locText) {
-    locText.textContent =
-      (geo?.address && String(geo.address).trim()) ||
-      (Number.isFinite(lat) && Number.isFinite(lng) ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : "—");
-  }
-
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-    wxSetError("wxHourlyRow", "No location found (lat/lng missing).");
-    wxSetError("wxWeeklyRow", "No location found (lat/lng missing).");
-    return;
-  }
-
-  wxSetSkeleton("wxHourlyRow");
-  wxSetSkeleton("wxWeeklyRow");
-
-  try {
-    const apiData = await wxFetchForecast(lat, lng);
-
-    // ✅ Render both: hourly + weekly
-    wxRenderHourlyStrip(apiData);
-    wxRenderWeeklyStrip(apiData);
-  } catch (e) {
-    console.error("Weather fetch failed:", e);
-    wxSetError("wxHourlyRow", "Weather unavailable right now.");
-    wxSetError("wxWeeklyRow", "Weather unavailable right now.");
-  }
-}
-function weatherTabIsActive() {
-  const p = document.getElementById("tab-weather");
-  return !!(p && p.classList.contains("active"));
-}
-
-function initWeatherUI() {
-  const refreshBtn = document.getElementById("weatherRefreshBtn");
-  if (refreshBtn && !refreshBtn.__bound) {
-    refreshBtn.__bound = true;
-    refreshBtn.addEventListener("click", loadCleanWeatherCard);
+    row.innerHTML = items.join("");
+    if (meta) meta.textContent = apiData?.timezone || "Next 7 days";
   }
 
-  // If Weather tab is already active on load, render once
-  if (weatherTabIsActive()) {
-    requestAnimationFrame(() => loadCleanWeatherCard());
+  // ---------- location modal + permission ----------
+  function wxOpenModal() {
+    const m = wx$("wxLocModal");
+    if (m) m.style.display = "block";
   }
-}
+  function wxCloseModal() {
+    const m = wx$("wxLocModal");
+    if (m) m.style.display = "none";
+  }
 
-document.addEventListener("DOMContentLoaded", initWeatherUI);
+  function wxGetSavedCoords() {
+    try {
+      const raw = localStorage.getItem("wx_live_coords");
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      const lat = Number(obj?.lat);
+      const lng = Number(obj?.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+      return { lat, lng, source: "device" };
+    } catch {
+      return null;
+    }
+  }
+
+  function wxSaveCoords(lat, lng) {
+    try {
+      localStorage.setItem("wx_live_coords", JSON.stringify({ lat, lng, at: Date.now() }));
+    } catch {}
+  }
+
+  function wxGetDashboardCoords() {
+    const d = window.__DASHBOARD__ || {};
+    const geo = d?.geo || {};
+    const lat = Number(geo?.lat);
+    const lng = Number(geo?.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng, source: "dashboard" };
+    return null;
+  }
+
+  async function wxLoadWeatherUsing(lat, lng, label) {
+    const locText = wx$("wxLocText");
+    if (locText) locText.textContent = label || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+    const hourlyRow = wx$("wxHourlyRow");
+    const weeklyRow = wx$("wxWeeklyRow");
+    wxSetStripSkeleton(hourlyRow);
+    wxSetStripSkeleton(weeklyRow);
+
+    try {
+      const apiData = await wxFetchForecast(lat, lng);
+      wxRenderCurrent(apiData);
+      wxRenderHourly(apiData);
+      wxRenderWeekly(apiData);
+    } catch (e) {
+      console.error("Weather fetch failed:", e);
+      wxSetStripError(hourlyRow, "Weather unavailable right now.");
+      wxSetStripError(weeklyRow, "Weather unavailable right now.");
+    }
+  }
+
+  async function loadCleanWeatherCard() {
+    // priority: saved live coords -> dashboard coords
+    const live = wxGetSavedCoords();
+    if (live) return wxLoadWeatherUsing(live.lat, live.lng, "Live location");
+
+    const dash = wxGetDashboardCoords();
+    if (dash) {
+      const d = window.__DASHBOARD__ || {};
+      const addr = (d?.geo?.address || "").trim();
+      return wxLoadWeatherUsing(dash.lat, dash.lng, addr || `${dash.lat.toFixed(4)}, ${dash.lng.toFixed(4)}`);
+    }
+
+    wxSetStripError(wx$("wxHourlyRow"), "No location found (lat/lng missing).");
+    wxSetStripError(wx$("wxWeeklyRow"), "No location found (lat/lng missing).");
+  }
+
+  async function requestLiveLocationAndLoad() {
+    if (!("geolocation" in navigator)) {
+      alert("Geolocation is not supported in this browser.");
+      return;
+    }
+
+    // show skeleton immediately
+    wxSetStripSkeleton(wx$("wxHourlyRow"));
+    wxSetStripSkeleton(wx$("wxWeeklyRow"));
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = Number(pos?.coords?.latitude);
+        const lng = Number(pos?.coords?.longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          wxCloseModal();
+          return;
+        }
+        wxSaveCoords(lat, lng);
+        wxCloseModal();
+        wxLoadWeatherUsing(lat, lng, "Live location");
+      },
+      (err) => {
+        console.warn("Geolocation denied/failed:", err);
+        wxCloseModal();
+        // fallback to dashboard coords
+        loadCleanWeatherCard();
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 600000 }
+    );
+  }
+
+  // ---------- wiring ----------
+  function weatherTabIsActive() {
+    const p = wx$("tab-weather");
+    return !!(p && p.classList.contains("active"));
+  }
+
+  function initWeatherUI() {
+    // modal close actions
+    const modal = wx$("wxLocModal");
+    if (modal && !modal.__bound) {
+      modal.__bound = true;
+      modal.addEventListener("click", (e) => {
+        const t = e.target;
+        if (t && t.getAttribute && t.getAttribute("data-close") === "1") wxCloseModal();
+      });
+    }
+
+    const allowBtn = wx$("wxAllowBtn");
+    if (allowBtn && !allowBtn.__bound) {
+      allowBtn.__bound = true;
+      allowBtn.addEventListener("click", requestLiveLocationAndLoad);
+    }
+
+    const useMyLocBtn = wx$("weatherUseMyLocationBtn");
+    if (useMyLocBtn && !useMyLocBtn.__bound) {
+      useMyLocBtn.__bound = true;
+      useMyLocBtn.addEventListener("click", () => wxOpenModal());
+    }
+
+    const refreshBtn = wx$("weatherRefreshBtn");
+    if (refreshBtn && !refreshBtn.__bound) {
+      refreshBtn.__bound = true;
+      refreshBtn.addEventListener("click", () => loadCleanWeatherCard());
+    }
+
+    // If tab is active on load, render
+    if (weatherTabIsActive()) {
+      requestAnimationFrame(() => loadCleanWeatherCard());
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", initWeatherUI);
+
+  // expose globally so your tab switch can call it safely
+  window.loadCleanWeatherCard = loadCleanWeatherCard;
+  window.wxOpenLocationModal = wxOpenModal;
+})();
 
 
 
