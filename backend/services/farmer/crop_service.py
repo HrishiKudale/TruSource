@@ -290,7 +290,7 @@ class CropService:
             "created_at": datetime.utcnow(),
         }
 
-        if farm_col:
+        if farm_col is not None:
             try:
                 res = farm_col.insert_one(farm_doc)
                 inserted_id = res.inserted_id
@@ -298,6 +298,7 @@ class CropService:
                 print(f"⚠️ Mongo insert farm_coordinates failed: {e}")
         else:
             print("⚠️ Mongo disabled/unavailable: skipping farm_coordinates insert")
+
 
         # --- 4) Register crop ON-CHAIN ---
         tx_hash = register_crop_onchain(
@@ -314,7 +315,7 @@ class CropService:
         )
 
         # --- 5) Back-link tx hash in Mongo (SAFE) ---
-        if farm_col and inserted_id:
+        if farm_col is not None and inserted_id is not None:
             try:
                 farm_col.update_one(
                     {"_id": inserted_id},
@@ -324,6 +325,7 @@ class CropService:
                 print(f"⚠️ Mongo update txHash failed: {e}")
         else:
             print("⚠️ Skipping txHash update (Mongo off or insert missing)")
+
 
         return {
             "ok": True,
@@ -376,11 +378,9 @@ class CropService:
         }
 
         col = get_col("farm_coordinates")
-        if not col:
-            return {
-                "ok": False,
-                "err": "MongoDB is disabled or unavailable"
-            }
+        if col is None:
+            return {"ok": False, "err": "MongoDB is disabled or unavailable"}
+
 
         col.insert_one(doc)
         return {"ok": True, "cropId": reg.cropId}

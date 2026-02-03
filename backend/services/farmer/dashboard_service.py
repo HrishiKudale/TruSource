@@ -226,7 +226,7 @@ class DashboardService:
             return 0
 
         try:
-            collection = db["farmer_coordinates"]
+            collection = db["farm_coordinates"]
             count = collection.count_documents({
                 "user_id": farmer_id
             })
