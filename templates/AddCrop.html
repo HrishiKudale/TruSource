@@ -538,7 +538,7 @@
     "userName": {{ ((session.get('user_name','') if session else '') or '') | tojson }}
   },
   "urls": {
-    "rfidRegister": {{ (url_for('rfid_bp.register_rfid') if SHOW_RFID_BTN else "") | tojson }}
+    "rfidRegister": {{ (url_for('rfid_bp.register_rfid_auto') if SHOW_RFID_BTN else "") | tojson }}
   }
 
 }
