@@ -276,6 +276,110 @@
   color: #ffffff;
 }
 
+
+/*Logout
+/* ===== Logout Modal (matches screenshot) ===== */
+.logout-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55); /* dark overlay */
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 9999;
+}
+
+.logout-overlay.show{
+  display: flex;
+}
+
+.logout-modal{
+  width: min(820px, 96vw);
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.22);
+  padding: 22px 26px 20px;
+  text-align: center;
+  position: relative;
+}
+
+.logout-illus-wrap{
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.logout-illus{
+  width: min(520px, 100%);
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+}
+
+.logout-title{
+  margin: 4px 0 8px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.3px;
+}
+
+.logout-desc{
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.logout-actions{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.logout-btn{
+  height: 44px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.05s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.logout-btn:active{
+  transform: translateY(1px);
+}
+
+.logout-btn-cancel{
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+.logout-btn-cancel:hover{
+  background: #f8fafc;
+}
+
+.logout-btn-danger{
+  background: #dc2626; /* red like screenshot */
+  border: 1px solid #dc2626;
+  color: #ffffff;
+}
+
+.logout-btn-danger:hover{
+  background: #c81e1e;
+  border-color: #c81e1e;
+}
+
+/* Mobile tweaks */
+@media (max-width: 520px){
+  .logout-title{ font-size: 22px; }
+  .logout-actions{ grid-template-columns: 1fr; }
+}
+
+
 /* =========================================================
    MAIN CONTENT AREA
    ========================================================= */

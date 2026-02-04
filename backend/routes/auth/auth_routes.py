@@ -308,4 +308,29 @@ def refresh():
     ), 200
 
 
+# -------------------------------------------------------------------
+# Logout (clears session on trusource-main domain)
+# -------------------------------------------------------------------
+@auth_bp.route("/logout", methods=["POST", "GET"])
+def logout():
+    """
+    Clears Flask session for current user and returns JSON for fetch().
+    Works with your logout modal confirm button.
+    """
+    try:
+        session_keys = list(session.keys())
+        session.clear()  # ✅ removes user_id/role/username etc
+        # optional: force cookie update
+        session.modified = True
+
+        # If request expects HTML (direct browser hit), redirect
+        accept = (request.headers.get("Accept") or "").lower()
+        if "text/html" in accept and request.method == "GET":
+            return redirect(url_for("auth.newlogin"))
+
+        return jsonify(ok=True, message="Logged out", cleared=session_keys), 200
+
+    except Exception as e:
+        # Even if something fails, respond OK so frontend can redirect
+        return jsonify(ok=True, message=f"Logged out (forced). {e}"), 200
 

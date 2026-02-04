@@ -13,7 +13,7 @@
   {% block extra_head %}{% endblock %}
 
   <style>
-    /* 🔥 Content-only loader: covers just the inner page content (.frame-14) */
+    /*  Content-only loader: covers just the inner page content (.frame-14) */
     #content-loader {
       position: absolute;
       inset: 0;                /* top:0; right:0; bottom:0; left:0 */
@@ -248,6 +248,41 @@
 
   </main>
 </div>
+<!-- LOGOUT MODAL (hidden by default) -->
+<div id="logoutModalOverlay" class="logout-overlay" aria-hidden="true">
+  <div
+    class="logout-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="logoutTitle"
+    aria-describedby="logoutDesc"
+  >
+    <div class="logout-illus-wrap">
+      <img
+        src="{{ url_for('static', filename='svg-icons/Dashboard/Logout.svg') }}"alt=""
+        class="logout-illus"
+        draggable="false"
+      />
+    </div>
+
+    <h2 id="logoutTitle" class="logout-title">Are you sure you want to logout?</h2>
+
+    <p id="logoutDesc" class="logout-desc">
+      Once you logout, you won't be able to access your crops,<br />
+      orders, or reports until you sign in again.
+    </p>
+
+    <div class="logout-actions">
+      <button id="logoutCancelBtn" type="button" class="logout-btn logout-btn-cancel">
+        Cancel
+      </button>
+
+      <button id="logoutConfirmBtn" type="button" class="logout-btn logout-btn-danger">
+        Logout
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Always load sidebar dropdown behavior -->
 <script src="{{ url_for('static', filename='js/sidebar-dropdown.js') }}"></script>
@@ -306,6 +341,82 @@
     hideLoader();
   });
 })();
+
+
+
+(function () {
+  const overlay = document.getElementById("logoutModalOverlay");
+  const cancelBtn = document.getElementById("logoutCancelBtn");
+  const confirmBtn = document.getElementById("logoutConfirmBtn");
+  const openBtn = document.getElementById("sidebarLogoutBtn");
+
+  if (!overlay || !cancelBtn || !confirmBtn || !openBtn) return;
+
+  let lastFocusedEl = null;
+
+  function openLogoutModal() {
+    lastFocusedEl = document.activeElement;
+
+    overlay.classList.add("show");
+    overlay.setAttribute("aria-hidden", "false");
+
+    // focus the safest button first
+    cancelBtn.focus();
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeLogoutModal() {
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden", "true");
+
+    document.body.style.overflow = "";
+    if (lastFocusedEl && typeof lastFocusedEl.focus === "function") {
+      lastFocusedEl.focus();
+    }
+  }
+
+  // open
+  openBtn.addEventListener("click", openLogoutModal);
+
+  // close on cancel
+  cancelBtn.addEventListener("click", closeLogoutModal);
+
+  // close on outside click
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeLogoutModal();
+  });
+
+  // close on ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && overlay.classList.contains("show")) {
+      closeLogoutModal();
+    }
+  });
+
+  // confirm logout
+  confirmBtn.addEventListener("click", async () => {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Logging out…";
+
+    try {
+      // ✅ Use your actual backend logout route:
+      // common patterns: /logout or /auth/logout or /api/logout
+      const res = await fetch("/logout", {
+        method: "POST", // change to GET if your backend uses GET
+        credentials: "include",
+        headers: { "Accept": "application/json" }
+      });
+
+      // even if server returns non-200, force logout on UI side
+    } catch (e) {
+      // ignore network error; still redirect
+    } finally {
+      // redirect to login page
+      window.location.href = "/newlogin";
+    }
+  });
+})();
+
 </script>
 
 
