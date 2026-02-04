@@ -19,7 +19,7 @@
     <!-- IMPORTANT: button type=button (opens modal) -->
     <button type="button" id="btnOpenStorageSummary" class="send-request-btn">
       Send Request
-      <img src="{{ url_for('static', filename='svg-icons/plus.svg') }}" class="btn-icon" />
+      <img src="{{ url_for('static', filename='svg-icons/Plus.svg') }}" class="btn-icon" />
     </button>
   </div>
 
@@ -73,7 +73,11 @@
                   </option>
                 {% endfor %}
               </select>
-              <div class="select-chevron">⌄</div>
+              <div class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+              </div>
             </div>
           </div>
 
@@ -94,7 +98,11 @@
                 <option value="30 days">30 days</option>
                 <option value="90 days">90 days</option>
               </select>
-              <div class="select-chevron">⌄</div>
+              <div class="select-chevron">
+                    <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+              </div>
             </div>
           </div>
 
@@ -106,7 +114,11 @@
                 <option value="Cash">Cash</option>
                 <option value="Online">Online</option>
               </select>
-              <div class="select-chevron">⌄</div>
+              <div class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+              </div>
             </div>
           </div>
 
@@ -144,7 +156,11 @@
                   </option>
                 {% endfor %}
               </select>
-              <div class="select-chevron">⌄</div>
+              <div class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+              </div>
             </div>
           </div>
 
@@ -161,7 +177,11 @@
                   </option>
                 {% endfor %}
               </select>
-              <div class="select-chevron">⌄</div>
+              <div class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+              </div>
             </div>
           </div>
 
@@ -182,7 +202,11 @@
                 <option value="Plastic Bag">Plastic Bag</option>
                 <option value="Box">Box</option>
               </select>
-              <div class="select-chevron">⌄</div>
+              <div class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+              </div>
             </div>
           </div>
 
@@ -248,7 +272,7 @@
 
         <div class="summary-illus">
           <!-- use your warehouse confirm illustration -->
-          <img src="{{ url_for('static', filename='illustrations/Storage Summary Modal.svg') }}" alt="">
+          <img src="{{ url_for('static', filename='svg-icons/StorageSummaryModal.svg') }}" alt="">
         </div>
 
         <h3 class="summary-title">Confirm Storage Request</h3>
