@@ -247,6 +247,51 @@
         });
     </script>
 <script>
+        const AUTH_BASE = "https://trusource.onrender.com";
+
+    async function warmupAuthService({ maxWaitMs = 25000 } = {}) {
+    const started = Date.now();
+    let attempt = 0;
+
+    while (Date.now() - started < maxWaitMs) {
+        attempt += 1;
+        try {
+        const res = await fetch(`${AUTH_BASE}/health`, {
+            method: "GET",
+            cache: "no-store",
+        });
+
+        if (res.ok) return true; // warmed up ✅
+        } catch (e) {
+        // ignore and retry
+        }
+
+        // exponential-ish backoff with cap
+        const delay = Math.min(800 * attempt, 3000);
+        await new Promise((r) => setTimeout(r, delay));
+    }
+
+    return false; // still cold ❌
+    }
+
+    // Example usage before login:
+    async function onLoginSubmit(e) {
+    e.preventDefault();
+
+    // show UI loader
+    setLoginLoading(true, "Starting secure login…");
+
+    const ok = await warmupAuthService();
+    if (!ok) {
+        setLoginLoading(false);
+        showError("Auth service is waking up. Please try again in a few seconds.");
+        return;
+    }
+
+    setLoginLoading(true, "Signing you in…");
+    await doLogin(); // your existing login fetch
+    }
+
   // Show loader on all link clicks
   document.querySelectorAll("a").forEach(link => {
     link.addEventListener("click", function (e) {
