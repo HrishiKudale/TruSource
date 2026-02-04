@@ -170,145 +170,86 @@
             Don't have an account? <a href="/newregister" class="signup-link">Sign up</a>
         </p>
     </div>
-
-    <script>
-        // Toggle password visibility
-        let isPasswordVisible = false;
-        function togglePasswordVisibility() {
-            const passwordField = document.getElementById("password");
-            if (isPasswordVisible) {
-                passwordField.type = "password";
-            } else {
-                passwordField.type = "text";
-            }
-            isPasswordVisible = !isPasswordVisible;
-        }
-
-        // Handle form submission
-        document.getElementById("loginForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
-            const role = document.getElementById("role").value;
-
-            const formData = {
-                email: email,  // Email is used to fetch userId from MongoDB
-                password: password,
-                role: role
-            };
-
-            console.log('Form Data Sent:', formData); // Debug the form data being sent
-
-            // Send the form data to the server via POST request
-            fetch("/newlogin", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Login successful!");
-                    // Redirect based on role from the backend response
-                    switch (data.role) {
-                        case 'farmer':
-                            window.location.href = "/farmer/dashboard";
-                            break;
-                        case 'manufacturer':
-                            window.location.href = "/manufacturer/dashboard";
-                            break;
-                        case 'distributor':
-                            window.location.href = "/distributor/dashboard";
-                            break;
-                        case 'transporter':
-                            window.location.href = "/transporter/dashboard";
-                            break;
-                        case 'warehousing':
-                            window.location.href = "/warehouse/dashboard";
-                            break;
-                        case 'retailer':
-                            window.location.href = "/retailer/dashboard";
-                            break;
-                        default:
-                            alert("Role is invalid");
-                            break;
-                    }
-                } else {
-                    alert(data.message || "Login failed");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("An error occurred during login. Please try again.");
-            });
-        });
-    </script>
 <script>
-        const AUTH_BASE = "https://trusource.onrender.com";
+  const AUTH_BASE = "https://trusource.onrender.com";
 
-    async function warmupAuthService({ maxWaitMs = 25000 } = {}) {
+  async function warmupAuthService(maxWaitMs = 25000) {
     const started = Date.now();
     let attempt = 0;
 
     while (Date.now() - started < maxWaitMs) {
-        attempt += 1;
-        try {
+      attempt += 1;
+      try {
+        console.log("[warmup] hitting:", `${AUTH_BASE}/health`);
         const res = await fetch(`${AUTH_BASE}/health`, {
-            method: "GET",
-            cache: "no-store",
+          method: "GET",
+          cache: "no-store",
+          mode: "cors",
         });
+        console.log("[warmup] status:", res.status);
+        if (res.ok) return true;
+      } catch (e) {
+        console.log("[warmup] error:", e?.message || e);
+      }
 
-        if (res.ok) return true; // warmed up ✅
-        } catch (e) {
-        // ignore and retry
-        }
-
-        // exponential-ish backoff with cap
-        const delay = Math.min(800 * attempt, 3000);
-        await new Promise((r) => setTimeout(r, delay));
+      await new Promise((r) => setTimeout(r, Math.min(800 * attempt, 3000)));
     }
+    return false;
+  }
 
-    return false; // still cold ❌
-    }
-
-    // Example usage before login:
-    async function onLoginSubmit(e) {
+  document.getElementById("loginForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    // show UI loader
-    setLoginLoading(true, "Starting secure login…");
+    // show loader
+    const overlay = document.getElementById("loaderOverlay");
+    if (overlay) overlay.style.display = "flex";
 
+    // ✅ warmup FIRST
     const ok = await warmupAuthService();
     if (!ok) {
-        setLoginLoading(false);
-        showError("Auth service is waking up. Please try again in a few seconds.");
-        return;
+      if (overlay) overlay.style.display = "none";
+      alert("Auth service is waking up. Please try again in a few seconds.");
+      return;
     }
 
-    setLoginLoading(true, "Signing you in…");
-    await doLogin(); // your existing login fetch
-    }
+    // then normal login
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value;
 
-  // Show loader on all link clicks
-  document.querySelectorAll("a").forEach(link => {
-    link.addEventListener("click", function (e) {
-      // Open in same tab only
-      if (!link.target || link.target === "_self") {
-        document.getElementById("loaderOverlay").style.display = "flex";
+    try {
+      const resp = await fetch("/newlogin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, role }),
+      });
+
+      const data = await resp.json();
+
+      if (data.success) {
+        switch (data.role) {
+          case "farmer": window.location.href = "/farmer/dashboard"; break;
+          case "manufacturer": window.location.href = "/manufacturer/dashboard"; break;
+          case "distributor": window.location.href = "/distributor/dashboard"; break;
+          case "transporter": window.location.href = "/transporter/dashboard"; break;
+          case "warehousing": window.location.href = "/warehouse/dashboard"; break;
+          case "retailer": window.location.href = "/retailer/dashboard"; break;
+          default:
+            alert("Role is invalid");
+            if (overlay) overlay.style.display = "none";
+        }
+      } else {
+        alert(data.message || "Login failed");
+        if (overlay) overlay.style.display = "none";
       }
-    });
-  });
-
-  // Show loader on form submit
-  document.querySelectorAll("form").forEach(form => {
-    form.addEventListener("submit", function () {
-      document.getElementById("loaderOverlay").style.display = "flex";
-    });
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred during login. Please try again.");
+      if (overlay) overlay.style.display = "none";
+    }
   });
 </script>
+
 <!-- Loader Overlay -->
 <div id="loaderOverlay">
   <div class="spinner"></div>
