@@ -346,22 +346,32 @@
 
 
 (function () {
-  const overlay = document.getElementById("logoutModalOverlay");
+  const overlay   = document.getElementById("logoutModalOverlay");
   const cancelBtn = document.getElementById("logoutCancelBtn");
-  const confirmBtn = document.getElementById("logoutConfirmBtn");
-  const openBtn = document.getElementById("sidebarLogoutBtn");
+  const confirmBtn= document.getElementById("logoutConfirmBtn");
+  const openBtn   = document.getElementById("logoutOpenBtn"); // ✅ FIXED ID
+
+  console.log("[logout] bind check", {
+    overlay: !!overlay,
+    cancelBtn: !!cancelBtn,
+    confirmBtn: !!confirmBtn,
+    openBtn: !!openBtn,
+  });
 
   if (!overlay || !cancelBtn || !confirmBtn || !openBtn) return;
 
   let lastFocusedEl = null;
 
-  function openLogoutModal() {
+  function openLogoutModal(e) {
+    if (e) {
+      e.preventDefault();   // ✅ stops "#"
+      e.stopPropagation();
+    }
     lastFocusedEl = document.activeElement;
 
     overlay.classList.add("show");
     overlay.setAttribute("aria-hidden", "false");
 
-    // focus the safest button first
     cancelBtn.focus();
     document.body.style.overflow = "hidden";
   }
@@ -376,48 +386,35 @@
     }
   }
 
-  // open
   openBtn.addEventListener("click", openLogoutModal);
 
-  // close on cancel
-  cancelBtn.addEventListener("click", closeLogoutModal);
+  cancelBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    closeLogoutModal();
+  });
 
-  // close on outside click
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) closeLogoutModal();
   });
 
-  // close on ESC
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && overlay.classList.contains("show")) {
-      closeLogoutModal();
-    }
+    if (e.key === "Escape" && overlay.classList.contains("show")) closeLogoutModal();
   });
 
-  // confirm logout
   confirmBtn.addEventListener("click", async () => {
     confirmBtn.disabled = true;
     confirmBtn.textContent = "Logging out…";
 
     try {
-      // ✅ Use your actual backend logout route:
-      // common patterns: /logout or /auth/logout or /api/logout
-      const res = await fetch("/logout", {
-        method: "POST", // change to GET if your backend uses GET
-        credentials: "include",
-        headers: { "Accept": "application/json" }
-      });
-
-      // even if server returns non-200, force logout on UI side
+      // Prefer GET unless your backend explicitly uses POST
+      await fetch("/logout", { method: "GET", credentials: "include" });
     } catch (e) {
-      // ignore network error; still redirect
+      // ignore
     } finally {
-      // redirect to login page
       window.location.href = "/newlogin";
     }
   });
 })();
-
 </script>
 
 
