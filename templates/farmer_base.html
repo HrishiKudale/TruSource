@@ -200,13 +200,14 @@
             <span class="text-wrapper-2">Setting</span>
           </a>
         </li>
-        <li class="component">
-          <a href="{{ url_for('logout') if false else '#logout' }}" class="component-link">
-            <img class="img sidebar-icon"
-                 src="{{ url_for('static', filename='svg-icons/LogOut.svg') }}">
-            <span class="text-wrapper-2">Log out</span>
-          </a>
-        </li>
+          <li class="component">
+            <a href="#" id="logoutOpenBtn" class="component-link">
+              <img class="img sidebar-icon"
+                  src="{{ url_for('static', filename='svg-icons/LogOut.svg') }}">
+              <span class="text-wrapper-2">Log out</span>
+            </a>
+          </li>
+
       </ul>
     </nav>
   </aside>
