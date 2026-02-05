@@ -65,7 +65,6 @@
               <input id="cropName" name="cropName" type="text"
                      value="{{ crop.crop_type if crop else '' }}"
                      {% if IS_PREFILLED %}readonly{% endif %} required />
-              <span class="select-chevron">&#9662;</span>
             </div>
           </div>
 
@@ -117,7 +116,11 @@
                   <option value="Spices & Condiments" {% if crop and crop.crop_category == 'Spices & Condiments' %}selected{% endif %}>Spices & Condiments</option>
                   <option value="Cash Crops" {% if crop and crop.crop_category == 'Cash Crops' %}selected{% endif %}>Cash Crops</option>
                 </select>
-                <span class="select-chevron">&#9662;</span>
+                <span class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+                </span>
               </div>
             </div>
 
@@ -134,7 +137,11 @@
                   <option value="Rainfed" {% if crop and crop.farming_type == 'Rainfed' %}selected{% endif %}>Rainfed</option>
                   <option value="Greenhouse" {% if crop and crop.farming_type == 'Greenhouse' %}selected{% endif %}>Greenhouse</option>
                 </select>
-                <span class="select-chevron">&#9662;</span>
+                <span class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+                </span>
               </div>
             </div>
 
@@ -151,7 +158,11 @@
                   <option value="Organic Seed" {% if crop and crop.seed_type == 'Organic Seed' %}selected{% endif %}>Organic Seed</option>
                   <option value="Tissue Culture Propagated Material" {% if crop and crop.seed_type == 'Tissue Culture Propagated Material' %}selected{% endif %}>Tissue Culture Propagated Material</option>
                 </select>
-                <span class="select-chevron">&#9662;</span>
+                <span class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+                </span>
               </div>
             </div>
 
@@ -231,7 +242,11 @@
                   <option value="Jute">Jute Bag</option>
                   <option value="Plastic">Plastic Bag</option>
                 </select>
-                <span class="select-chevron">&#9662;</span>
+                <span class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+                </span>
               </div>
             </div>
 
