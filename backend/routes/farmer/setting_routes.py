@@ -23,7 +23,7 @@ def settings_page():
         return render_template("newlogin.html"), 401
 
     user = SettingsService.get_user(user_id) or {}
-    return render_template("settings.html", user=user)
+    return render_template("Setting.html", user=user)
 
 
 @settings_bp.post("/profile")
