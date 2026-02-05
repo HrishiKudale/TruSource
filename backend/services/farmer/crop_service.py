@@ -33,7 +33,17 @@ class CropService:
             print(f"[CropService.get_my_crops] Error get_user_crops: {e}")
             crop_ids = []
 
+        # ✅ IMPORTANT: remove duplicate crop IDs
+        seen = set()
+        unique_crop_ids = []
         for cid in crop_ids:
+            cid = str(cid or "").strip()
+            if not cid or cid in seen:
+                continue
+            seen.add(cid)
+            unique_crop_ids.append(cid)
+
+        for cid in unique_crop_ids:
             try:
                 history = get_crop_history(cid) or []
             except Exception as e:
@@ -45,35 +55,31 @@ class CropService:
             sold_qty = 0
 
             for ev in history:
-                # Assumes the same event layout as your original on-chain struct
                 status = ev[0]
 
                 if status == "Planted":
                     planted = {
                         "id": cid,
-                        "name": ev[14],          # cropType display name
+                        "name": ev[14],
                         "crop_type": ev[16],
-                        "crop_name":ev[17],     # variety / type
+                        "crop_name": ev[17],
                         "date_planted": ev[6],
                         "farming_type": ev[4] if len(ev) > 5 else "",
                         "seed_type": ev[5] if len(ev) > 6 else "",
-                        "area_size": int(ev[13]),
+                        "area_size": int(ev[13] or 0),
                     }
-                    total_area += int(ev[13])
 
-                if status == "Harvested":
+                elif status == "Harvested":
                     harvested = {
                         "harvest_date": ev[5],
-                        "harvest_qty": int(ev[12]),
-                        "packaging_type": ev[10]
+                        "harvest_qty": int(ev[12] or 0),
+                        "packaging_type": ev[10],
                     }
-                    total_harvest_qtl += int(ev[12])
 
-                if status in ("Sold", "Retail", "Retailer"):
-                    qty = int(ev[18] or 0)
-                    sold_qty += qty
-                    total_sold_qtl += qty
+                elif status in ("Sold", "Retail", "Retailer"):
+                    sold_qty += int(ev[18] or 0)
 
+            # ✅ add exactly ONE row per crop id
             if planted:
                 crops.append(
                     {
@@ -90,6 +96,12 @@ class CropService:
                     }
                 )
 
+                # ✅ totals should be counted ONCE per crop (not inside history loop)
+                total_area += int(planted.get("area_size") or 0)
+                if harvested:
+                    total_harvest_qtl += int(harvested.get("harvest_qty") or 0)
+                total_sold_qtl += int(sold_qty or 0)
+
         return {
             "crops": crops,
             "total_crops": len(crops),
@@ -97,6 +109,7 @@ class CropService:
             "total_harvest_qtl": total_harvest_qtl,
             "total_sold_qtl": total_sold_qtl,
         }
+
 
     # ------------------------------------------------------------
     # SINGLE CROP DETAIL (for CropInfo.html or JSON)
