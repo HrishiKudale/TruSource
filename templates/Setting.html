@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Setting</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+</head>
+<body>
+
+<div class="settings-page">
+  <div class="settings-header">
+    <div class="settings-title">
+      <span class="settings-icon">⚙️</span>
+      <h1>Setting</h1>
+    </div>
+  </div>
+
+  <!-- Account -->
+  <section class="settings-section">
+    <div class="section-label">Account</div>
+
+    <div class="card">
+      <div class="account-row">
+        <div class="avatar-wrap">
+          <img
+            class="avatar"
+            src="{{ user.profilePhotoUrl or url_for('static', filename='img/default-avatar.png') }}"
+            alt="Profile"
+          />
+        </div>
+
+        <div class="account-grid">
+          <div class="field">
+            <div class="field-label">User ID</div>
+            <div class="field-value">{{ user.userId }}</div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Name</div>
+            <div class="field-value">{{ user.name }}</div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Email</div>
+            <div class="field-value">{{ user.email }}</div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Phone Number</div>
+            <div class="field-value">{{ user.phone or "" }}</div>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button id="openEditProfile" class="btn btn-outline">
+            Edit <span class="btn-icon">✎</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security -->
+  <section class="settings-section">
+    <div class="section-label">Security</div>
+
+    <div class="card">
+      <div class="row-between">
+        <div>
+          <div class="card-title">Password</div>
+          <div class="card-subtitle">Manage your account password to keep your account secure</div>
+          <div class="card-note">Last updated on {{ user.passwordUpdatedAt or "—" }}</div>
+        </div>
+
+        <button id="openChangePassword" class="btn btn-outline">
+          Change password <span class="btn-icon">✎</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Documents -->
+  <section class="settings-section">
+    <div class="section-label">Documents</div>
+
+    <div class="card">
+      <div class="doc-grid">
+
+        <div class="doc-item">
+          <div class="doc-label">Adhaar Card</div>
+          <div class="doc-input">
+            <input id="aadhaarFile" type="file" accept="image/*,.pdf" />
+            <button class="btn btn-light" data-doc="aadhaar">⤓</button>
+          </div>
+          <div class="doc-meta" id="aadhaarMeta">
+            {{ user.documents.aadhaar.filename if user.documents and user.documents.aadhaar else "no file chosen" }}
+          </div>
+        </div>
+
+        <div class="doc-item">
+          <div class="doc-label">Khasar</div>
+          <div class="doc-input">
+            <input id="khasarFile" type="file" accept="image/*,.pdf" />
+            <button class="btn btn-light" data-doc="khasar">⤓</button>
+          </div>
+          <div class="doc-meta" id="khasarMeta">
+            {{ user.documents.khasar.filename if user.documents and user.documents.khasar else "no file chosen" }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Accessibility -->
+  <section class="settings-section">
+    <div class="section-label">Accessibility</div>
+
+    <div class="card">
+      <div class="row-between">
+        <div>
+          <div class="card-title">Language Assistance</div>
+          <div class="card-subtitle">Display content in your preferred local language.</div>
+        </div>
+
+        <select id="languageSelect" class="select">
+          {% set lang = (user.preferences.language if user.preferences else "English") %}
+          <option value="English" {{ "selected" if lang=="English" else "" }}>English</option>
+          <option value="Hindi" {{ "selected" if lang=="Hindi" else "" }}>Hindi</option>
+          <option value="Marathi" {{ "selected" if lang=="Marathi" else "" }}>Marathi</option>
+          <option value="Tamil" {{ "selected" if lang=="Tamil" else "" }}>Tamil</option>
+          <option value="Telugu" {{ "selected" if lang=="Telugu" else "" }}>Telugu</option>
+          <option value="Gujarati" {{ "selected" if lang=="Gujarati" else "" }}>Gujarati</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Notification -->
+  <section class="settings-section">
+    <div class="section-label">Notification</div>
+
+    <div class="card">
+      <div class="row-between">
+        <div>
+          <div class="card-title">Harvest &amp; Crop Updates</div>
+          <div class="card-subtitle">Receive reminders to add harvest details or update crop status.</div>
+        </div>
+
+        {% set enabled = (user.preferences.harvestNotifications if user.preferences else false) %}
+        <label class="switch">
+          <input id="notifToggle" type="checkbox" {{ "checked" if enabled else "" }}>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div id="editProfileOverlay" class="modal-overlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-top">
+      <div class="modal-avatar">
+        <img id="editAvatarPreview"
+             src="{{ user.profilePhotoUrl or url_for('static', filename='img/default-avatar.png') }}"
+             alt="Profile" />
+        <label class="upload-mini">
+          <input id="profilePhotoFile" type="file" accept="image/*" />
+          ⤒
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-grid">
+      <div class="input-group">
+        <label>User ID</label>
+        <input id="editUserId" value="{{ user.userId }}" disabled />
+      </div>
+
+      <div class="input-group">
+        <label>Name</label>
+        <input id="editName" value="{{ user.name }}" />
+      </div>
+
+      <div class="input-group">
+        <label>Email</label>
+        <input id="editEmail" value="{{ user.email }}" />
+      </div>
+
+      <div class="input-group">
+        <label>Phone Number</label>
+        <input id="editPhone" value="{{ user.phone or '' }}" />
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="editCancelBtn" class="btn btn-outline wide">
+        Cancel <span class="btn-icon">↩</span>
+      </button>
+
+      <button id="editSaveBtn" class="btn btn-green wide">
+        Save &amp; Update <span class="btn-icon">✓</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div id="passwordOverlay" class="modal-overlay" aria-hidden="true">
+  <div class="modal modal-sm" role="dialog" aria-modal="true">
+    <div class="modal-grid one-col">
+      <div class="input-group">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input id="currentPassword" type="password" placeholder="Enter password" />
+          <button class="pw-eye" type="button" data-eye="currentPassword">👁</button>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>New Password</label>
+        <div class="pw-wrap">
+          <input id="newPassword" type="password" placeholder="Enter new password" />
+          <button class="pw-eye" type="button" data-eye="newPassword">👁</button>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Confirm Password</label>
+        <div class="pw-wrap">
+          <input id="confirmPassword" type="password" placeholder="Re-enter password" />
+          <button class="pw-eye" type="button" data-eye="confirmPassword">👁</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="pwCancelBtn" class="btn btn-outline wide">
+        Cancel <span class="btn-icon">↩</span>
+      </button>
+
+      <button id="pwSaveBtn" class="btn btn-green wide">
+        Save &amp; Update <span class="btn-icon">✓</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+</body>
+</html>

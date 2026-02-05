@@ -57,3 +57,7 @@ def register_all_blueprints(app):
     app.register_blueprint(traceability_bp)
 
     print("✓ All blueprints registered")
+
+
+    from backend.routes.farmer.setting_routes import settings_bp
+    app.register_blueprint(settings_bp)
