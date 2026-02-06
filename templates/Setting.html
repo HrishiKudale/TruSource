@@ -13,8 +13,8 @@
 <div class="settings-page">
   <div class="settings-header">
     <div class="settings-title">
-      <span class="settings-icon">⚙️</span>
-      <h1>Setting</h1>
+      <img class="grains" src="{{ url_for('static', filename='svg-icons/Setting/Setting.svg') }}" />
+      <span class="head-title">Setting</span>
     </div>
   </div>
 
@@ -27,7 +27,7 @@
         <div class="avatar-wrap">
           <img
             class="avatar"
-            src="{{ user.profilePhotoUrl or url_for('static', filename='img/default-avatar.png') }}"
+            src="{{ user.profilePhotoUrl or url_for('static',filename='svg-icons/Setting/Profile.png') }}"
             alt="Profile"
           />
         </div>
@@ -166,7 +166,7 @@
     <div class="modal-top">
       <div class="modal-avatar">
         <img id="editAvatarPreview"
-             src="{{ user.profilePhotoUrl or url_for('static', filename='img/default-avatar.png') }}"
+             src="{{ user.profilePhotoUrl or url_for('static', filename='svg-icons/Setting/Profile.png') }}"
              alt="Profile" />
         <label class="upload-mini">
           <input id="profilePhotoFile" type="file" accept="image/*" />
