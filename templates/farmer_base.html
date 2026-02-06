@@ -193,10 +193,11 @@
       <!-- Footer -->
       <ul class="frame-6">
         <li><img class="line-2" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}" alt=""/></li>
-        <li class="component">
-          <a href="/settings" class="component-link">
-            <img class="img sidebar-icon" src="{{ url_for('static', filename='svg-icons/Setting.svg') }}">
-            <span class="text-wrapper-2">Setting</span>
+        <li class="{{ 'component-2' if current_page=='setting' else 'component' }}">
+          <a href="{{ url_for('settings_bp.setting_page') }}" class="component-link">
+            <img class="img sidebar-icon {% if current_page=='setting' %}active{% endif %}"
+            src="{{ url_for('static', filename='svg-icons/Setting.svg') }}">
+            <span class="{{ 'dashboard' if current_page=='setting' else 'text-wrapper-2' }}">Setting</span>
           </a>
         </li>
           <li class="component">
