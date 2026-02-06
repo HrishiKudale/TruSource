@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Set, Tuple
 
 from backend.mongo_safe import get_col
 from backend.blockchain import get_crop_history
@@ -28,13 +28,24 @@ class FarmerProcessingService:
     # -------------------------------------------------
     @staticmethod
     def get_processing_overview(farmer_id: str) -> Dict[str, Any]:
+        """
+        Overview is now "1 doc = 1 request", with `items[]` inside each request.
+
+        Returns keys matching ProcessingOverview.html:
+        - kpis.total_requests
+        - kpis.active_processing
+        - kpis.completed_requests
+        - kpis.total_processed_qty   (in qtl)
+        - items[] rows each with:
+            manufacturerId, manufacturerName, location, cropType, totalQuantity, updated_at
+        """
         rows: List[Dict[str, Any]] = []
 
         total_requests = 0
-        total_harvest_qty = 0.0
-        total_processed_qty = 0.0
         active_processing = 0
         completed_requests = 0
+
+        total_processed_kg = 0.0  # convert to qtl for KPI
 
         farmer_req_col = get_col("farmer_request")
         if farmer_req_col is None:
@@ -44,8 +55,7 @@ class FarmerProcessingService:
                     "total_requests": 0,
                     "active_processing": 0,
                     "completed_requests": 0,
-                    "total_processed_qty": 0,
-                    "total_harvest_qty": 0,
+                    "total_processed_qty": 0,  # qtl
                 },
                 "items": [],
                 "error": "Mongo is disabled/unavailable.",
@@ -62,69 +72,104 @@ class FarmerProcessingService:
         )
 
         for raw in cursor:
-            crop_id = raw.get("cropId") or raw.get("crop_id") or ""
-            crop_type = raw.get("cropType") or raw.get("crop_type") or raw.get("crop_name") or ""
-            manufacturer_id = raw.get("manufacturerId") or raw.get("manufacturer_id") or ""
-            status = raw.get("status", "pending")
-
-            try:
-                harvest_qty = float(
-                    raw.get("harvestQuantity")
-                    or raw.get("harvest_qty")
-                    or raw.get("quantity")
-                    or 0
-                )
-            except Exception:
-                harvest_qty = 0.0
-
-            try:
-                req = ProcessingRequestModel(
-                    cropId=crop_id,
-                    farmerId=raw.get("farmerId") or raw.get("farmer_id") or farmer_id,
-                    cropType=crop_type,
-                    harvestDate=raw.get("harvestDate") or raw.get("harvest_date"),
-                    harvestQuantity=harvest_qty,
-                    manufacturerId=manufacturer_id,
-                    packagingType=raw.get("packagingType") or raw.get("packaging_type"),
-                    status=status,
-                    rfidEpcs=raw.get("rfidEpcs"),
-                    rfidEpc=raw.get("rfidEpc"),
-                    bagQty=raw.get("bagQty", 0),
-                    created_at=raw.get("created_at"),
-                    updated_at=raw.get("updated_at"),
-                )
-            except Exception as e:
-                print(f"[FarmerProcessingService.get_processing_overview] invalid doc: {e}")
-                continue
-
             total_requests += 1
-            total_harvest_qty += req.harvestQuantity or 0.0
 
-            onchain_evt = FarmerProcessingService._latest_processed_event(req.cropId)
-
-            if onchain_evt:
-                processed_qty = onchain_evt.processedQuantity or 0.0
-                manufacturer_name = onchain_evt.manufacturerName or ""
-                total_qty_for_row = processed_qty
-
-                completed_requests += 1
-                total_processed_qty += processed_qty
-            else:
-                manufacturer_name = raw.get("manufacturerName") or raw.get("manufacturer_name") or ""
-                total_qty_for_row = req.harvestQuantity or 0.0
-                active_processing += 1
-
+            manufacturer_id = raw.get("manufacturerId") or raw.get("manufacturer_id") or "—"
+            manufacturer_name = raw.get("manufacturerName") or raw.get("manufacturer_name") or "—"
             location = raw.get("location") or "—"
             updated_at = raw.get("updated_at") or raw.get("created_at")
 
+            # NEW STRUCTURE: items[] (list of processing rows)
+            items = raw.get("items") if isinstance(raw.get("items"), list) else []
+
+            # Fallback for old docs (single-crop style)
+            if not items:
+                crop_id = raw.get("cropId") or raw.get("crop_id") or ""
+                crop_type = raw.get("cropType") or raw.get("crop_type") or ""
+                qty = raw.get("harvestQuantity") or raw.get("harvest_qty") or raw.get("quantity") or 0
+                try:
+                    qty = float(qty)
+                except Exception:
+                    qty = 0.0
+
+                if crop_id:
+                    items = [{
+                        "cropId": crop_id,
+                        "cropType": crop_type,
+                        "quantityKg": qty,
+                        "processingType": raw.get("processingType") or "",
+                        "price": raw.get("price") or 0,
+                    }]
+
+            # Unique cropIds and cropTypes for this request
+            crop_ids: List[str] = []
+            crop_types: List[str] = []
+            requested_kg = 0.0
+
+            for it in items:
+                cid = (it.get("cropId") or it.get("crop_id") or "").strip()
+                ctype = (it.get("cropType") or it.get("crop_type") or "").strip()
+                qty = it.get("quantityKg") or it.get("harvestQuantity") or it.get("quantity") or 0
+
+                try:
+                    qty = float(qty)
+                except Exception:
+                    qty = 0.0
+
+                if cid and cid not in crop_ids:
+                    crop_ids.append(cid)
+                if ctype and ctype not in crop_types:
+                    crop_types.append(ctype)
+
+                requested_kg += qty
+
+            # Completion logic:
+            # Completed request = all cropIds in the request have at least one processed on-chain event.
+            processed_kg_for_request = 0.0
+            completed_crops = 0
+
+            for cid in crop_ids:
+                evt = FarmerProcessingService._latest_processed_event(cid)
+                if evt:
+                    completed_crops += 1
+                    processed_kg_for_request += float(evt.processedQuantity or 0)
+
+            is_completed = (len(crop_ids) > 0 and completed_crops == len(crop_ids))
+
+            if is_completed:
+                completed_requests += 1
+            else:
+                active_processing += 1
+
+            total_processed_kg += processed_kg_for_request
+
+            # Crop label in table (same as your current UX expectation)
+            if not crop_types:
+                crop_label = "—"
+            elif len(crop_types) == 1:
+                crop_label = crop_types[0]
+            else:
+                crop_label = f"{crop_types[0]} +{len(crop_types) - 1}"
+
+            # Total quantity shown in table:
+            # if completed -> processed kg, else requested kg
+            total_qty_for_row = processed_kg_for_request if is_completed else requested_kg
+
             rows.append({
-                "manufacturerId": manufacturer_id or "—",
-                "manufacturerName": manufacturer_name or "—",
-                "location": location or "—",
-                "cropType": crop_type or "—",
-                "totalQuantity": total_qty_for_row,
+                "manufacturerId": manufacturer_id,
+                "manufacturerName": manufacturer_name,
+                "location": location,
+                "cropType": crop_label,
+                # IMPORTANT: match template key row.totalQuantity
+                "totalQuantity": round(total_qty_for_row, 2),
                 "updated_at": updated_at,
+                "status": "completed" if is_completed else "active",
+                # keep requestId available if you later add a "View Request" link
+                "requestId": raw.get("requestId"),
             })
+
+        # KPI in qtl (1 qtl = 100 kg)
+        total_processed_qtl = round(total_processed_kg / 100.0, 2)
 
         return {
             "farmerId": farmer_id,
@@ -132,24 +177,88 @@ class FarmerProcessingService:
                 "total_requests": total_requests,
                 "active_processing": active_processing,
                 "completed_requests": completed_requests,
-                "total_processed_qty": round(total_processed_qty, 2),
-                "total_harvest_qty": round(total_harvest_qty, 2),
+                # IMPORTANT: match template key kpis.total_processed_qty
+                "total_processed_qty": total_processed_qtl,
             },
             "items": rows,
         }
 
+    # -------------------------------------------------
+    # REQUEST DETAIL (NEW, 1 request -> items[])
+    # -------------------------------------------------
+    @staticmethod
+    def get_processing_request_detail(farmer_id: str, request_id: str) -> Dict[str, Any]:
+        """
+        Returns one request doc (by requestId) and its items[].
+        You can render this in a new ProcessingRequestDetail.html later.
+        """
+        col = get_col("farmer_request")
+        if col is None:
+            return {"error": "Mongo is disabled/unavailable.", "request": None, "items": [], "grouped": []}
+
+        doc = col.find_one({
+            "requestKind": {"$in": ["processing", "Processing"]},
+            "$or": [{"farmerId": farmer_id}, {"farmer_id": farmer_id}],
+            "requestId": request_id,
+        })
+
+        if not doc:
+            return {"error": "Request not found.", "request": None, "items": [], "grouped": []}
+
+        items = doc.get("items") if isinstance(doc.get("items"), list) else []
+
+        # Group by crop for UI (same crop split across processing types)
+        grouped_map: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+        for it in items:
+            cid = (it.get("cropId") or "").strip()
+            ctype = (it.get("cropType") or "").strip()
+            key = (cid, ctype)
+            grouped_map.setdefault(key, []).append(it)
+
+        grouped = [{"cropId": k[0], "cropType": k[1], "rows": v} for k, v in grouped_map.items()]
+
+        return {
+            "request": {
+                "requestId": doc.get("requestId"),
+                "manufacturerId": doc.get("manufacturerId") or doc.get("manufacturer_id"),
+                "manufacturerName": doc.get("manufacturerName") or doc.get("manufacturer_name"),
+                "location": doc.get("location"),
+                "requestDate": doc.get("requestDate"),
+                "paymentMode": doc.get("paymentMode"),
+                "note": doc.get("note"),
+                "status": doc.get("status", "pending"),
+                "totals": doc.get("totals") or {},
+                "updated_at": doc.get("updated_at") or doc.get("created_at"),
+            },
+            "items": items,
+            "grouped": grouped,
+        }
+
+    # -------------------------------------------------
+    # LEGACY CROP DETAIL (keep for backward compatibility)
+    # -------------------------------------------------
     @staticmethod
     def get_processing_detail(farmer_id: str, crop_id: str) -> Dict[str, Any]:
+        """
+        Old behavior: fetch processing request by cropId.
+        Keep this for now if any existing UI links still use /crop/<crop_id>.
+        """
         farmer_req_col = get_col("farmer_request")
 
         req_doc = None
         if farmer_req_col is not None:
-            # ✅ IMPORTANT: cannot have two "$or" keys. Use $and.
             req_doc = farmer_req_col.find_one(
                 {
                     "$and": [
                         {"$or": [{"farmerId": farmer_id}, {"farmer_id": farmer_id}]},
-                        {"$or": [{"cropId": crop_id}, {"crop_id": crop_id}]},
+                        # either legacy single-crop doc OR request doc that contains this cropId in items[]
+                        {
+                            "$or": [
+                                {"cropId": crop_id},
+                                {"crop_id": crop_id},
+                                {"items.cropId": crop_id},
+                            ]
+                        },
                         {"requestKind": {"$in": ["processing", "Processing"]}},
                     ]
                 }
@@ -157,18 +266,32 @@ class FarmerProcessingService:
 
         req: Optional[ProcessingRequestModel] = None
         if req_doc:
-            try:
-                harvest_qty = float(req_doc.get("harvestQuantity") or req_doc.get("harvest_qty") or 0)
-            except Exception:
-                harvest_qty = 0.0
+            # If it is a new request doc with items[], pick the first matching row for the old view
+            picked_crop_type = ""
+            picked_qty = 0.0
+
+            if isinstance(req_doc.get("items"), list):
+                for it in req_doc["items"]:
+                    if (it.get("cropId") or "").strip() == crop_id:
+                        picked_crop_type = it.get("cropType") or ""
+                        try:
+                            picked_qty += float(it.get("quantityKg") or 0)
+                        except Exception:
+                            pass
+            else:
+                picked_crop_type = req_doc.get("cropType") or req_doc.get("crop_type") or req_doc.get("crop_name") or ""
+                try:
+                    picked_qty = float(req_doc.get("harvestQuantity") or req_doc.get("harvest_qty") or 0)
+                except Exception:
+                    picked_qty = 0.0
 
             try:
                 req = ProcessingRequestModel(
-                    cropId=req_doc.get("cropId") or req_doc.get("crop_id") or crop_id,
+                    cropId=crop_id,
                     farmerId=req_doc.get("farmerId") or req_doc.get("farmer_id") or farmer_id,
-                    cropType=req_doc.get("cropType") or req_doc.get("crop_type") or req_doc.get("crop_name"),
-                    harvestDate=req_doc.get("harvestDate") or req_doc.get("harvest_date"),
-                    harvestQuantity=harvest_qty,
+                    cropType=picked_crop_type,
+                    harvestDate=req_doc.get("requestDate") or req_doc.get("harvestDate") or req_doc.get("harvest_date"),
+                    harvestQuantity=picked_qty,
                     manufacturerId=req_doc.get("manufacturerId") or req_doc.get("manufacturer_id"),
                     packagingType=req_doc.get("packagingType") or req_doc.get("packaging_type"),
                     status=req_doc.get("status", "pending"),
@@ -269,7 +392,7 @@ class FarmerProcessingService:
             return None
 
     # -------------------------------------------------
-    # CREATE PROCESSING REQUESTS (Mongo insert)
+    # CREATE PROCESSING REQUEST (1 Mongo doc with items[])
     # -------------------------------------------------
     @staticmethod
     def create_processing_requests(farmer_id: str, form) -> Dict[str, Any]:
@@ -285,23 +408,23 @@ class FarmerProcessingService:
         payment_mode = form.get("payment_mode") or None
         note = form.get("note") or ""
 
-        packaging_type = form.get("packaging_type") or None
-        bags_count_raw = form.get("bags_count") or "0"
-        try:
-            bags_count = int(bags_count_raw or 0)
-        except ValueError:
-            bags_count = 0
-
+        # ---- Items lists (from hidden inputs in table rows) ----
         crop_ids = form.getlist("items_crop_id[]")
-        crop_names = form.getlist("items_crop_name[]")
+        crop_types = form.getlist("items_crop_type[]")
         proc_types = form.getlist("items_processing_type[]")
-        quantities_raw = form.getlist("items_quantity[]")
-        prices_raw = form.getlist("items_price[]")
+        qty_raw_list = form.getlist("items_quantity_kg[]")
+        price_raw_list = form.getlist("items_price[]")
+
+        # Backward compatibility (if older JS names still exist)
+        if not crop_types:
+            crop_types = form.getlist("items_crop_name[]") or form.getlist("items_crop_type[]")
+        if not qty_raw_list:
+            qty_raw_list = form.getlist("items_quantity[]") or form.getlist("items_quantityKg[]")
 
         if not crop_ids:
             return {"ok": False, "error": "No crop rows added to the request."}
 
-        # Optional manufacturer location from users
+        # Optional manufacturer location
         location = ""
         if manufacturer_id and users_col is not None:
             mdoc = (
@@ -311,81 +434,93 @@ class FarmerProcessingService:
             if mdoc:
                 location = mdoc.get("location") or ""
 
-        docs: List[Dict[str, Any]] = []
-        now = datetime.utcnow()
+        # ---- Build items array ----
+        items: List[Dict[str, Any]] = []
+        total_qty = 0.0
+        total_value = 0.0
 
         for idx, crop_id in enumerate(crop_ids):
             crop_id = (crop_id or "").strip()
             if not crop_id:
                 continue
 
-            crop_name = (crop_names[idx] if idx < len(crop_names) else "") or ""
+            crop_type = (crop_types[idx] if idx < len(crop_types) else "") or ""
             proc_type = (proc_types[idx] if idx < len(proc_types) else "") or ""
 
-            qty_raw = quantities_raw[idx] if idx < len(quantities_raw) else ""
-            try:
-                harvest_qty = float(qty_raw or 0)
-            except ValueError:
-                harvest_qty = 0.0
+            qty_raw = (qty_raw_list[idx] if idx < len(qty_raw_list) else "") or "0"
+            price_raw = (price_raw_list[idx] if idx < len(price_raw_list) else "") or ""
 
-            price_raw = prices_raw[idx] if idx < len(prices_raw) else ""
             try:
-                price = float(price_raw or 0)
-            except ValueError:
+                qty = float(qty_raw)
+            except Exception:
+                qty = 0.0
+
+            try:
+                price = float(price_raw) if str(price_raw).strip() != "" else 0.0
+            except Exception:
                 price = 0.0
 
-            doc = {
-                "requestKind": "processing",
+            # row-level validation
+            if not crop_type or not proc_type or qty <= 0:
+                continue
 
-                # ✅ store both naming styles so old code works too
+            line_value = round(qty * price, 2) if price > 0 else 0.0
+
+            items.append({
                 "cropId": crop_id,
-                "crop_id": crop_id,
-
-                "farmerId": farmer_id,
-                "farmer_id": farmer_id,
-
-                "cropType": crop_name,     # your UI label
-                "crop_type": crop_name,
-
-                "harvestDate": request_date,
-                "harvestQuantity": harvest_qty,
-
-                "manufacturerId": manufacturer_id,
-                "manufacturer_id": manufacturer_id,
-
-                "manufacturerName": manufacturer_name,
-                "manufacturer_name": manufacturer_name,
-
-                "packagingType": packaging_type,
-                "status": "pending",
-
-                "rfidEpcs": [],
-                "rfidEpc": "",
-                "bagQty": bags_count,
-
+                "cropType": crop_type,
                 "processingType": proc_type,
+                "quantityKg": qty,
                 "price": price,
-                "paymentMode": payment_mode,
-                "note": note,
-                "location": location,
+                "lineValue": line_value,
+            })
 
-                "created_at": now,
-                "updated_at": now,
-            }
-            docs.append(doc)
+            total_qty += qty
+            total_value += qty * price
 
-        if not docs:
-            return {"ok": False, "error": "No valid rows to insert."}
+        if not items:
+            return {"ok": False, "error": "No valid rows found. Please add crop, processing type, and quantity."}
 
-        result = farmer_req_col.insert_many(docs)
-        return {
-            "ok": True,
-            "inserted_count": len(result.inserted_ids),
-            "cropIds": [d["cropId"] for d in docs],
+        now = datetime.utcnow()
+        request_id = f"PRC{now.strftime('%Y%m%d%H%M%S%f')[:-3]}"
+
+        doc = {
+            "requestKind": "processing",
+            "requestId": request_id,
+
+            "farmerId": farmer_id,
+            "farmer_id": farmer_id,
+
+            "manufacturerId": manufacturer_id,
+            "manufacturer_id": manufacturer_id,
+            "manufacturerName": manufacturer_name,
+            "manufacturer_name": manufacturer_name,
+
+            "requestDate": request_date,
+            "paymentMode": payment_mode,
+            "note": note,
+            "location": location,
+
+            "status": "pending",
+
+            # ✅ all rows here
+            "items": items,
+
+            "totals": {
+                "totalQuantityKg": round(total_qty, 2),
+                "totalValue": round(total_value, 2),
+                "itemsCount": len(items),
+            },
+
+            "created_at": now,
+            "updated_at": now,
         }
 
+        result = farmer_req_col.insert_one(doc)
+        return {"ok": True, "requestId": request_id, "mongoId": str(result.inserted_id)}
+
     # -------------------------------------------------
-    # MANUFACTURER / FACTORY INFO PAGE
+    # MANUFACTURER / FACTORY INFO PAGE (works with request docs)
     # -------------------------------------------------
     @staticmethod
     def get_manufacturer_info(farmer_id: str, manufacturer_id: str) -> Dict[str, Any]:
@@ -446,7 +581,7 @@ class FarmerProcessingService:
 
         cur = farmer_req_col.find(
             {
-                "requestKind": "processing",
+                "requestKind": {"$in": ["processing", "Processing"]},
                 "$and": [
                     {"$or": [{"farmerId": farmer_id}, {"farmer_id": farmer_id}]},
                     {"$or": [{"manufacturerId": manufacturer_id}, {"manufacturer_id": manufacturer_id}]},
@@ -459,23 +594,41 @@ class FarmerProcessingService:
         total_qty = 0.0
 
         for r in cur:
-            crop_id = (r.get("cropId") or r.get("crop_id") or "").strip()
-            crop_type = (r.get("cropType") or r.get("crop_type") or "").strip()
-            try:
-                qty = float(r.get("harvestQuantity") or r.get("harvest_qty") or 0)
-            except Exception:
-                qty = 0.0
+            # NEW: request doc with items[]
+            items = r.get("items") if isinstance(r.get("items"), list) else []
 
-            status = r.get("status", "pending")
+            if items:
+                for it in items:
+                    crop_id = (it.get("cropId") or "").strip()
+                    crop_type = (it.get("cropType") or "").strip()
+                    try:
+                        qty = float(it.get("quantityKg") or 0)
+                    except Exception:
+                        qty = 0.0
 
-            if crop_type:
-                crops_linked_set.add(crop_type)
+                    status = r.get("status", "pending")
 
-            total_qty += qty
+                    if crop_type:
+                        crops_linked_set.add(crop_type)
 
-            table_rows.append(
-                {"cropId": crop_id, "cropType": crop_type, "quantity": qty, "status": status}
-            )
+                    total_qty += qty
+                    table_rows.append({"cropId": crop_id, "cropType": crop_type, "quantity": qty, "status": status})
+            else:
+                # fallback legacy single-crop doc
+                crop_id = (r.get("cropId") or r.get("crop_id") or "").strip()
+                crop_type = (r.get("cropType") or r.get("crop_type") or "").strip()
+                try:
+                    qty = float(r.get("harvestQuantity") or r.get("harvest_qty") or 0)
+                except Exception:
+                    qty = 0.0
+
+                status = r.get("status", "pending")
+
+                if crop_type:
+                    crops_linked_set.add(crop_type)
+
+                total_qty += qty
+                table_rows.append({"cropId": crop_id, "cropType": crop_type, "quantity": qty, "status": status})
 
         crops_linked = ", ".join(sorted(crops_linked_set)) if crops_linked_set else "—"
 

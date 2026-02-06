@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field
 
 
 class ProcessingRequestModel(BaseModel):
-
     cropId: str
     farmerId: str
     cropType: Optional[str] = None

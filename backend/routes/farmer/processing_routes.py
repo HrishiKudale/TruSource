@@ -71,7 +71,6 @@ def submit_request():
                 )
             )
         else:
-            # if mongo is down, prefer your service error text
             if "Mongo" not in mongo_error:
                 mongo_error = "Mongo is disabled/unavailable. Manufacturer list cannot be loaded."
 
@@ -91,7 +90,6 @@ def submit_request():
     flash("Processing request submitted.", "success")
     return redirect(url_for("farmer_processing_bp.processing_overview"))
 
-
 # ----------------- HTML OVERVIEW -----------------
 @processing_bp.get("/overview")
 def processing_overview():
@@ -108,8 +106,24 @@ def processing_overview():
         **data,
     )
 
+# ----------------- NEW: REQUEST DETAIL (1 request -> items[]) -----------------
+@processing_bp.get("/request/<request_id>")
+def processing_request_detail(request_id: str):
+    if session.get("role") != "farmer" or not session.get("user_id"):
+        return redirect("/newlogin")
 
-# ----------------- HTML DETAIL -----------------
+    farmer_id = session["user_id"]
+    data = FarmerProcessingService.get_processing_request_detail(farmer_id, request_id)
+
+    # Create this template later (or I can generate it for you)
+    return render_template(
+        "ProcessingRequestDetail.html",
+        active_page="storage",
+        active_submenu="processing",
+        **data,
+    )
+
+# ----------------- LEGACY: HTML DETAIL BY CROP -----------------
 @processing_bp.get("/crop/<crop_id>")
 def processing_detail(crop_id: str):
     if session.get("role") != "farmer" or not session.get("user_id"):
@@ -125,7 +139,6 @@ def processing_detail(crop_id: str):
         **data,
     )
 
-
 # ----------------- JSON APIs -----------------
 @processing_bp.get("/api/overview")
 def processing_overview_api():
@@ -135,6 +148,13 @@ def processing_overview_api():
     farmer_id = session["user_id"]
     return jsonify(FarmerProcessingService.get_processing_overview(farmer_id))
 
+@processing_bp.get("/api/request/<request_id>")
+def processing_request_detail_api(request_id: str):
+    if session.get("role") != "farmer" or not session.get("user_id"):
+        return jsonify({"error": "unauthorized"}), 401
+
+    farmer_id = session["user_id"]
+    return jsonify(FarmerProcessingService.get_processing_request_detail(farmer_id, request_id))
 
 @processing_bp.get("/api/crop/<crop_id>")
 def processing_detail_api(crop_id: str):
@@ -143,7 +163,6 @@ def processing_detail_api(crop_id: str):
 
     farmer_id = session["user_id"]
     return jsonify(FarmerProcessingService.get_processing_detail(farmer_id, crop_id))
-
 
 # ----------------- MANUFACTURER / FACTORY INFO PAGE -----------------
 @processing_bp.get("/manufacturer/<manufacturer_id>")

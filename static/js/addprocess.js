@@ -125,28 +125,29 @@ document.addEventListener("DOMContentLoaded", () => {
     tr.dataset.price = price || "0";
     tr.dataset.crop = cropType;
 
-    tr.innerHTML = `
-      <td>
-        ${cropId}
-        <input type="hidden" name="items_crop_id[]" value="${cropId}">
-      </td>
-      <td>
-        ${cropType}
-        <input type="hidden" name="items_crop_type[]" value="${cropType}">
-      </td>
-      <td>
-        ${procType}
-        <input type="hidden" name="items_processing_type[]" value="${procType}">
-      </td>
-      <td>
-        ${qty} Kg
-        <input type="hidden" name="items_quantityKg[]" value="${qty}">
-      </td>
-      <td>
-        ${price ? "₹ " + price : "-"}
-        <input type="hidden" name="items_price[]" value="${price}">
-      </td>
-    `;
+      tr.innerHTML = `
+        <td>
+          ${cropId}
+          <input type="hidden" name="items_crop_id[]" value="${cropId}">
+        </td>
+        <td>
+          ${cropType}
+          <input type="hidden" name="items_crop_type[]" value="${cropType}">
+        </td>
+        <td>
+          ${procType}
+          <input type="hidden" name="items_processing_type[]" value="${procType}">
+        </td>
+        <td>
+          ${qty} Kg
+          <input type="hidden" name="items_quantity_kg[]" value="${qty}">
+        </td>
+        <td>
+          ${price ? "₹ " + price : "-"}
+          <input type="hidden" name="items_price[]" value="${price}">
+        </td>
+      `;
+
 
     tbody.appendChild(tr);
 
