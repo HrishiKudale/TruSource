@@ -723,7 +723,7 @@
 
 .my-crop .frame-22 {
   display: flex;
-  width: 240px;
+  max-width: 240px;
   align-items: center;
   gap: 8px;
   padding: 9px 12px;

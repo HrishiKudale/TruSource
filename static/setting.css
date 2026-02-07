@@ -39,19 +39,19 @@ body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--text
   padding-top:2px;
 }
 
-.field-label{font-size:14px;color:#777;margin-bottom:4px}
-.field-value{font-size:13px;color:#111}
+.field-label{font-size:16px;color:#777;margin-bottom:4px}
+.field-value{font-size:14px;color:#111}
 
 .card-actions{display:flex;align-items:flex-start;justify-content:flex-end}
 
 .row-between{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.card-title{font-size:13px;font-weight:700}
-.card-subtitle{font-size:12px;color:#777;margin-top:4px}
+.card-title{font-size:16px;font-weight:700}
+.card-subtitle{font-size:14px;color:#777;margin-top:4px}
 .card-note{font-size:11px;color:#a0a0a0;margin-top:6px}
 
 .doc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 .doc-item{border:1px solid var(--border);border-radius:10px;padding:14px}
-.doc-label{font-size:12px;color:#777;margin-bottom:8px}
+.doc-label{font-size:14px;color:#777;margin-bottom:8px}
 .doc-input{display:flex;gap:10px;align-items:center}
 .doc-input input{flex:1}
 .doc-meta{margin-top:8px;font-size:12px;color:#777}
@@ -69,7 +69,7 @@ body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--text
   padding:9px 14px;
   border:1px solid transparent;
   cursor:pointer;
-  font-size:12px;
+  font-size:14px;
 }
 .btn-icon{margin-left:8px}
 .btn-outline{background:#fff;border-color:#cfcfcf}

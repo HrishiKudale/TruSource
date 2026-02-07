@@ -78,6 +78,26 @@
       <input type="search" id="table-search" class="text-wrapper-7"
              placeholder="Search" aria-label="Search storage requests" />
     </div>
+        <div class="frame-23">
+      {% for label in ["Crop", "Location"] %}
+      <div class="frame-24">
+        <div class="dropdown-title-wrapper">
+          <span class="text-wrapper-7">{{ label }}</span>
+        </div>
+        <button class="caret-down-wrapper">
+          <img src="{{ url_for('static', filename='svg-icons/DownArrow.svg') }}">
+        </button>
+      </div>
+      {% endfor %}
+
+      <button class="frame-25">
+        <img class="img" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}">
+      </button>
+
+      <button class="frame-25">
+        <img class="img" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}">
+      </button>
+    </div>
   </div>
 
 
