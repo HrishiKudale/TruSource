@@ -25,7 +25,7 @@
     <div class="card">
       <div class="card-header">
         <div class="card-header-left">
-          <img class="card-header-icon" src="{{ url_for('static', filename='svg-icons/Order Detail.svg') }}" alt="">
+          <img class="card-header-icon" src="{{ url_for('static', filename='svg-icons/Order/Orderdetail.svg') }}" alt="">
           <h2 class="card-title">Order Details</h2>
         </div>
       </div>
@@ -56,6 +56,11 @@
             <option value="Net 15">Net 15</option>
             <option value="Net 30">Net 30</option>
           </select>
+                <span class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+                </span>
         </div>
 
         <div class="field">
@@ -65,6 +70,11 @@
             <option value="Manufacturer">Manufacturer</option>
             <option value="Retailer">Retailer</option>
           </select>
+                <span class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+                </span>
         </div>
 
         <div class="field">
@@ -77,7 +87,13 @@
               </option>
             {% endfor %}
           </select>
+                <span class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+                </span>
         </div>
+
 
         <div class="field">
           <label>Address</label>
@@ -126,6 +142,11 @@
                 </option>
               {% endfor %}
             </select>
+                <span class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+                </span>            
           </div>
 
           <div class="field">
@@ -139,6 +160,11 @@
                 </option>
               {% endfor %}
             </select>
+                <span class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+                </span>
           </div>
 
           <div class="field">
@@ -153,7 +179,6 @@
         </div>
       </div>
 
-            <!-- PICKUP DETAILS -->
             <!-- PICKUP DETAILS -->
       <div class="card">
         <div class="card-header">
@@ -189,6 +214,11 @@
               {% endfor %}
             </select>
             <input type="hidden" name="pickupFromLabel" id="pickupFromLabelWarehouse">
+                <span class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">
+                </span>
           </div>
 
           <!-- Farm dropdown -->
@@ -231,7 +261,7 @@
     <div class="summary-modal-content">
       
       <div class="summary-illus">
-        <img src="{{ url_for('static', filename='illustrations/Order Summary Modal.svg') }}" alt="">
+        <img src="{{ url_for('static', filename='svg-icons/Order/OrderSummaryModal.svg') }}" alt="">
       </div>
       <!-- REVIEW STATE -->
       <div id="orderSummaryReview">

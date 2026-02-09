@@ -5,10 +5,7 @@
   // fallback: id -> name
   const getField = (id, name) => byId(id) || document.querySelector(`[name="${name}"]`);
 
-  const setVal = (el, v) => {
-    if (!el) return;
-    el.value = (v === undefined || v === null) ? "" : String(v);
-  };
+
 
   const getVal = (el) => (el && el.value != null) ? String(el.value).trim() : "";
 
