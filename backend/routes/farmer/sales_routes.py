@@ -1,10 +1,10 @@
 # backend/routes/farmer/sales_routes.py
 
-from flask import Blueprint, render_template, session, redirect, url_for, request, jsonify
+from flask import Blueprint, render_template, session, redirect, request, jsonify
 from datetime import datetime
 import random
 
-from backend.mongo_safe import get_col
+from backend.mongo_safe import get_db
 from backend.services.farmer.orders_service import OrderService
 from backend.services.farmer.crop_service import CropService
 
@@ -26,13 +26,23 @@ def _safe_list(cursor):
         return []
 
 
+def _users_collection():
+    """
+    Returns (db, users_col). If mongo is disabled/unavailable, users_col will be None.
+    """
+    db = get_db()
+    if db is None:
+        print("⚠️ Mongo disabled/unavailable: skipping users collection queries")
+        return None, None
+    return db, db.users
+
+
 # -------------------- PAGES --------------------
 
 @sales_bp.get("/orders")
 def orders_page():
     farmer_id = _require_farmer_session()
     if not farmer_id:
-        # keep same as your app behavior
         return redirect("/newlogin")
 
     orders = OrderService.list_orders_for_farmer(farmer_id)
@@ -46,7 +56,7 @@ def orders_page():
         total_delivered_orders=total_delivered,
         total_revenue=total_revenue,
         active_page="sales",
-        active_submenu="orders"
+        active_submenu="orders",
     )
 
 
@@ -58,13 +68,13 @@ def create_order_page():
 
     request_id = (request.args.get("requestId") or "").strip()
 
-    users_col = get_col("users")
+    db, users_col = _users_collection()
 
     # -------------------
     # Buyers (users)
     # -------------------
     buyers = []
-    if users_col:
+    if users_col is not None:
         buyers = _safe_list(
             users_col.find(
                 {"role": {"$in": ["manufacturer", "retailer"]}},
@@ -86,14 +96,14 @@ def create_order_page():
     # -------------------
     # Crops (blockchain-backed)
     # -------------------
-    crop_data = CropService.get_my_crops(farmer_id)
+    crop_data = CropService.get_my_crops(farmer_id) or {}
     crops = crop_data.get("crops", [])
 
     # -------------------
     # Warehouses (optional)
     # -------------------
     warehouses = []
-    if users_col:
+    if users_col is not None:
         warehouses = _safe_list(
             users_col.find(
                 {"role": "warehouse"},
@@ -102,12 +112,10 @@ def create_order_page():
         )
 
     # -------------------
-    # Farms (optional)
-    # NOTE: Your query {"farmerId": farmer_id} inside users collection might not exist.
-    # Keeping it mongo-safe. If you actually store farms in another collection, switch here.
+    # Farms (optional) - mongo safe
     # -------------------
     farms = []
-    if users_col:
+    if users_col is not None:
         farms = _safe_list(
             users_col.find(
                 {"farmerId": farmer_id},
@@ -124,7 +132,7 @@ def create_order_page():
         request_id=request_id,
         active_page="sales",
         active_submenu="orders",
-        mongo_enabled=bool(users_col),
+        mongo_enabled=bool(users_col is not None),
     )
 
 
@@ -141,14 +149,15 @@ def api_generate_request_id():
     if not farmer_id:
         return jsonify({"error": "unauthorized"}), 401
 
-    users_col = get_col("users")
-    if not users_col:
-        # Fallback if Mongo off: still generate an ID
-        initials = "FRM"
-    else:
-        user = users_col.find_one({"userId": farmer_id}, {"_id": 0, "name": 1}) or {}
+    db = get_db()
+    initials = "FRM"
+
+    if db is not None:
+        user = db.users.find_one({"userId": farmer_id}, {"_id": 0, "name": 1}) or {}
         name = (user.get("name") or "").strip()
         initials = "".join([p[0].upper() for p in name.split()[:2]]) or "FRM"
+    else:
+        print("⚠️ Mongo disabled/unavailable: using default initials FRM")
 
     date_part = datetime.utcnow().strftime("%Y%m%d")
     rand_part = str(random.randint(10000, 99999))
@@ -169,15 +178,15 @@ def api_request_prefill(request_id):
 def api_buyer_details(buyer_id):
     buyer_type = (request.args.get("buyerType") or "").strip().lower()
 
-    users_col = get_col("users")
-    if not users_col:
+    db = get_db()
+    if db is None:
         return jsonify({"error": "mongo disabled/unavailable"}), 503
 
     q = {"userId": buyer_id}
     if buyer_type in ["manufacturer", "retailer"]:
         q["role"] = buyer_type
 
-    u = users_col.find_one(q, {"_id": 0})
+    u = db.users.find_one(q, {"_id": 0})
     if not u:
         return jsonify({"error": "buyer not found"}), 404
 
