@@ -117,20 +117,20 @@
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, "0");
         const dd = String(d.getDate()).padStart(2, "0");
-        setVal(orderDateEl, `${yyyy}-${mm}-${dd}`);
+        getVal(orderDateEl, `${yyyy}-${mm}-${dd}`);
       }
 
       // OrderId
       if (orderIdEl && !getVal(orderIdEl)) {
         const { res, data } = await safeFetchJSON("/farmer/sales/api/generate_order_id");
-        if (res.ok && data && data.orderId) setVal(orderIdEl, data.orderId);
+        if (res.ok && data && data.orderId) getVal(orderIdEl, data.orderId);
       }
 
       // RequestId (optional endpoint)
       if (requestIdEl && !getVal(requestIdEl)) {
         try {
           const { res, data } = await safeFetchJSON("/farmer/sales/api/generate_request_id");
-          if (res.ok && data && data.requestId) setVal(requestIdEl, data.requestId);
+          if (res.ok && data && data.requestId) getVal(requestIdEl, data.requestId);
         } catch (_) {
           // endpoint may not exist yet -> ignore
         }
@@ -168,10 +168,10 @@
 
   // -------------------- BUYER TYPE -> FILTER BUYERS --------------------
   function resetBuyerAutoFill() {
-    setVal(buyerAddressEl, "");
-    setVal(buyerContactPersonEl, "");
-    setVal(buyerContactEl, "");
-    setVal(buyerEmailEl, "");
+    getVal(buyerAddressEl, "");
+    getVal(buyerContactPersonEl, "");
+    getVal(buyerContactEl, "");
+    getVal(buyerEmailEl, "");
 
     markPrefilled(buyerAddressEl, false);
     markPrefilled(buyerContactPersonEl, false);
@@ -210,10 +210,10 @@
       }
 
       // Fill + mark grey (prefilled)
-      setVal(buyerAddressEl, data.address || "-");            markPrefilled(buyerAddressEl, true);
-      setVal(buyerContactPersonEl, data.contactPerson || "-");markPrefilled(buyerContactPersonEl, true);
-      setVal(buyerContactEl, data.phone || "-");              markPrefilled(buyerContactEl, true);
-      setVal(buyerEmailEl, data.email || "-");                markPrefilled(buyerEmailEl, true);
+      getVal(buyerAddressEl, data.address || "-");            markPrefilled(buyerAddressEl, true);
+      getVal(buyerContactPersonEl, data.contactPerson || "-");markPrefilled(buyerContactPersonEl, true);
+      getVal(buyerContactEl, data.phone || "-");              markPrefilled(buyerContactEl, true);
+      getVal(buyerEmailEl, data.email || "-");                markPrefilled(buyerEmailEl, true);
 
     } catch (e) {
       console.error(e);
@@ -263,7 +263,7 @@
 
       // lock requestId if exists
       if (requestIdEl) {
-        setVal(requestIdEl, requestId);
+        getVal(requestIdEl, requestId);
         markPrefilled(requestIdEl, true);
       }
 
@@ -279,13 +279,13 @@
         markPrefilled(cropTypeSelect, true);
       }
       if (data.quantityKg && quantityKgEl) {
-        setVal(quantityKgEl, data.quantityKg);
+        getVal(quantityKgEl, data.quantityKg);
         markPrefilled(quantityKgEl, true);
       }
 
       // buyer type + buyer prefill
       if (data.buyerType && buyerTypeEl) {
-        setVal(buyerTypeEl, data.buyerType);
+        getVal(buyerTypeEl, data.buyerType);
         markPrefilled(buyerTypeEl, true);
         filterBuyersByType();
       }
