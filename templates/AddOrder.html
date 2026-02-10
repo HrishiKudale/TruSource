@@ -49,20 +49,15 @@
 
         <div class="field">
           <label>Payment Terms</label>
-          <div class="field-input field-input--select">
-            <select id="paymentTerms" name="payment_terms" required>
-              <option value="" disabled selected>Select payment method</option>
-              <option value="Cash">Cash</option>
-              <option value="Net 10">Net 10</option>
-              <option value="Net 15">Net 15</option>
-              <option value="Net 30">Net 30</option>
-            </select>
-              <span class="select-chevron">
-                  <img class="sd-caret"
-                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
-                   alt="dropdown">  
-              </span>
-          </div>
+          
+          <select id="paymentTerms" name="payment_terms" required>
+            <option value="" disabled selected>Select payment method</option>
+            <option value="Cash">Cash</option>
+            <option value="Net 10">Net 10</option>
+            <option value="Net 15">Net 15</option>
+            <option value="Net 30">Net 30</option>
+          </select>
+
         </div>
 
         <div class="field">
