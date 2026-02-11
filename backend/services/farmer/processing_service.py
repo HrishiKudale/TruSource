@@ -716,106 +716,106 @@ class FarmerProcessingService:
 
         return [{"no": i + 1, "title": parts[i]} for i in range(len(parts))]
 
-@staticmethod
-def get_process_status(farmer_id: str, manufacturer_id: str, crop_id: str):
-    col = get_col("farmer_request")
-    if col is None:
-        return {"ok": False, "error": "Mongo is disabled/unavailable."}
+    @staticmethod
+    def get_process_status(farmer_id: str, manufacturer_id: str, crop_id: str):
+        col = get_col("farmer_request")
+        if col is None:
+            return {"ok": False, "error": "Mongo is disabled/unavailable."}
 
-    # Find latest request that contains this cropId for this farmer+manufacturer
-    doc = col.find_one(
-        {
-            "requestKind": {"$in": ["processing", "Processing"]},
-            "$or": [{"farmerId": farmer_id}, {"farmer_id": farmer_id}],
-            "$or": [{"manufacturerId": manufacturer_id}, {"manufacturer_id": manufacturer_id}],
-            "items.cropId": crop_id,
-        },
-        sort=[("created_at", -1), ("_id", -1)]
-    )
+        # Find latest request that contains this cropId for this farmer+manufacturer
+        doc = col.find_one(
+            {
+                "requestKind": {"$in": ["processing", "Processing"]},
+                "$or": [{"farmerId": farmer_id}, {"farmer_id": farmer_id}],
+                "$or": [{"manufacturerId": manufacturer_id}, {"manufacturer_id": manufacturer_id}],
+                "items.cropId": crop_id,
+            },
+            sort=[("created_at", -1), ("_id", -1)]
+        )
 
-    if not doc:
-        return {"ok": False, "error": f"No processing request found for crop {crop_id}."}
+        if not doc:
+            return {"ok": False, "error": f"No processing request found for crop {crop_id}."}
 
-    items = doc.get("items") if isinstance(doc.get("items"), list) else []
-    crop_items = [it for it in items if (it.get("cropId") or "").strip() == crop_id]
+        items = doc.get("items") if isinstance(doc.get("items"), list) else []
+        crop_items = [it for it in items if (it.get("cropId") or "").strip() == crop_id]
 
-    # Quantity (kg) from farmer_request
-    total_qty_kg = 0
-    for it in crop_items:
-        try:
-            total_qty_kg += float(it.get("quantityKg") or 0)
-        except Exception:
-            pass
+        # Quantity (kg) from farmer_request
+        total_qty_kg = 0
+        for it in crop_items:
+            try:
+                total_qty_kg += float(it.get("quantityKg") or 0)
+            except Exception:
+                pass
 
-    # ✅ Processing Type (Crop Details card) must come from farmer_request
-    ptypes = [it.get("processingType") for it in crop_items if it.get("processingType")]
-    uniq_ptypes = []
-    for p in ptypes:
-        if p not in uniq_ptypes:
-            uniq_ptypes.append(p)
-    processing_type_display = " / ".join(uniq_ptypes) if uniq_ptypes else "-"
+        # ✅ Processing Type (Crop Details card) must come from farmer_request
+        ptypes = [it.get("processingType") for it in crop_items if it.get("processingType")]
+        uniq_ptypes = []
+        for p in ptypes:
+            if p not in uniq_ptypes:
+                uniq_ptypes.append(p)
+        processing_type_display = " / ".join(uniq_ptypes) if uniq_ptypes else "-"
 
-    # Crop type is needed for manufacturer stepper lookup
-    crop_type = crop_items[0].get("cropType") if crop_items else "-"
+        # Crop type is needed for manufacturer stepper lookup
+        crop_type = crop_items[0].get("cropType") if crop_items else "-"
 
-    status = doc.get("status", "pending")
+        status = doc.get("status", "pending")
 
-    # ✅ Steps STRICTLY from users.processing_services
-    steps = FarmerProcessingService._build_steps_from_manufacturer(manufacturer_id, crop_type)
+        # ✅ Steps STRICTLY from users.processing_services
+        steps = FarmerProcessingService._build_steps_from_manufacturer(manufacturer_id, crop_type)
 
-    # ✅ Do NOT fallback to farmer_request types for the stepper
-    if not steps:
-        steps = [{"no": 1, "title": "Processing"}]
+        # ✅ Do NOT fallback to farmer_request types for the stepper
+        if not steps:
+            steps = [{"no": 1, "title": "Processing"}]
 
-    # Progress mapping can still use request status (doesn't affect step definitions)
-    current_step = FarmerProcessingService._status_to_step(status, len(steps))
+        # Progress mapping can still use request status (doesn't affect step definitions)
+        current_step = FarmerProcessingService._status_to_step(status, len(steps))
 
-    request_context = {
-        "plant_code": manufacturer_id,
-        "request_code": crop_id,
-        "status": status.capitalize() if isinstance(status, str) else "Pending",
+        request_context = {
+            "plant_code": manufacturer_id,
+            "request_code": crop_id,
+            "status": status.capitalize() if isinstance(status, str) else "Pending",
 
-        "request_id": doc.get("requestId", "-"),
-        "quantity_sent": f"{int(total_qty_kg)} kg" if total_qty_kg else "-",
-        "sent_from": doc.get("location", "Farm / Warehouse") or "Farm / Warehouse",
+            "request_id": doc.get("requestId", "-"),
+            "quantity_sent": f"{int(total_qty_kg)} kg" if total_qty_kg else "-",
+            "sent_from": doc.get("location", "Farm / Warehouse") or "Farm / Warehouse",
 
-        # ✅ This is from farmer_request
-        "processing_type": processing_type_display,
+            # ✅ This is from farmer_request
+            "processing_type": processing_type_display,
 
-        "notes": doc.get("note") or "-",
+            "notes": doc.get("note") or "-",
 
-        "started_at": "-",
-        "completed_at": "-",
-        "processed_batch": "-",
-        "output_qty": "-",
-    }
+            "started_at": "-",
+            "completed_at": "-",
+            "processed_batch": "-",
+            "output_qty": "-",
+        }
 
-    documents_left = [
-        {"name": "Inward Receipt", "status": "Not Uploaded"},
-        {"name": "Output Report", "status": "Not Uploaded"},
-        {"name": "fassi Certificate", "status": "Not Uploaded"},
-    ]
-    documents_right = [
-        {"name": "Processing Sheet", "status": "Not Uploaded"},
-        {"name": "Invoice", "status": "Not Uploaded"},
-        {"name": "Certificate of origin", "status": "Not Uploaded"},
-    ]
+        documents_left = [
+            {"name": "Inward Receipt", "status": "Not Uploaded"},
+            {"name": "Output Report", "status": "Not Uploaded"},
+            {"name": "fassi Certificate", "status": "Not Uploaded"},
+        ]
+        documents_right = [
+            {"name": "Processing Sheet", "status": "Not Uploaded"},
+            {"name": "Invoice", "status": "Not Uploaded"},
+            {"name": "Certificate of origin", "status": "Not Uploaded"},
+        ]
 
-    return {
-        "ok": True,
-        "crop_id": crop_id,
-        "crop_type": crop_type,
-        "manufacturerId": manufacturer_id,
+        return {
+            "ok": True,
+            "crop_id": crop_id,
+            "crop_type": crop_type,
+            "manufacturerId": manufacturer_id,
 
-        # Left card uses this
-        "request_context": request_context,
+            # Left card uses this
+            "request_context": request_context,
 
-        # Right stepper uses these
-        "current_step": current_step,
-        "steps": steps,
+            # Right stepper uses these
+            "current_step": current_step,
+            "steps": steps,
 
-        "shipment": None,
-        "return_shipment": None,
-        "documents_left": documents_left,
-        "documents_right": documents_right,
-    }
+            "shipment": None,
+            "return_shipment": None,
+            "documents_left": documents_left,
+            "documents_right": documents_right,
+        }
