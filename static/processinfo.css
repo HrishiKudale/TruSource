@@ -163,7 +163,3 @@
 .pi-click-row {
   cursor: pointer;
 }
-
-.pi-click-row * {
-  pointer-events: none;   /* ensures clicking text still triggers row click */
-}

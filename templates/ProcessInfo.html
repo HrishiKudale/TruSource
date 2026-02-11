@@ -135,7 +135,15 @@
                   data-href="{{ url_for('farmer_processing_bp.process_status_page',
                                         manufacturer_id=manufacturerId,
                                         crop_id=row.cropId) }}">
-                <td><span class="pi-link">{{ row.cropId }}</span></td>
+                                  <td>
+                    <a class="pi-link"
+                      href="{{ url_for('farmer_processing_bp.process_status_page',
+                                        manufacturer_id=manufacturerId,
+                                        crop_id=row.cropId) }}">
+                      {{ row.cropId }}
+                    </a>
+                  </td>
+
                 <td>{{ row.cropType }}</td>
                 <td>{{ row.quantity }}</td>
                 <td>

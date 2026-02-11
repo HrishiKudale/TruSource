@@ -252,3 +252,14 @@ body {
     cursor: pointer;
 }
 
+
+
+/* Force hover to work even if manufacturer.css overrides it */
+.manufacturer-table tbody tr.pi-click-row:hover td {
+  background: #fafafa !important;
+}
+
+/* Make the whole row feel clickable */
+.manufacturer-table tbody tr.pi-click-row td {
+  cursor: pointer;
+}
