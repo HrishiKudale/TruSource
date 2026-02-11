@@ -35,7 +35,7 @@
 .processinfo-subtitle {
   margin: 0;
   font-family: var(--body-sm-reg-font-family);
-  font-size: 28px;
+  font-size: 24px;
   color: var(--grey-600);
 }
 
@@ -73,15 +73,15 @@
 }
 
 .pi-card-icon {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
 }
 
 .pi-card-title {
   margin: 0;
     font-family: var(--body-md-semibold-font-family);
     font-weight: var(--body-lg-semibold-font-weight);
-    font-size: var(--body-lg-semibold-font-size);
+    font-size: 18px;
     color: var(--grey-900);
 }
 
@@ -113,7 +113,7 @@
 
 .pi-label {
   font-family: var(--body-sm-reg-font-family);
-  font-size: 16px;
+  font-size: 14px;
   color: var(--grey-400);
 }
 
@@ -123,7 +123,7 @@
   border: white;
   background-color: white;
   font-family: var(--body-sm-reg-font-family);
-  font-size: 18px;
+  font-size: 16px;
   color: var(--grey-950);
 }
 
