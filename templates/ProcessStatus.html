@@ -13,7 +13,7 @@
 
     <div class="ps-breadcrumbs">
       <!-- left small icon (optional) -->
-      <img class="ps-bc-home" src="{{ url_for('static', filename='svg-icons/Home.svg') }}" alt="" onerror="this.style.display='none'">
+      <img class="ps-bc-home" src="{{ url_for('static', filename='svg-icons/Manufacturer/Back Manufacturer.svg') }}" alt="" onerror="this.style.display='none'">
 
       <span class="ps-bc-item">{{ request_context.plant_code if request_context and request_context.plant_code else "MFC-001" }}</span>
       <img class="ps-bc-sep" src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}" alt=">" onerror="this.style.display='none'">
@@ -123,7 +123,7 @@
         <!-- Shipment -->
         <div class="ps-card">
           <div class="ps-card-header">
-            <img class="ps-card-icon" src="{{ url_for('static', filename='svg-icons/Shipment.svg') }}" alt="" onerror="this.style.display='none'">
+            <img class="ps-card-icon" src="{{ url_for('static', filename='svg-icons/Manufacturer/Shipment.svg') }}" alt="" onerror="this.style.display='none'">
             <h2 class="ps-card-title">Shipment</h2>
           </div>
 
@@ -135,7 +135,7 @@
                 <p class="ps-value"><b>Status:</b> {{ shipment.status }}</p>
               </div>
             {% else %}
-              <img class="ps-illustration" src="{{ url_for('static', filename='svg-icons/ShipmentEmpty.svg') }}" alt="" onerror="this.style.display='none'">
+              <img class="ps-illustration" src="{{ url_for('static', filename='svg-icons/Manufacturer/Shipment_Empty.svg') }}" alt="" onerror="this.style.display='none'">
               <h3 class="ps-empty-title">No Shipment Created Yet</h3>
               <p class="ps-empty-text">Create a shipment to send your crop batch to the manufacturer.</p>
             {% endif %}
@@ -145,7 +145,7 @@
         <!-- Return Shipment -->
         <div class="ps-card">
           <div class="ps-card-header">
-            <img class="ps-card-icon" src="{{ url_for('static', filename='svg-icons/ReturnShipment.svg') }}" alt="" onerror="this.style.display='none'">
+            <img class="ps-card-icon" src="{{ url_for('static', filename='svg-icons/Manufacturer/Return_Shipment.svg') }}" alt="" onerror="this.style.display='none'">
             <h2 class="ps-card-title">Return Shipment</h2>
           </div>
 
@@ -156,7 +156,7 @@
                 <p class="ps-value"><b>Status:</b> {{ return_shipment.status }}</p>
               </div>
             {% else %}
-              <img class="ps-illustration" src="{{ url_for('static', filename='svg-icons/ReturnShipmentEmpty.svg') }}" alt="" onerror="this.style.display='none'">
+              <img class="ps-illustration" src="{{ url_for('static', filename='svg-icons/Manufacturer/Return_ShipmentEmpty.svg') }}" alt="" onerror="this.style.display='none'">
               <h3 class="ps-empty-title">Processed Goods Ready for Pickup</h3>
               <p class="ps-empty-text">
                 Your processed products are ready, but no return shipment has been arranged yet.
@@ -171,7 +171,7 @@
       <!-- Document List -->
       <div class="ps-card">
         <div class="ps-card-header">
-          <img class="ps-card-icon" src="{{ url_for('static', filename='svg-icons/Documents.svg') }}" alt="" onerror="this.style.display='none'">
+          <img class="ps-card-icon" src="{{ url_for('static', filename='svg-icons/Manufacturer/Document_List.svg') }}" alt="" onerror="this.style.display='none'">
           <h2 class="ps-card-title">Document List</h2>
         </div>
 
