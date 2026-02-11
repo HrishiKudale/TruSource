@@ -179,3 +179,25 @@ def manufacturer_info_page(manufacturer_id: str):
         active_submenu="processing",
         **data,
     )
+
+
+# ----------------- PROCESS STATUS PAGE (BY MANUFACTURER + CROP) -----------------
+@processing_bp.get("/manufacturer/<manufacturer_id>/crop/<crop_id>/status")
+def process_status_page(manufacturer_id: str, crop_id: str):
+    if session.get("role") != "farmer" or not session.get("user_id"):
+        return redirect("/newlogin")
+
+    farmer_id = session["user_id"]
+
+    data = FarmerProcessingService.get_process_status(farmer_id, manufacturer_id, crop_id)
+
+    if not data.get("ok"):
+        flash(data.get("error") or "Process status not found.", "error")
+        return redirect(url_for("farmer_processing_bp.manufacturer_info_page", manufacturer_id=manufacturer_id))
+
+    return render_template(
+        "ProcessStatus.html",
+        active_page="storage",
+        active_submenu="processing",
+        **data
+    )

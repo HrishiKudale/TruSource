@@ -157,3 +157,8 @@
   color: var(--grey-600);
   margin: 0;
 }
+
+
+.pi-click-row { cursor: pointer; }
+.pi-click-row:hover { background: #fafafa; }
+.pi-link { color:#1a8f3d; text-decoration: underline; font-weight: 700; }

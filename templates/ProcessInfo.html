@@ -131,17 +131,15 @@
           </thead>
           <tbody>
             {% for row in items %}
-              <tr>
-                <td>{{ row.cropId }}</td>
+              <tr class="pi-click-row"
+                  data-href="{{ url_for('farmer_processing_bp.process_status_page',
+                                        manufacturer_id=manufacturerId,
+                                        crop_id=row.cropId) }}">
+                <td><span class="pi-link">{{ row.cropId }}</span></td>
                 <td>{{ row.cropType }}</td>
                 <td>{{ row.quantity }}</td>
                 <td>
-                  <span class="status-pill
-                               {% if row.status|lower in ['processed','approved'] %}
-                                 status-complete
-                               {% else %}
-                                 status-pending
-                               {% endif %}">
+                  <span class="status-pill {% if row.status|lower in ['processed','approved'] %}status-complete{% else %}status-pending{% endif %}">
                     {{ row.status|capitalize }}
                   </span>
                 </td>

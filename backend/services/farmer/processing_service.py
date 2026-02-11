@@ -650,3 +650,158 @@ class FarmerProcessingService:
             "factory": factory,
             "items": table_rows,
         }
+
+
+
+    @staticmethod
+    def _status_to_step(status: str, total_steps: int) -> int:
+        """
+        If you don't store step progress yet, map broad statuses into a step index.
+        """
+        s = (status or "").strip().lower()
+        if total_steps <= 0:
+            return 1
+
+        if s in ["pending", "requested"]:
+            return 1
+        if s in ["approved", "in_progress", "processing"]:
+            # middle-ish
+            return max(1, min(total_steps, (total_steps // 2) + 1))
+        if s in ["processed", "completed", "done"]:
+            return total_steps
+
+        return 1
+
+    @staticmethod
+    def _build_steps_from_manufacturer(manufacturer_id: str, crop_type: str):
+        """
+        Builds the stepper list from users.processing_services for that manufacturer + cropType.
+        Returns list like: [{"no":1,"title":"Cleaning"}, ...]
+        """
+        users_col = get_col("users")
+        if users_col is None:
+            return []
+
+        # Manufacturer can be stored as manufacturerId or userId in your users docs
+        mfg = users_col.find_one(
+            {
+                "role": "manufacturer",
+                "$or": [
+                    {"manufacturerId": manufacturer_id},
+                    {"userId": manufacturer_id},
+                ]
+            },
+            {"_id": 0, "processing_services": 1}
+        )
+
+        if not mfg:
+            return []
+
+        services = mfg.get("processing_services") or []
+        match = None
+        for s in services:
+            if (s.get("cropType") or "").strip().lower() == (crop_type or "").strip().lower():
+                match = s
+                break
+
+        if not match:
+            return []
+
+        p = (match.get("processingType") or "").strip()
+        if not p:
+            return []
+
+        # split by comma -> clean
+        parts = [x.strip() for x in p.split(",") if x.strip()]
+
+        return [{"no": i + 1, "title": parts[i]} for i in range(len(parts))]
+
+    @staticmethod
+    def get_process_status(farmer_id: str, manufacturer_id: str, crop_id: str):
+        col = get_col("farmer_request")
+        if col is None:
+            return {"ok": False, "error": "Mongo is disabled/unavailable."}
+
+        doc = col.find_one(
+            {
+                "requestKind": "processing",
+                "farmerId": farmer_id,
+                "manufacturerId": manufacturer_id,
+                "items.cropId": crop_id,
+            },
+            sort=[("created_at", -1)]
+        )
+
+        if not doc:
+            return {"ok": False, "error": f"No processing request found for crop {crop_id}."}
+
+        crop_items = [it for it in (doc.get("items") or []) if it.get("cropId") == crop_id]
+
+        total_qty_kg = sum(int(it.get("quantityKg") or 0) for it in crop_items)
+
+        ptypes = [it.get("processingType") for it in crop_items if it.get("processingType")]
+        uniq_ptypes = []
+        for p in ptypes:
+            if p not in uniq_ptypes:
+                uniq_ptypes.append(p)
+        processing_type_display = " / ".join(uniq_ptypes) if uniq_ptypes else "-"
+
+        crop_type = crop_items[0].get("cropType") if crop_items else "-"
+
+        status = doc.get("status", "pending")
+
+        # ✅ NEW: fetch step list from manufacturer users.processing_services
+        steps = FarmerProcessingService._build_steps_from_manufacturer(manufacturer_id, crop_type)
+
+        # fallback if manufacturer has no steps for this cropType
+        if not steps:
+            # minimal sensible fallback: use the processing type requested in the request items
+            # If processing types exist in request, use them as steps.
+            if uniq_ptypes:
+                steps = [{"no": i + 1, "title": uniq_ptypes[i]} for i in range(len(uniq_ptypes))]
+            else:
+                steps = [{"no": 1, "title": "Processing"}]
+
+        current_step = FarmerProcessingService._status_to_step(status, len(steps))
+
+        request_context = {
+            "plant_code": manufacturer_id,
+            "request_code": crop_id,
+            "status": status.capitalize() if isinstance(status, str) else "Pending",
+
+            "request_id": doc.get("requestId", "-"),
+            "quantity_sent": f"{total_qty_kg} kg" if total_qty_kg else "-",
+            "sent_from": doc.get("location", "Farm / Warehouse") or "Farm / Warehouse",
+            "processing_type": processing_type_display,
+            "notes": doc.get("note") or "-",
+
+            "started_at": "-",
+            "completed_at": "-",
+            "processed_batch": "-",
+            "output_qty": "-",
+        }
+
+        documents_left = [
+            {"name": "Inward Receipt", "status": "Not Uploaded"},
+            {"name": "Output Report", "status": "Not Uploaded"},
+            {"name": "fassi Certificate", "status": "Not Uploaded"},
+        ]
+        documents_right = [
+            {"name": "Processing Sheet", "status": "Not Uploaded"},
+            {"name": "Invoice", "status": "Not Uploaded"},
+            {"name": "Certificate of origin", "status": "Not Uploaded"},
+        ]
+
+        return {
+            "ok": True,
+            "crop_id": crop_id,
+            "crop_type": crop_type,
+            "manufacturerId": manufacturer_id,
+            "request_context": request_context,
+            "current_step": current_step,
+            "steps": steps,
+            "shipment": None,
+            "return_shipment": None,
+            "documents_left": documents_left,
+            "documents_right": documents_right,
+        }

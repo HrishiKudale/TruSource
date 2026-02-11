@@ -1,0 +1,255 @@
+{% extends "farmer_base.html" %}
+{% set current_page = "my_crops" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='processstatus.css') }}">
+<script defer src="{{ url_for('static', filename='processstatus.js') }}"></script>
+
+<div class="ps-container">
+
+  <!-- Header / Breadcrumb row -->
+  <div class="ps-topbar">
+
+    <div class="ps-breadcrumbs">
+      <!-- left small icon (optional) -->
+      <img class="ps-bc-home" src="{{ url_for('static', filename='svg-icons/Home.svg') }}" alt="" onerror="this.style.display='none'">
+
+      <span class="ps-bc-item">{{ request_context.plant_code if request_context and request_context.plant_code else "MFC-001" }}</span>
+      <img class="ps-bc-sep" src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}" alt=">" onerror="this.style.display='none'">
+
+      <span class="ps-bc-item">{{ request_context.request_code if request_context and request_context.request_code else crop_id }}</span>
+
+      <span class="ps-status-pill
+        {% if request_context and request_context.status %}
+          {% if request_context.status|lower in ['requested'] %} ps-pill-requested
+          {% elif request_context.status|lower in ['in_progress','processing'] %} ps-pill-progress
+          {% elif request_context.status|lower in ['completed','done'] %} ps-pill-done
+          {% else %} ps-pill-neutral
+          {% endif %}
+        {% else %} ps-pill-requested
+        {% endif %}
+      ">
+        {{ request_context.status if request_context and request_context.status else "Requested" }}
+      </span>
+    </div>
+
+    <button class="ps-danger-btn" type="button">
+      Delete Request
+      <img src="{{ url_for('static', filename='svg-icons/trash.svg') }}" alt="" onerror="this.style.display='none'">
+    </button>
+  </div>
+
+
+  <!-- Main layout: LEFT content + RIGHT stepper -->
+  <div class="ps-layout">
+
+    <!-- LEFT COLUMN -->
+    <div class="ps-left">
+
+      <!-- Crop Details (wide) -->
+      <div class="ps-card">
+        <div class="ps-card-header">
+          <img class="ps-card-icon" src="{{ url_for('static', filename='svg-icons/Crop detail.svg') }}" alt="" onerror="this.style.display='none'">
+          <h2 class="ps-card-title">Crop Details</h2>
+        </div>
+
+        <div class="ps-card-body">
+
+          <div class="ps-details-grid">
+
+            <div class="ps-detail">
+              <p class="ps-label">Crop ID</p>
+              <p class="ps-value ps-linklike">{{ crop_id }}</p>
+            </div>
+
+            <div class="ps-detail">
+              <p class="ps-label">Request ID</p>
+              <p class="ps-value">{{ request_context.request_id if request_context and request_context.request_id else "Req-01" }}</p>
+            </div>
+
+            <div class="ps-detail">
+              <p class="ps-label">Quantity Sent</p>
+              <p class="ps-value">{{ request_context.quantity_sent if request_context and request_context.quantity_sent else "1000 kg" }}</p>
+            </div>
+
+            <div class="ps-detail">
+              <p class="ps-label">Sent From</p>
+              <p class="ps-value">{{ request_context.sent_from if request_context and request_context.sent_from else "Farm / Warehouse" }}</p>
+            </div>
+
+            <div class="ps-divider"></div>
+
+            <div class="ps-detail">
+              <p class="ps-label">Processing Type</p>
+              <p class="ps-value">{{ request_context.processing_type if request_context and request_context.processing_type else "Milling" }}</p>
+            </div>
+
+            <div class="ps-detail">
+              <p class="ps-label">Notes</p>
+              <p class="ps-value">
+                {{ request_context.notes if request_context and request_context.notes else '“Mill to fine atta, pack in 25kg bags”' }}
+              </p>
+            </div>
+
+            <div class="ps-detail">
+              <p class="ps-label">Started</p>
+              <p class="ps-value">{{ request_context.started_at if request_context and request_context.started_at else "-" }}</p>
+            </div>
+
+            <div class="ps-detail">
+              <p class="ps-label">Completion</p>
+              <p class="ps-value">{{ request_context.completed_at if request_context and request_context.completed_at else "-" }}</p>
+            </div>
+
+            <div class="ps-detail">
+              <p class="ps-label">Processed Batch</p>
+              <p class="ps-value">{{ request_context.processed_batch if request_context and request_context.processed_batch else "-" }}</p>
+            </div>
+
+            <div class="ps-detail">
+              <p class="ps-label">Output Quantity</p>
+              <p class="ps-value">{{ request_context.output_qty if request_context and request_context.output_qty else "-" }}</p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Shipment + Return Shipment (two cards) -->
+      <div class="ps-two-col">
+
+        <!-- Shipment -->
+        <div class="ps-card">
+          <div class="ps-card-header">
+            <img class="ps-card-icon" src="{{ url_for('static', filename='svg-icons/Shipment.svg') }}" alt="" onerror="this.style.display='none'">
+            <h2 class="ps-card-title">Shipment</h2>
+          </div>
+
+          <div class="ps-card-body ps-empty-state">
+            {% if shipment and shipment.created %}
+              <!-- If you have shipment data, render it here -->
+              <div class="ps-ship-meta">
+                <p class="ps-value"><b>Shipment ID:</b> {{ shipment.id }}</p>
+                <p class="ps-value"><b>Status:</b> {{ shipment.status }}</p>
+              </div>
+            {% else %}
+              <img class="ps-illustration" src="{{ url_for('static', filename='svg-icons/ShipmentEmpty.svg') }}" alt="" onerror="this.style.display='none'">
+              <h3 class="ps-empty-title">No Shipment Created Yet</h3>
+              <p class="ps-empty-text">Create a shipment to send your crop batch to the manufacturer.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Return Shipment -->
+        <div class="ps-card">
+          <div class="ps-card-header">
+            <img class="ps-card-icon" src="{{ url_for('static', filename='svg-icons/ReturnShipment.svg') }}" alt="" onerror="this.style.display='none'">
+            <h2 class="ps-card-title">Return Shipment</h2>
+          </div>
+
+          <div class="ps-card-body ps-empty-state">
+            {% if return_shipment and return_shipment.created %}
+              <div class="ps-ship-meta">
+                <p class="ps-value"><b>Return Shipment ID:</b> {{ return_shipment.id }}</p>
+                <p class="ps-value"><b>Status:</b> {{ return_shipment.status }}</p>
+              </div>
+            {% else %}
+              <img class="ps-illustration" src="{{ url_for('static', filename='svg-icons/ReturnShipmentEmpty.svg') }}" alt="" onerror="this.style.display='none'">
+              <h3 class="ps-empty-title">Processed Goods Ready for Pickup</h3>
+              <p class="ps-empty-text">
+                Your processed products are ready, but no return shipment has been arranged yet.
+              </p>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- Document List -->
+      <div class="ps-card">
+        <div class="ps-card-header">
+          <img class="ps-card-icon" src="{{ url_for('static', filename='svg-icons/Documents.svg') }}" alt="" onerror="this.style.display='none'">
+          <h2 class="ps-card-title">Document List</h2>
+        </div>
+
+        <div class="ps-card-body">
+          <div class="ps-doc-table">
+            <div class="ps-doc-head">
+              <div>Name</div><div>Status</div><div></div>
+              <div>Name</div><div>Status</div><div></div>
+            </div>
+
+            {% set left_docs = documents_left if documents_left else [
+              {'name':'Inward Receipt','status':'Not Uploaded'},
+              {'name':'Output Report','status':'Not Uploaded'},
+              {'name':'fassi Certificate','status':'Not Uploaded'}
+            ] %}
+            {% set right_docs = documents_right if documents_right else [
+              {'name':'Processing Sheet','status':'Not Uploaded'},
+              {'name':'Invoice','status':'Not Uploaded'},
+              {'name':'Certificate of origin','status':'Not Uploaded'}
+            ] %}
+
+            {% for i in range([left_docs|length, right_docs|length]|max) %}
+              {% set l = left_docs[i] if i < left_docs|length else None %}
+              {% set r = right_docs[i] if i < right_docs|length else None %}
+
+              <div class="ps-doc-row">
+                <!-- left -->
+                <div class="ps-doc-name">{{ l.name if l else "" }}</div>
+                <div class="ps-doc-status {{ 'ps-doc-missing' if l and (l.status|lower in ['not uploaded','missing']) else 'ps-doc-ok' }}">
+                  {{ l.status if l else "" }}
+                </div>
+                <div class="ps-doc-action">
+                  {% if l %}
+                    <button class="ps-eye-btn" type="button" title="View">
+                      <img src="{{ url_for('static', filename='svg-icons/eye.svg') }}" alt="View" onerror="this.style.display='none'">
+                    </button>
+                  {% endif %}
+                </div>
+
+                <!-- right -->
+                <div class="ps-doc-name">{{ r.name if r else "" }}</div>
+                <div class="ps-doc-status {{ 'ps-doc-missing' if r and (r.status|lower in ['not uploaded','missing']) else 'ps-doc-ok' }}">
+                  {{ r.status if r else "" }}
+                </div>
+                <div class="ps-doc-action">
+                  {% if r %}
+                    <button class="ps-eye-btn" type="button" title="View">
+                      <img src="{{ url_for('static', filename='svg-icons/eye.svg') }}" alt="View" onerror="this.style.display='none'">
+                    </button>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- RIGHT COLUMN: Vertical Stepper -->
+    <div class="ps-right">
+            <div class="ps-stepper" id="psStepper" data-current-step="{{ current_step or 1 }}">
+            {% for s in steps %}
+                <div class="ps-step" data-step="{{ s.no }}">
+                <div class="ps-step-left">
+                    <div class="ps-step-circle">{{ "%02d"|format(s.no) }}</div>
+                    <div class="ps-step-line"></div>
+                </div>
+                <div class="ps-step-text">{{ s.title }}</div>
+                </div>
+            {% endfor %}
+            </div>
+
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
