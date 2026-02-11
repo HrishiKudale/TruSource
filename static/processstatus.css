@@ -20,7 +20,7 @@
   flex-wrap:wrap;
 }
 
-.ps-bc-home{ width:20px; height:20px; opacity:.85; }
+.ps-bc-home{ width:34px; height:34px; opacity:.85; }
 .ps-bc-sep{ width:16px; height:16px; opacity:.65; }
 
 .ps-bc-item{
@@ -156,13 +156,13 @@
 }
 .ps-empty-title{
   margin:6px 0 0;
-  font-size:14px;
-  font-weight:800;
+  font: size 16px;
+  font-weight:600;
   color:#111;
 }
 .ps-empty-text{
   margin:0;
-  font-size:12px;
+  font-size:14px;
   color:#6b6b6b;
   line-height:1.35;
   max-width:320px;
@@ -224,7 +224,7 @@
   padding-left:8px;
   display:flex;
   flex-direction:column;
-  gap:22px;
+  gap:48px;
 }
 
 .ps-step{
