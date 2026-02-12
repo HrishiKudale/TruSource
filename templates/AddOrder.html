@@ -9,6 +9,7 @@
   <div class="page-header">
     <div class="header-left">
       <img src="{{ url_for('static', filename='svg-icons/AddOrder.svg') }}" class="title-icon" alt="">
+      <img src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}" alt="" aria-hidden="true">
       <h1 class="page-title">New Order</h1>
     </div>
 
@@ -57,7 +58,11 @@
             <option value="Net 15">Net 15</option>
             <option value="Net 30">Net 30</option>
           </select>
-
+              <span class="select-chevron">
+                  <img class="sd-caret"
+                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                   alt="dropdown">  
+              </span>
         </div>
 
         <div class="field">

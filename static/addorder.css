@@ -41,7 +41,7 @@
 .card{
   background:#fff;
   border:1px solid var(--grey-100);
-  border-radius:14px;
+  border-radius:12px;
   overflow:hidden;
 }
 
@@ -58,12 +58,12 @@
 }
 
 .card-header-icon{ width:40px; height:40px; }
-.card-title{ margin:0; font-size:20px; font-weight:700; }
+.card-title{ margin:0; font-size:18px; font-weight:700; }
 
 .grid-2{
   display:grid;
   grid-template-columns:repeat(2, minmax(0,1fr));
-  gap:24px;
+  gap:20px;
 
 }
 
@@ -427,7 +427,7 @@
 .card-header{
   background: var(--grey-50);
   border-bottom: 1px solid var(--grey-100);
-  padding: 12px 14px;
+  padding: 8px 15px;
   margin: -18px;          /* matches .card padding */
   margin-bottom: 14px;
   border-top-left-radius: 14px;
