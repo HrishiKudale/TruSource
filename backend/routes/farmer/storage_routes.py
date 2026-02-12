@@ -86,6 +86,7 @@ def add_storage_page():
         active_page="storage",
         active_submenu="warehouse",
         coord_doc=warehouses,   # template variable name unchanged
+        warehouses=warehouses,
         crops=crops,
         items=[],
         error=mongo_error,

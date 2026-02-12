@@ -61,7 +61,7 @@
 
                 {% for m in manufacturers or [] %}
                   {# your route returns: userId, manufacturerId, name, location #}
-                  <option value="{{ m.name }}"
+                  <option value="{{ m.officeName, cropType }}"
                           data-id="{{ m.manufacturerId or m.userId }}"
                           data-location="{{ m.location or '' }}">
                     {{ m.name }}
@@ -117,7 +117,7 @@
       <section class="process-card">
         <div class="process-card-header">
           <img class="process-card-icon"
-               src="{{ url_for('static', filename='svg-icons/Manufacturer/Crop Details.svg') }}"
+               src="{{ url_for('static', filename='svg-icons/Manufacturer/Crop_Details.svg') }}"
                alt="">
           <h2 class="process-card-title">Crop Details</h2>
         </div>

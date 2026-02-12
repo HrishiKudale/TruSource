@@ -60,7 +60,7 @@
 .process-card {
   background: var(--white);
   border: 1px solid var(--grey-100);
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -69,7 +69,7 @@
 .process-card-header {
   background: var(--grey-50);
   border-bottom: 1px solid var(--grey-100);
-  padding: 10px 18px;
+  padding: 8px 15px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -79,7 +79,7 @@
 .process-card-title {
   margin: 0;
   font-family: var(--body-md-semibold-font-family);
-  font-size: var(--body-lg-semibold-font-size);
+  font-size:18px;
   color: var(--grey-900);
   font-weight: 600;
 }
@@ -194,7 +194,7 @@
 .process-table-wrapper {
   background: var(--white);
   border: 1px solid var(--grey-100);
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   width: 100%;
 }
@@ -207,7 +207,7 @@
 .process-table thead tr { background: var(--grey-50); }
 
 .process-table th {
-  padding: 14px 16px;
+  padding: 15px 18px;
   border-bottom: 1px solid var(--grey-200);
   text-align: left;
   font-family: var(--body-md-semibold-font-family);
