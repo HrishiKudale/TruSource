@@ -1,12 +1,13 @@
 (function () {
   "use strict";
 
+  // IMPORTANT: do not reassign data reference (template uses this object)
   const data = window.__DASHBOARD__ || {};
   const $ = (id) => document.getElementById(id);
 
-  /* -----------------------------
-     Utilities
-  ----------------------------- */
+  /* -------------------------------------------------------
+     Utils
+  ------------------------------------------------------- */
   function safeNum(x) {
     const n = Number(x);
     return Number.isFinite(n) ? n : 0;
@@ -41,7 +42,13 @@
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
   }
 
-  // double raf (helps Chart.js render after tab switch)
+  function setText(id, val) {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = val == null ? "0" : String(val);
+  }
+
+  // double raf: helps charts render after layout
   function raf2(cb) {
     requestAnimationFrame(() => requestAnimationFrame(cb));
   }
@@ -58,6 +65,7 @@
           el.offsetParent !== null &&
           el.offsetWidth > 20 &&
           el.offsetHeight > 20;
+
         if (ok) return resolve(true);
         if (Date.now() - start > timeoutMs) return resolve(false);
         raf2(tick);
@@ -66,40 +74,41 @@
     });
   }
 
-  function setText(id, value) {
-    const el = $(id);
-    if (!el) return;
-    el.textContent = value == null ? "0" : String(value);
-  }
+  /* -------------------------------------------------------
+     Loading shimmer helper (JS toggles)
+     Add CSS once in your stylesheet:
 
-  // Animation for chart points/bars
-  function chartAnimStagger(delayBase = 35) {
-    return {
-      duration: 900,
-      easing: "easeOutQuart",
-      delay: (ctx) => {
-        if (ctx.type === "data") return ctx.dataIndex * delayBase;
-        return 0;
-      },
-    };
-  }
-
-  /* -----------------------------
-     Loading shimmer helper
-     Add CSS for these classes in your main CSS:
-     .is-loading { position: relative; }
-     .is-loading::after { content:""; position:absolute; inset:0; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 100%); transform: translateX(-100%); animation: shimmer 1.2s infinite; pointer-events:none; }
+     .is-loading { position: relative; overflow: hidden; }
+     .is-loading::after {
+       content:"";
+       position:absolute; inset:0;
+       background: linear-gradient(90deg,
+          rgba(255,255,255,0) 0%,
+          rgba(255,255,255,.55) 50%,
+          rgba(255,255,255,0) 100%);
+       transform: translateX(-100%);
+       animation: shimmer 1.1s infinite;
+       pointer-events:none;
+     }
      @keyframes shimmer { to { transform: translateX(100%); } }
-  ----------------------------- */
+  ------------------------------------------------------- */
   function withLoading(elOrId, on) {
     const el = typeof elOrId === "string" ? $(elOrId) : elOrId;
     if (!el) return;
     el.classList.toggle("is-loading", !!on);
   }
 
-  /* -----------------------------
-     Tabs: Soil / Weather / Status
-  ----------------------------- */
+  function chartAnimStagger(delayBase = 35) {
+    return {
+      duration: 850,
+      easing: "easeOutQuart",
+      delay: (ctx) => (ctx.type === "data" ? ctx.dataIndex * delayBase : 0),
+    };
+  }
+
+  /* -------------------------------------------------------
+     Tabs
+  ------------------------------------------------------- */
   const tabBtns = document.querySelectorAll(".seg-btn");
   const panels = {
     soil: $("tab-soil"),
@@ -126,7 +135,7 @@
       }
 
       if (tab === "weather") {
-        raf2(() => loadWeatherCardAll());
+        raf2(() => loadWeatherAll()); // always reload
       }
 
       if (tab === "soil") {
@@ -137,23 +146,36 @@
     });
   });
 
-  /* -----------------------------
-     Charts (Chart.js)
-  ----------------------------- */
+  // crop type change -> refresh polygons only if status tab active
+  document.addEventListener("DOMContentLoaded", () => {
+    const cropTypeSelect = $("cropTypeSelect");
+    if (cropTypeSelect) {
+      cropTypeSelect.addEventListener("change", () => {
+        if (isStatusTabActive()) {
+          openCropStatusAndRenderMap().catch((e) => console.warn("Map render failed:", e));
+        }
+      });
+    }
+  });
+
+  /* -------------------------------------------------------
+     Charts
+  ------------------------------------------------------- */
   let soilChart = null;
   let orderChart = null;
-  let weatherComboChart = null;
+  let warehousePie = null;
   let mfgPie = null;
+  let weatherBarChart = null;
 
+  // ---------------- SOIL LINE ----------------
   function initSoilChart() {
     const canvas = $("soilLineChart");
     if (!canvas || typeof Chart === "undefined") return;
 
     const ctx = canvas.getContext("2d");
     const labels = data.soil?.labels || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const points = data.soil?.soil_temp || [];
+    const points = data.soil?.soil_temp || [25.6, 25.7, 25.65, 25.9, 26.0, 26.35, 25.8];
 
-    // Loading shimmer on wrapper (try nearest .card-body)
     withLoading(canvas.closest(".card-body") || canvas.parentElement, true);
 
     const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
@@ -170,7 +192,7 @@
         datasets: [
           {
             label: "Soil Temperature",
-            data: points.length ? points : [25.6, 25.7, 25.65, 25.9, 26.0, 26.35, 25.8],
+            data: points,
             tension: 0.35,
             pointRadius: 4,
             pointHoverRadius: 5,
@@ -192,13 +214,9 @@
           x: { grid: { display: false } },
           y: { grid: { display: false }, ticks: { display: false } },
         },
-        onComplete: () => {
-          withLoading(canvas.closest(".card-body") || canvas.parentElement, false);
-        },
       },
     });
 
-    // remove loading a bit later (Chart.js doesn't always call onComplete consistently on resize)
     setTimeout(() => withLoading(canvas.closest(".card-body") || canvas.parentElement, false), 900);
   }
 
@@ -218,7 +236,6 @@
 
       soilChart.data.labels = labels;
       soilChart.data.datasets[0].data = series;
-
       soilChart.data.datasets[0].label =
         key === "soil_moisture"
           ? "Soil Moisture"
@@ -227,11 +244,11 @@
           : key === "npk"
           ? "NPK Level"
           : "Soil Temperature";
-
       soilChart.update();
     });
   }
 
+  // ---------------- ORDER DONUT (rounded segments) ----------------
   function initOrderDonut() {
     const canvas = $("orderDonutChart");
     if (!canvas || typeof Chart === "undefined") return;
@@ -245,8 +262,8 @@
       safeNum(o.completed),
       safeNum(o.payment_received),
     ];
-
     const total = values.reduce((a, b) => a + b, 0);
+
     setText("orderTotal", total);
     setText("oRequested", values[0]);
     setText("oInTransit", values[1]);
@@ -264,26 +281,28 @@
         datasets: [
           {
             data: values,
-            borderWidth: 0,
             backgroundColor: ["#FDE68A", "#60A5FA", "#86EFAC", "#C4B5FD"],
+            borderWidth: 0,
+            borderRadius: 14,  // ✅ rounded ends
+            spacing: 4,        // ✅ small gap between segments
+            hoverOffset: 6,
           },
         ],
       },
       options: {
         cutout: "72%",
         plugins: { legend: { display: false } },
-        animation: chartAnimStagger(35),
+        animation: chartAnimStagger(30),
       },
     });
 
-    setTimeout(() => withLoading(canvas.closest(".card-body") || canvas.parentElement, false), 900);
+    setTimeout(() => withLoading(canvas.closest(".card-body") || canvas.parentElement, false), 800);
   }
 
-  /* ============================================================
-     ✅ SHIPMENTS OVERVIEW (FIXED)
-     Your HTML uses #shipBars, NOT a canvas.
-     We render horizontal bars exactly as your card expects.
-  ============================================================ */
+  /* -------------------------------------------------------
+     ✅ SHIPMENTS (YOUR HTML IS NOT CANVAS)
+     Uses #shipBars div and legend IDs.
+  ------------------------------------------------------- */
   function renderShipmentBars() {
     const container = $("shipBars");
     if (!container) return;
@@ -303,11 +322,16 @@
     setText("sDelivered", values.delivered);
     setText("sPayment", values.payment);
 
-    const total = values.requested + values.pending + values.in_transit + values.delivered + values.payment;
+    const total =
+      values.requested +
+      values.pending +
+      values.in_transit +
+      values.delivered +
+      values.payment;
 
-    // Empty state toggle matches your helper ids
     const emptyEl = $("emptyShipmentCard");
     const contentEl = $("shipmentCardContent");
+
     if (total <= 0) {
       if (emptyEl) emptyEl.style.display = "flex";
       if (contentEl) contentEl.style.display = "none";
@@ -318,7 +342,6 @@
       if (contentEl) contentEl.style.display = "block";
     }
 
-    // Loading shimmer on card body while injecting
     withLoading(container.closest(".card-body") || container.parentElement, true);
 
     const max = Math.max(
@@ -340,39 +363,36 @@
 
     container.innerHTML = rows
       .map((r) => {
-        const v = values[r.key];
-        const pct = Math.round((v / max) * 100);
-
-        // inline width anim (nice)
         return `
           <div class="ship-row">
             <div class="ship-label">${escapeHtml(r.label)}</div>
             <div class="ship-track">
               <div class="ship-fill ${r.cls}" style="width:0%"></div>
             </div>
-            <div class="ship-val">${v}</div>
           </div>
         `;
       })
       .join("");
 
-    // animate widths after DOM paint
     raf2(() => {
       const fills = container.querySelectorAll(".ship-fill");
       fills.forEach((fill, idx) => {
-        const v = values[rows[idx].key];
-        const pct = Math.round((v / max) * 100);
+        const key = rows[idx].key;
+        const pct = Math.round((values[key] / max) * 100);
         fill.style.width = pct + "%";
       });
-      setTimeout(() => withLoading(container.closest(".card-body") || container.parentElement, false), 450);
+      setTimeout(() => withLoading(container.closest(".card-body") || container.parentElement, false), 400);
     });
   }
 
-  /* ============================================================
-     Manufacturer numbers + pie (robust)
-     - If you have a pie canvas id "mfgPieChart", it will render
-     - Numbers will always compute from manufacturer_requests if needed
-  ============================================================ */
+  /* -------------------------------------------------------
+     Warehouse Pie (summary OR derived from warehouse_requests)
+     Required IDs if you want the pie:
+       - canvas#warehousePieChart
+       - wrap#warehousePieWrap  (optional)
+       - empty#emptyWarehouseCard (optional)
+       - counters: whRequested, whStored, whPendingPay
+  ------------------------------------------------------- */
   function countByStatus(items, statusKey = "status") {
     const out = {};
     (items || []).forEach((it) => {
@@ -383,15 +403,25 @@
     return out;
   }
 
-  function initManufacturerCard() {
-    const list = Array.isArray(data.manufacturer_requests) ? data.manufacturer_requests : [];
-    const summary = data.manufacturer_summary || data.manufacturer || null;
-    const fromList = countByStatus(list);
+  function initWarehousePie() {
+    const canvas = $("warehousePieChart");
+    if (!canvas || typeof Chart === "undefined") {
+      // still set numbers if counters exist
+      const fromList = countByStatus(data.warehouse_requests);
+      const requested = safeNum(fromList.requested ?? 0);
+      const stored = safeNum(fromList.stored ?? fromList.accepted ?? 0);
+      const pendingPay = safeNum(fromList["pending payment"] ?? fromList.pending_payment ?? 0);
+      setText("whRequested", requested);
+      setText("whStored", stored);
+      setText("whPendingPay", pendingPay);
+      return;
+    }
+
+    const summary = data.warehouse_summary || data.warehouse || null;
+    const fromList = countByStatus(data.warehouse_requests);
 
     const requested = safeNum(summary?.requested ?? fromList.requested ?? 0);
-    const processing = safeNum(summary?.processing ?? fromList.processing ?? 0);
-
-    // some apps store as "pending payment"
+    const stored = safeNum(summary?.stored ?? fromList.stored ?? fromList.accepted ?? 0);
     const pendingPay = safeNum(
       summary?.pending_payment ??
         fromList["pending payment"] ??
@@ -399,26 +429,90 @@
         0
     );
 
-    // ✅ numbers (only set if elements exist)
-    setText("mfgRequested", requested);
-    setText("mfgProcessing", processing);
-    setText("mfgPendingPay", pendingPay);
+    setText("whRequested", requested);
+    setText("whStored", stored);
+    setText("whPendingPay", pendingPay);
 
-    // ✅ optional pie render (if your HTML has it)
-    const canvas = $("mfgPieChart");
-    if (!canvas || typeof Chart === "undefined") return;
+    const total = requested + stored + pendingPay;
 
-    const total = requested + processing + pendingPay;
-    const emptyEl = $("emptyManufacturerCard");
-    const wrap = $("mfgPieWrap");
-
+    const emptyEl = $("emptyWarehouseCard");
+    const wrap = $("warehousePieWrap");
     if (total <= 0) {
       if (wrap) wrap.style.display = "none";
       if (emptyEl) emptyEl.style.display = "flex";
       return;
+    } else {
+      if (emptyEl) emptyEl.style.display = "none";
+      if (wrap) wrap.style.display = "block";
     }
-    if (emptyEl) emptyEl.style.display = "none";
-    if (wrap) wrap.style.display = "block";
+
+    withLoading(canvas.closest(".card-body") || canvas.parentElement, true);
+
+    const ctx = canvas.getContext("2d");
+    if (warehousePie) warehousePie.destroy();
+
+    warehousePie = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: ["Requested", "Stored", "Pending payment"],
+        datasets: [
+          {
+            data: [requested, stored, pendingPay],
+            borderWidth: 0,
+            backgroundColor: ["#FDE68A", "#6366F1", "#60A5FA"],
+          },
+        ],
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        animation: chartAnimStagger(40),
+      },
+    });
+
+    setTimeout(() => withLoading(canvas.closest(".card-body") || canvas.parentElement, false), 850);
+  }
+
+  /* -------------------------------------------------------
+     Manufacturer Pie + Numbers (always computed)
+     IDs:
+       mfgRequested, mfgProcessing, mfgPendingPay
+       canvas#mfgPieChart (optional)
+       wrap#mfgPieWrap (optional)
+       empty#emptyManufacturerCard (optional)
+  ------------------------------------------------------- */
+  function initManufacturerCard() {
+    const list = Array.isArray(data.manufacturer_requests) ? data.manufacturer_requests : [];
+    const summary = data.manufacturer_summary || data.manufacturer || null;
+    const fromList = countByStatus(list);
+
+    const requested = safeNum(summary?.requested ?? fromList.requested ?? 0);
+    const processing = safeNum(summary?.processing ?? fromList.processing ?? 0);
+    const pendingPay = safeNum(
+      summary?.pending_payment ??
+        fromList["pending payment"] ??
+        fromList.pending_payment ??
+        0
+    );
+
+    setText("mfgRequested", requested);
+    setText("mfgProcessing", processing);
+    setText("mfgPendingPay", pendingPay);
+
+    const canvas = $("mfgPieChart");
+    if (!canvas || typeof Chart === "undefined") return;
+
+    const total = requested + processing + pendingPay;
+
+    const emptyEl = $("emptyManufacturerCard");
+    const wrap = $("mfgPieWrap");
+    if (total <= 0) {
+      if (wrap) wrap.style.display = "none";
+      if (emptyEl) emptyEl.style.display = "flex";
+      return;
+    } else {
+      if (emptyEl) emptyEl.style.display = "none";
+      if (wrap) wrap.style.display = "block";
+    }
 
     withLoading(canvas.closest(".card-body") || canvas.parentElement, true);
 
@@ -443,16 +537,16 @@
       },
     });
 
-    setTimeout(() => withLoading(canvas.closest(".card-body") || canvas.parentElement, false), 900);
+    setTimeout(() => withLoading(canvas.closest(".card-body") || canvas.parentElement, false), 850);
   }
 
-  /* ============================================================
-     WEATHER
-     - keeps your strips rendering
-     - PLUS: if canvas exists (#weatherBarChart or #weatherComboChart),
-       render a "bar + line" combo chart for next 12 hours temperature
-  ============================================================ */
-
+  /* -------------------------------------------------------
+     Weather (NO LINE, NO COMBO)
+     - Always loads when page loads
+     - Loads again when weather tab opened
+     - If you have a weather bar canvas, it will render bars only.
+     - Also supports weather_image_url if you use image based weather.
+  ------------------------------------------------------- */
   function wxSetStripSkeleton(el) {
     if (!el) return;
     el.innerHTML = `
@@ -489,18 +583,16 @@
   function wxSvgIcon(code) {
     const common =
       'stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"';
+    const cloud = `
+      <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M16 34h18a8 8 0 0 0 0-16 10 10 0 0 0-19-3A7 7 0 0 0 16 34Z" ${common}></path>
+      </svg>
+    `;
     const sun = `
       <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
         <circle cx="24" cy="24" r="7" ${common}></circle>
         <path d="M24 4v6" ${common}></path><path d="M24 38v6" ${common}></path>
         <path d="M4 24h6" ${common}></path><path d="M38 24h6" ${common}></path>
-        <path d="M9 9l4 4" ${common}></path><path d="M35 35l4 4" ${common}></path>
-        <path d="M39 9l-4 4" ${common}></path><path d="M13 35l-4 4" ${common}></path>
-      </svg>
-    `;
-    const cloud = `
-      <svg class="wx-anim-float" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
-        <path d="M16 34h18a8 8 0 0 0 0-16 10 10 0 0 0-19-3A7 7 0 0 0 16 34Z" ${common}></path>
       </svg>
     `;
     const rain = `
@@ -511,17 +603,9 @@
         <path d="M34 34l-2 4" ${common}></path>
       </svg>
     `;
-    const thunder = `
-      <svg class="wx-anim-wiggle" width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
-        <path d="M16 26h18a7 7 0 0 0 0-14 10 10 0 0 0-19-3A7 7 0 0 0 16 26Z" ${common}></path>
-        <path d="M25 26l-6 10h6l-2 10 8-14h-6l2-6" ${common}></path>
-      </svg>
-    `;
-
     const c = Number(code || 0);
     if ([0, 1].includes(c)) return sun;
-    if ([51, 53, 55, 56, 57, 61, 63, 65, 80, 81, 82].includes(c)) return rain;
-    if ([95, 96, 99].includes(c)) return thunder;
+    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(c)) return rain;
     return cloud;
   }
 
@@ -550,15 +634,15 @@
     const windDir = $("wxWindDir");
     const codeEl = $("wxCode");
 
-    if (!cur || !nowTemp || !nowIcon) return;
+    if (!cur) return;
 
     const t = Number(cur.temperature);
     const ws = Number(cur.windspeed);
     const wd = Number(cur.winddirection);
     const code = Number(cur.weathercode);
 
-    nowTemp.textContent = Number.isFinite(t) ? `${t.toFixed(1)}°C` : "—";
-    nowIcon.innerHTML = wxSvgIcon(code);
+    if (nowTemp) nowTemp.textContent = Number.isFinite(t) ? `${t.toFixed(1)}°C` : "—";
+    if (nowIcon) nowIcon.innerHTML = wxSvgIcon(code);
     if (nowMeta) nowMeta.textContent = cur.time ? `Updated: ${cur.time}` : "Updated just now";
 
     if (wind) wind.textContent = Number.isFinite(ws) ? `${ws.toFixed(1)} km/h` : "—";
@@ -585,10 +669,7 @@
     let startIdx = 0;
     for (let i = 0; i < times.length; i++) {
       const t = new Date(times[i]);
-      if (t.getTime() >= now.getTime()) {
-        startIdx = i;
-        break;
-      }
+      if (t.getTime() >= now.getTime()) { startIdx = i; break; }
     }
 
     const items = [];
@@ -667,54 +748,40 @@
     return { labels, values };
   }
 
-  function renderWeatherComboChart(labels, values) {
-    const canvas = $("weatherComboChart") || $("weatherBarChart");
+  // Weather chart bars only (NO LINE)
+  function renderWeatherBarsOnly(labels, values) {
+    const canvas = $("weatherBarChart") || $("weatherComboChart");
     if (!canvas || typeof Chart === "undefined") return;
-
     if (!labels.length || !values.length) return;
-
-    const ctx = canvas.getContext("2d");
 
     withLoading(canvas.closest(".card-body") || canvas.parentElement, true);
 
-    if (weatherComboChart) weatherComboChart.destroy();
+    const ctx = canvas.getContext("2d");
+    if (weatherBarChart) weatherBarChart.destroy();
 
-    weatherComboChart = new Chart(ctx, {
+    weatherBarChart = new Chart(ctx, {
+      type: "bar",
       data: {
         labels,
         datasets: [
-          // Bars
           {
-            type: "bar",
-            label: "Temp (bar)",
+            label: "Temperature",
             data: values,
-            backgroundColor: "rgba(99,102,241,0.18)",
+            backgroundColor: "rgba(99,102,241,0.20)",
             borderColor: "#6366F1",
-            borderWidth: 1,
-            borderRadius: 8,      // less rounded than before
-            barThickness: 22,     // remove thin bars
-            maxBarThickness: 28,
-            categoryPercentage: 0.85,
-            barPercentage: 0.9,
-          },
-          // Line
-          {
-            type: "line",
-            label: "Temp (line)",
-            data: values,
-            borderColor: "#111827",
             borderWidth: 2,
-            pointRadius: 3,
-            pointHoverRadius: 4,
-            tension: 0.35,
-            fill: false,
+            borderRadius: 10,
+            barThickness: 28,
+            maxBarThickness: 34,
+            categoryPercentage: 0.9,
+            barPercentage: 0.9,
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: chartAnimStagger(30),
+        animation: chartAnimStagger(25),
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -732,28 +799,13 @@
           },
         },
         scales: {
-          x: {
-            grid: { display: false },
-            ticks: { color: "#6b7280", font: { size: 11 } },
-          },
-          y: {
-            grid: { display: false },
-            ticks: { color: "#6b7280", font: { size: 11 } },
-          },
+          x: { grid: { display: false }, ticks: { color: "#6b7280", font: { size: 11 } } },
+          y: { grid: { display: false }, ticks: { color: "#6b7280", font: { size: 11 } } },
         },
       },
     });
 
-    setTimeout(() => withLoading(canvas.closest(".card-body") || canvas.parentElement, false), 900);
-  }
-
-  function wxOpenModal() {
-    const m = $("wxLocModal");
-    if (m) m.style.display = "block";
-  }
-  function wxCloseModal() {
-    const m = $("wxLocModal");
-    if (m) m.style.display = "none";
+    setTimeout(() => withLoading(canvas.closest(".card-body") || canvas.parentElement, false), 850);
   }
 
   function wxGetSavedCoords() {
@@ -786,7 +838,7 @@
     return null;
   }
 
-  async function wxLoadWeatherUsing(lat, lng, label) {
+  async function wxLoadUsing(lat, lng, label) {
     if ($("wxLocText")) $("wxLocText").textContent = label || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     wxSetStripSkeleton($("wxHourlyRow"));
     wxSetStripSkeleton($("wxWeeklyRow"));
@@ -797,31 +849,46 @@
       wxRenderHourly(apiData);
       wxRenderWeekly(apiData);
 
-      // ✅ If you have weather chart canvas, render bar+line chart
       const { labels, values } = extractNext12Hours(apiData);
-      renderWeatherComboChart(labels, values);
+      renderWeatherBarsOnly(labels, values);
     } catch (e) {
       console.error("Weather fetch failed:", e);
       wxSetStripError($("wxHourlyRow"), "Weather unavailable right now.");
       wxSetStripError($("wxWeeklyRow"), "Weather unavailable right now.");
+      if ($("wxLocText")) $("wxLocText").textContent = "Weather: failed to load";
     }
   }
 
-  async function loadWeatherCardAll() {
-    const panel = $("tab-weather");
-    if (panel) await waitForVisible(panel, 2500);
+  async function loadWeatherAll() {
+    // if you have image-based weather, apply it too
+    // (only if your HTML has an <img id="weatherImage">)
+    if (data.weather_image_url && $("weatherImage")) {
+      $("weatherImage").src = data.weather_image_url;
+    }
 
+    // Try live coords -> dashboard coords -> show error
     const live = wxGetSavedCoords();
-    if (live) return wxLoadWeatherUsing(live.lat, live.lng, "Live location");
+    if (live) return wxLoadUsing(live.lat, live.lng, "Live location");
 
     const dash = wxGetDashboardCoords();
     if (dash) {
       const label = (dash.address || "").trim() || `${dash.lat.toFixed(4)}, ${dash.lng.toFixed(4)}`;
-      return wxLoadWeatherUsing(dash.lat, dash.lng, label);
+      return wxLoadUsing(dash.lat, dash.lng, label);
     }
 
+    // If no coords, show helpful error
     wxSetStripError($("wxHourlyRow"), "No location found (lat/lng missing).");
     wxSetStripError($("wxWeeklyRow"), "No location found (lat/lng missing).");
+    if ($("wxLocText")) $("wxLocText").textContent = "Location not available";
+  }
+
+  function wxOpenModal() {
+    const m = $("wxLocModal");
+    if (m) m.style.display = "block";
+  }
+  function wxCloseModal() {
+    const m = $("wxLocModal");
+    if (m) m.style.display = "none";
   }
 
   async function requestLiveLocationAndLoad() {
@@ -843,12 +910,12 @@
         }
         wxSaveCoords(lat, lng);
         wxCloseModal();
-        wxLoadWeatherUsing(lat, lng, "Live location");
+        wxLoadUsing(lat, lng, "Live location");
       },
       (err) => {
         console.warn("Geolocation denied/failed:", err);
         wxCloseModal();
-        loadWeatherCardAll();
+        loadWeatherAll();
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 600000 }
     );
@@ -879,21 +946,13 @@
     const refreshBtn = $("weatherRefreshBtn");
     if (refreshBtn && !refreshBtn.__bound) {
       refreshBtn.__bound = true;
-      refreshBtn.addEventListener("click", loadWeatherCardAll);
-    }
-
-    // If weather tab is already active on load
-    if ($("tab-weather")?.classList.contains("active")) {
-      raf2(() => loadWeatherCardAll());
+      refreshBtn.addEventListener("click", loadWeatherAll);
     }
   }
 
-  // Expose for safety
-  window.loadWeatherCardAll = loadWeatherCardAll;
-
-  /* -----------------------------
-     Right lists (Tasks/Warehouse/Manufacturer list)
-  ----------------------------- */
+  /* -------------------------------------------------------
+     Right side lists + date filters
+  ------------------------------------------------------- */
   function fmtDate(d) {
     if (!d) return "-";
     return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
@@ -961,9 +1020,9 @@
     refreshAll();
   }
 
-  /* -----------------------------
-     Leaflet Crop Status Map (unchanged)
-  ----------------------------- */
+  /* -------------------------------------------------------
+     Leaflet Crop Status Map (kept from your code)
+  ------------------------------------------------------- */
   let dashboardLeafletMap = null;
   let dashboardPolygonLayers = [];
 
@@ -985,7 +1044,11 @@
       if (Date.now() - start > 8000) throw new Error("Leaflet not loaded");
     }
 
-    dashboardLeafletMap = L.map("farmMap", { center: [20.5937, 78.9629], zoom: 5, zoomControl: true });
+    dashboardLeafletMap = L.map("farmMap", {
+      center: [20.5937, 78.9629],
+      zoom: 5,
+      zoomControl: true,
+    });
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -1045,7 +1108,6 @@
     }
 
     const allBounds = [];
-
     out.farms.forEach((farm) => {
       const coords = normalizeCoords(farm.coordinates);
       if (coords.length < 3) return;
@@ -1059,15 +1121,15 @@
 
       dashboardPolygonLayers.push(polygon);
 
-      const infoHtml = `
+      polygon.bindPopup(`
         <div style="font-size:13px;">
           <strong>${escapeHtml(farm.cropType || "Crop")}</strong><br/>
           Crop ID: ${escapeHtml(farm.crop_id || "-")}<br/>
           Area: ${escapeHtml(farm.area_size || "-")} acres<br/>
           Planted: ${escapeHtml(farm.date_planted || "-")}
         </div>
-      `;
-      polygon.bindPopup(infoHtml);
+      `);
+
       coords.forEach((c) => allBounds.push(c));
     });
 
@@ -1080,6 +1142,7 @@
 
     setActiveTab("status");
     await waitForVisible(farmMapEl, 8000);
+
     await ensureLeafletMapInitialized();
 
     setTimeout(() => { try { dashboardLeafletMap.invalidateSize(); } catch (e) {} }, 80);
@@ -1088,30 +1151,30 @@
 
   window.initFarmMap = function initFarmMap() {};
 
-  /* -----------------------------
-     BOOT
-  ----------------------------- */
+  /* -------------------------------------------------------
+     BOOT (everything in correct order)
+  ------------------------------------------------------- */
   document.addEventListener("DOMContentLoaded", () => {
-    // Soil
+    // Soil + Orders
     initSoilChart();
     initSoilSelectors();
-
-    // Orders
     initOrderDonut();
 
-    // ✅ Shipments (fixed)
+    // Shipment (div-based)
     renderShipmentBars();
 
-    // Manufacturer (numbers + optional pie)
+    // Warehouse + Manufacturer
+    initWarehousePie();
     initManufacturerCard();
 
     // Right lists
     initDateFilters();
 
-    // Weather
+    // Weather UI + Auto-load weather once
     initWeatherUI();
+    loadWeatherAll(); // ✅ loads even if user never clicks Weather tab
 
-    // Re-run empty state helper if present
+    // empty-state recalculation (your helper)
     try {
       if (typeof window.applyDashboardEmptyStates === "function") {
         window.applyDashboardEmptyStates(window.__DASHBOARD__ || {});
