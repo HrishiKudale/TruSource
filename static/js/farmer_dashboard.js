@@ -93,53 +93,54 @@
   let warehousePie = null;
   let mfgPie = null;
 
-  function initSoilChart() {
-    const canvas = $("soilLineChart");
-    if (!canvas) return;
+function initSoilChart() {
+  const canvas = $("soilLineChart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
 
-    const ctx = canvas.getContext("2d");
-    const labels = data.soil?.labels || ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-    const points = data.soil?.soil_temp || [25.6, 25.7, 25.65, 25.9, 26.0, 26.35, 25.8];
+  const labels = data.soil?.labels || ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const points = data.soil?.soil_temp || [25.6, 25.7, 25.65, 25.9, 26.0, 26.35, 25.8];
 
-    soilChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
+  // ✅ Gradient fill like your previous code
+  const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+  gradient.addColorStop(0, "rgba(124, 58, 237, 0.55)");
+  gradient.addColorStop(0.6, "rgba(124, 58, 237, 0.20)");
+  gradient.addColorStop(1, "rgba(124, 58, 237, 0.02)");
+
+  if (soilChart) soilChart.destroy();
+
+  soilChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
           label: "Soil Temperature",
           data: points,
           tension: 0.35,
-          pointRadius: 3,
-          pointHoverRadius: 4,
-          fill: false,
-          borderColor: "#6366F1",
-          pointBackgroundColor: "#6366F1",
+          pointRadius: 4,
+          pointHoverRadius: 5,
+          fill: true,                 // ✅ important
+          borderColor: "#7C3AED",
+          backgroundColor: gradient,   // ✅ gradient
+          pointBackgroundColor: "#7C3AED",
           pointBorderColor: "#fff",
           borderWidth: 2,
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { display: false }, ticks: { color: "#6b7280", font: { size: 11 } } },
-          y: { grid: { display: false }, ticks: { color: "#6b7280", font: { size: 11 } } },
         },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { display: false }, ticks: { display: false } },
       },
-    });
+    },
+  });
+}
 
-    // Fill soil KPI mini values if backend provides
-    const latestTemp = Array.isArray(data.soil?.soil_temp) ? data.soil.soil_temp.at(-1) : null;
-    const latestPh = Array.isArray(data.soil?.ph) ? data.soil.ph.at(-1) : null;
-    const latestMoist = Array.isArray(data.soil?.soil_moisture) ? data.soil.soil_moisture.at(-1) : null;
-    const latestEc = data.soil?.ec?.at?.(-1);
-
-    if ($("mSoilTemp")) $("mSoilTemp").textContent = (latestTemp != null) ? `${Number(latestTemp).toFixed(1)}°C` : "—";
-    if ($("mPh")) $("mPh").textContent = (latestPh != null) ? `${Number(latestPh).toFixed(2)}` : "—";
-    if ($("mMoisture")) $("mMoisture").textContent = (latestMoist != null) ? `${Number(latestMoist).toFixed(0)}%` : "—";
-    if ($("mEc")) $("mEc").textContent = (latestEc != null) ? `${Number(latestEc).toFixed(3)} ds/m` : "—";
-  }
 
   function initOrderDonut() {
     const canvas = $("orderDonutChart");
@@ -323,6 +324,37 @@
       },
       options: { plugins: { legend: { display: false } } },
     });
+  }
+
+
+    async function refreshManufacturerDataAndRender() {
+    try {
+      // ✅ Use the same endpoint you were using earlier
+      // Replace URL below with your actual existing one if different
+      const res = await fetch("/farmer/dashboard/api/manufacturer", {
+        headers: { Accept: "application/json" },
+      });
+      const out = await res.json();
+
+      // Expecting: { ok:true, summary:{...} } OR { ok:true, requests:[...] }
+      if (!out?.ok) return;
+
+      // Merge into existing dashboard object so rest of logic keeps working
+      if (out.summary) data.manufacturer_summary = out.summary;
+      if (Array.isArray(out.requests)) data.manufacturer_requests = out.requests;
+
+      // ✅ Re-render pie
+      initManufacturerPie();
+
+      // ✅ also re-run empty state if you use it
+      try {
+        if (typeof window.applyDashboardEmptyStates === "function") {
+          window.applyDashboardEmptyStates(window.__DASHBOARD__ || {});
+        }
+      } catch (e) {}
+    } catch (e) {
+      console.warn("Manufacturer refresh failed:", e);
+    }
   }
 
   // ---------------------------
@@ -514,8 +546,13 @@
           backgroundColor: "rgba(99,102,241,0.20)",
           borderColor: "#6366F1",
           borderWidth: 2,
-          borderRadius: 8,
-          barThickness: 18,
+          borderRadius: 10,
+
+          // ✅ Make bars thicker
+          barThickness: 34,
+          maxBarThickness: 40,
+          categoryPercentage: 0.9,
+          barPercentage: 0.9,
         }],
       },
       options: {
@@ -537,16 +574,17 @@
             },
           },
         },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: { color: "#6b7280", font: { size: 11 } },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: "#6b7280", font: { size: 11 } },
+              offset: true
+            },
+            y: {
+              grid: { display: false },
+              ticks: { color: "#6b7280", font: { size: 11 } },
+            },
           },
-          y: {
-            grid: { display: false },
-            ticks: { color: "#6b7280", font: { size: 11 } },
-          },
-        },
       },
     });
   }
@@ -685,6 +723,7 @@
 
     initWarehousePie();
     initManufacturerPie();
+    refreshManufacturerDataAndRender(); // ✅ ensures chart appears like before
 
     initDateFilters();
     initSoilSelectors();

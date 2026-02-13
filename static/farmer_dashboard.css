@@ -138,6 +138,35 @@
   height:100% !important;
 }
 
+.tab-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.tab-filters{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:nowrap;
+}
+
+.tab-filters .select-ghost{
+  height:34px;           /* ✅ same height */
+  display:flex;
+  align-items:center;
+  padding:0 10px;        /* ✅ consistent padding */
+  line-height:34px;
+}
+
+#soilMetricSelect{ min-width: 180px; }
+#soilRangeSelect{ min-width: 120px; }
+
+
+
 .muted{color:var(--muted);}
 .small{font-size:14px; text-align: center;}
 
