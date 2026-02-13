@@ -327,61 +327,68 @@
         <div class="right-list" id="pendingTasksList"></div>
       </div>
 
-      <!-- Warehouse -->
-      <div class="card right-card" id="warehouseCard">
-        <div class="card-head compact">
-          <div class="card-head-left">
-            <span class="ico-circle amber" aria-hidden="true">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Warehouse.svg') }}" alt="Warehouse">
-            </span>
-            <div class="card-title">Warehouse</div>
-          </div>
-          <input type="date" class="date-pill" id="warehouseDate">
+    <!-- Warehouse -->
+    <div class="card right-card" id="warehouseCard">
+      <div class="card-head compact">
+        <div class="card-head-left">
+          <span class="ico-circle amber" aria-hidden="true">
+            <img src="{{ url_for('static', filename='svg-icons/Dashboard/Warehouse.svg') }}" alt="Warehouse">
+          </span>
+          <div class="card-title">Warehouse</div>
         </div>
+        <input type="date" class="date-pill" id="warehouseDate">
+      </div>
 
-        <div class="empty-state empty-state--compact" id="emptyWarehouseCard" style="display:block; text-align:center; margin:50px;">
-          <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_warehouse_table.svg') }}" alt="No warehouse data"><br>
-        </div>
+      <div class="empty-state empty-state--compact" id="emptyWarehouseCard" style="display:block; text-align:center; margin:50px;">
+        <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_warehouse_table.svg') }}" alt="No warehouse data"><br>
+      </div>
 
-        <div class="pie-wrap" id="warehousePieWrap" style="display:none;">
+      <!-- ✅ FIXED STRUCTURE -->
+      <div class="pie-wrap pie-wrap--col" id="warehousePieWrap" style="display:none;">
+        <div class="pie-chart-box">
           <canvas id="warehousePieChart"></canvas>
-          <div class="pie-legend">
-            <div class="pie-leg-item"><span class="pie-dot dot-wh-req"></span> Requested <b id="whRequested">0</b></div>
-            <div class="pie-leg-item"><span class="pie-dot dot-wh-stored"></span> Stored <b id="whStored">0</b></div>
-            <div class="pie-leg-item"><span class="pie-dot dot-wh-pay"></span> Pending payment <b id="whPendingPay">0</b></div>
-          </div>
+        </div>
+
+        <!-- ✅ BELOW CHART -->
+        <div class="pie-legend pie-legend--below">
+          <div class="pie-leg-item"><span class="pie-dot dot-wh-req"></span> Requested <b id="whRequested">0</b></div>
+          <div class="pie-leg-item"><span class="pie-dot dot-wh-stored"></span> Stored <b id="whStored">0</b></div>
+          <div class="pie-leg-item"><span class="pie-dot dot-wh-pay"></span> Pending payment <b id="whPendingPay">0</b></div>
         </div>
       </div>
-
-      <!-- Manufacturer -->
-      <div class="card right-card" id="manufacturerCard">
-        <div class="card-head compact">
-          <div class="card-head-left">
-            <span class="ico-circle orange" aria-hidden="true">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Manufacturer.svg') }}" alt="Manufacturer">
-            </span>
-            <div class="card-title">Manufacturer</div>
-          </div>
-          <input type="date" class="date-pill" id="mfgDate">
-        </div>
-
-        <div class="empty-state empty-state--compact" id="emptyManufacturerCard" style="display:block; text-align:center; margin:50px;">
-          <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_manufacturer_table.svg') }}" alt="No manufacturer updates"><br>
-        </div>
-
-        <div class="pie-wrap" id="mfgPieWrap" style="display:none;">
-          <canvas id="mfgPieChart"></canvas>
-          <div class="pie-legend">
-            <div class="pie-leg-item"><span class="pie-dot dot-mfg-req"></span> Requested <b id="mfgRequested">0</b></div>
-            <div class="pie-leg-item"><span class="pie-dot dot-mfg-proc"></span> Processing <b id="mfgProcessing">0</b></div>
-            <div class="pie-leg-item"><span class="pie-dot dot-mfg-pay"></span> Pending payment <b id="mfgPendingPay">0</b></div>
-          </div>
-        </div>
-      </div>
-
     </div>
-  </div>
-</div>
+
+    <!-- Manufacturer -->
+    <div class="card right-card" id="manufacturerCard">
+      <div class="card-head compact">
+        <div class="card-head-left">
+          <span class="ico-circle orange" aria-hidden="true">
+            <img src="{{ url_for('static', filename='svg-icons/Dashboard/Manufacturer.svg') }}" alt="Manufacturer">
+          </span>
+          <div class="card-title">Manufacturer</div>
+        </div>
+        <input type="date" class="date-pill" id="mfgDate">
+      </div>
+
+      <div class="empty-state empty-state--compact" id="emptyManufacturerCard" style="display:block; text-align:center; margin:50px;">
+        <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_manufacturer_table.svg') }}" alt="No manufacturer updates"><br>
+      </div>
+
+      <!-- ✅ FIXED STRUCTURE -->
+      <div class="pie-wrap pie-wrap--col" id="mfgPieWrap" style="display:none;">
+        <div class="pie-chart-box">
+          <canvas id="mfgPieChart"></canvas>
+        </div>
+
+        <!-- ✅ BELOW CHART -->
+        <div class="pie-legend pie-legend--below">
+          <div class="pie-leg-item"><span class="pie-dot dot-mfg-req"></span> Requested <b id="mfgRequested">0</b></div>
+          <div class="pie-leg-item"><span class="pie-dot dot-mfg-proc"></span> Processing <b id="mfgProcessing">0</b></div>
+          <div class="pie-leg-item"><span class="pie-dot dot-mfg-pay"></span> Pending payment <b id="mfgPendingPay">0</b></div>
+        </div>
+      </div>
+    </div>
+
 
 <script id="dashboard-json" type="application/json">
   {{ dashboard|tojson|safe }}

@@ -313,7 +313,7 @@
 
 .ship-track {
   width: 100%;
-  height: 14px;
+  height: 25px;
   background: #f3f4f6;
   border-radius: 999px;
   overflow: hidden;
@@ -454,6 +454,48 @@
 .dot-mfg-req{ background:#60a5fa; }
 .dot-mfg-proc{ background:#f59e0b; }
 .dot-mfg-pay{ background:#6366f1; }
+
+
+/* Force pie wrap to stack vertically */
+.pie-wrap--col {
+  display: flex;
+  flex-direction: column;     /* ✅ legend goes below */
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+/* Fixed chart box so canvas doesn't stretch weird */
+.pie-chart-box {
+  width: 180px;
+  height: 180px;
+  position: relative;
+}
+
+/* Make canvas fill the box */
+.pie-chart-box canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Legend below chart */
+.pie-legend--below {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
+  flex-wrap: wrap;
+  text-align: center;
+}
+
+/* Each legend item */
+.pie-leg-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+}
 
 /* Empty state */
 .empty-state{
