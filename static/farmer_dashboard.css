@@ -291,38 +291,47 @@
 .donut-total{font-size:26px; font-weight:800; color:#111; margin-top:2px;}
 
 /* Shipment Overview bars (match screenshot) */
-.ship-bars{
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  margin-top:4px;
+.ship-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 6px 6px;
 }
-.ship-row{
-  display:grid;
+
+.ship-row {
+  display: grid;
   grid-template-columns: 90px 1fr;
-  align-items:center;
-  gap:12px;
+  gap: 10px;
+  align-items: center;
 }
-.ship-label{
-  font-size:12px;
-  color:#6b7280;
+
+.ship-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
 }
-.ship-track{
-  height:12px;
-  background:#f3f4f6;
-  border-radius:999px;
-  position:relative;
-  overflow:hidden;
+
+.ship-track {
+  width: 100%;
+  height: 14px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
 }
-.ship-fill{
-  height:100%;
-  border-radius:999px;
+
+.ship-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  transition: width 0.85s ease;
 }
-.ship-fill.req{ background:#ead8b1; }
-.ship-fill.pending{ background:#f5d87a; }
-.ship-fill.transit{ background:#86b7ff; }
-.ship-fill.del{ background:#bff3c7; }
-.ship-fill.pay{ background:#c9c3ff; }
+
+/* Colors matching your legend dots */
+.ship-fill.req { background: #FDE68A; }
+.ship-fill.pending { background: #FCD34D; }
+.ship-fill.transit { background: #60A5FA; }
+.ship-fill.del { background: #86EFAC; }
+.ship-fill.pay { background: #C4B5FD; }
 
 /* Legends */
 .legend-grid{
