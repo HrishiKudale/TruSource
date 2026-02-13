@@ -47,6 +47,41 @@
     return d1.getTime() <= d2.getTime();
   }
 
+
+  function raf2(cb) {
+  requestAnimationFrame(() => requestAnimationFrame(cb));
+}
+
+// Chart.js: nice staggered animation
+function chartAnimStagger(delayBase = 45) {
+  return {
+    duration: 900,
+    easing: "easeOutQuart",
+    delay: (ctx) => {
+      // ctx.type can be "data" for dataset items
+      if (ctx.type === "data") return ctx.dataIndex * delayBase;
+      return 0;
+    },
+  };
+}
+
+// Render charts only when canvas is visible (fixes “chart not loading” if hidden/0 size)
+function whenCanvasReady(canvas, timeoutMs = 2500) {
+  return new Promise((resolve) => {
+    if (!canvas) return resolve(false);
+
+    const start = Date.now();
+    const tick = () => {
+      const rect = canvas.getBoundingClientRect();
+      const ok = rect.width > 20 && rect.height > 20 && canvas.offsetParent !== null;
+      if (ok) return resolve(true);
+      if (Date.now() - start > timeoutMs) return resolve(false);
+      raf2(tick);
+    };
+    tick();
+  });
+}
+
   // ============================================================
   // TABS (Soil / Weather / Status)
   // ============================================================
@@ -203,64 +238,77 @@
   }
 
   // ---------- SHIPMENT HORIZONTAL BAR (fix gaps + radius) ----------
-  function initShipBars() {
-    const canvas = $("shipBarChart");
-    if (!canvas || typeof Chart === "undefined") return;
+async function initShipBars() {
+  if (typeof Chart === "undefined") return;
 
-    const ctx = canvas.getContext("2d");
-    const s = data.shipments || {};
+  // ✅ fallback ids (one of these must exist)
+  const canvas =
+    $("shipBarChart") ||
+    $("shipmentBarChart") ||
+    $("shipmentsBarChart") ||
+    $("shipOverviewChart");
 
-    const values = [
-      safeNum(s.requested),
-      safeNum(s.pending),
-      safeNum(s.in_transit),
-      safeNum(s.delivered),
-      safeNum(s.payment),
-    ];
+  if (!canvas) return;
 
-    if ($("sRequested")) $("sRequested").textContent = String(values[0]);
-    if ($("sPending")) $("sPending").textContent = String(values[1]);
-    if ($("sInTransit")) $("sInTransit").textContent = String(values[2]);
-    if ($("sDelivered")) $("sDelivered").textContent = String(values[3]);
-    if ($("sPayment")) $("sPayment").textContent = String(values[4]);
+  // ✅ wait for layout to be ready (prevents blank chart)
+  await whenCanvasReady(canvas, 2500);
 
-    if (shipChart) shipChart.destroy();
+  const ctx = canvas.getContext("2d");
+  const s = data.shipments || {};
 
-    shipChart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: ["Requested", "Pending", "In transit", "Delivered", "Payment"],
-        datasets: [
-          {
-            data: values,
-            backgroundColor: ["#FDE68A", "#FCD34D", "#60A5FA", "#86EFAC", "#C4B5FD"],
-            borderWidth: 0,
-            borderRadius: 8, // ✅ less rounded than before
-            barThickness: 16, // ✅ controls fatness
-          },
-        ],
-      },
-      options: {
-        indexAxis: "y",
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        layout: { padding: { left: 2, right: 8, top: 0, bottom: 0 } },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: { display: false },
-            border: { display: false },
-          },
-          y: {
-            grid: { display: false },
-            ticks: { color: "#6b7280", font: { size: 12, weight: "600" } },
-            border: { display: false },
-          },
+  const values = [
+    safeNum(s.requested),
+    safeNum(s.pending),
+    safeNum(s.in_transit),
+    safeNum(s.delivered),
+    safeNum(s.payment),
+  ];
+
+  if ($("sRequested")) $("sRequested").textContent = String(values[0]);
+  if ($("sPending")) $("sPending").textContent = String(values[1]);
+  if ($("sInTransit")) $("sInTransit").textContent = String(values[2]);
+  if ($("sDelivered")) $("sDelivered").textContent = String(values[3]);
+  if ($("sPayment")) $("sPayment").textContent = String(values[4]);
+
+  if (shipChart) shipChart.destroy();
+
+  shipChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Requested", "Pending", "In transit", "Delivered", "Payment"],
+      datasets: [
+        {
+          data: values,
+          backgroundColor: ["#FDE68A", "#FCD34D", "#60A5FA", "#86EFAC", "#C4B5FD"],
+          borderWidth: 0,
+          borderRadius: 8,
+          barThickness: 16,
+        },
+      ],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      animation: chartAnimStagger(55),
+      layout: { padding: { left: 2, right: 8, top: 0, bottom: 0 } },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { display: false },
+          border: { display: false },
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: "#6b7280", font: { size: 12, weight: "600" } },
+          border: { display: false },
         },
       },
-    });
-  }
+    },
+  });
+}
+
 
   // ============================================================
   // RIGHT SIDE: MANUFACTURER + WAREHOUSE PIE CHARTS (AUTO INJECT)
@@ -367,56 +415,66 @@
     ]);
   }
 
-  function initManufacturerPie() {
-    if (typeof Chart === "undefined") return;
+function initWarehousePie() {
+  if (typeof Chart === "undefined") return;
 
-    ensureRightPieInjected("manufacturerCard", "mfgPieWrap", "mfgPieChart", "mfgPieLegend");
-    const wrap = $("mfgPieWrap");
-    const canvas = $("mfgPieChart");
-    const legend = $("mfgPieLegend");
-    const empty = $("emptyManufacturerCard");
+  ensureRightPieInjected("warehouseCard", "warehousePieWrap", "warehousePieChart", "warehousePieLegend");
+  const wrap = $("warehousePieWrap");
+  const canvas = $("warehousePieChart");
+  const legend = $("warehousePieLegend");
+  const empty = $("emptyWarehouseCard");
 
-    const counts = countStatuses(data.manufacturer_requests);
-    const requested = safeNum(counts.requested || 0);
-    const processing = safeNum(counts.processing || 0);
-    const pending = safeNum(counts["pending payment"] || counts.pending_payment || counts.pending || 0);
-    const total = requested + processing + pending;
+  const counts = countStatuses(data.warehouse_requests);
 
-    if (!canvas) return;
+  const requested = safeNum(counts.requested || counts["create storage shipment"] || 0);
+  const stored = safeNum(counts.stored || 0);
+  const pending = safeNum(counts["pending payment"] || counts.pending_payment || counts.pending || 0);
+  const total = requested + stored + pending;
 
-    if (total <= 0) {
-      if (wrap) wrap.style.display = "none";
-      if (empty) empty.style.display = "flex";
-      return;
-    }
+  // ✅ Populate numbers if your HTML has these IDs
+  if ($("whRequested")) $("whRequested").textContent = String(requested);
+  if ($("whStored")) $("whStored").textContent = String(stored);
+  if ($("whPendingPay")) $("whPendingPay").textContent = String(pending);
 
-    if (empty) empty.style.display = "none";
-    if (wrap) wrap.style.display = "block";
+  if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
-    if (mfgPie) mfgPie.destroy();
-
-    mfgPie = new Chart(ctx, {
-      type: "pie",
-      data: {
-        labels: ["Requested", "Processing", "Pending payment"],
-        datasets: [
-          {
-            data: [requested, processing, pending],
-            borderWidth: 0,
-            backgroundColor: ["#60A5FA", "#F59E0B", "#6366F1"],
-          },
-        ],
-      },
-      options: { plugins: { legend: { display: false } } },
-    });
-
-    renderPieLegend(legend, [
-      { label: "Requested", value: requested, color: "#60A5FA" },
-      { label: "Processing", value: processing, color: "#F59E0B" },
-      { label: "Pending payment", value: pending, color: "#6366F1" },
-    ]);
+  if (total <= 0) {
+    if (wrap) wrap.style.display = "none";
+    if (empty) empty.style.display = "flex";
+    return;
   }
+
+  if (empty) empty.style.display = "none";
+  if (wrap) wrap.style.display = "block";
+
+  const ctx = canvas.getContext("2d");
+  if (whPie) whPie.destroy();
+
+  whPie = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: ["Requested", "Stored", "Pending payment"],
+      datasets: [
+        {
+          data: [requested, stored, pending],
+          borderWidth: 0,
+          backgroundColor: ["#FDE68A", "#6366F1", "#60A5FA"],
+        },
+      ],
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      animation: chartAnimStagger(35),
+    },
+  });
+
+  renderPieLegend(legend, [
+    { label: "Requested", value: requested, color: "#FDE68A" },
+    { label: "Stored", value: stored, color: "#6366F1" },
+    { label: "Pending payment", value: pending, color: "#60A5FA" },
+  ]);
+}
+
 
   // ============================================================
   // LISTS (Pending Tasks / Warehouse List / Manufacturer List)
@@ -603,93 +661,81 @@
     return Number.isFinite(n) ? n : null;
   }
 
-  function ensureWeatherUIInjected() {
-    const panel = $("tab-weather");
-    if (!panel) return;
-
-    // already injected?
-    if ($("wxKpiRow") && $("weatherBarChart")) return;
-
-    // Put UI after "Location: ..." line if present
-    const locLine = panel.querySelector(".muted");
-    const anchor = locLine ? locLine.parentElement : panel;
-
-    const wrap = document.createElement("div");
-    wrap.id = "wxKpiRow";
-    wrap.style.marginTop = "12px";
-    wrap.innerHTML = `
-    `;
-
-    // Insert wrap at the top of weather content
-    if (anchor) {
-      // insert after locLine if exists, else just append
-      if (locLine && locLine.nextSibling) {
-        locLine.parentElement.insertBefore(wrap, locLine.nextSibling);
-      } else {
-        anchor.appendChild(wrap);
-      }
-    } else {
-      panel.appendChild(wrap);
-    }
-  }
-
   function ensureWeatherChart(labels, values) {
-    const canvas = $("weatherBarChart");
-    if (!canvas || typeof Chart === "undefined") return;
-    const ctx = canvas.getContext("2d");
+  const canvas = $("weatherBarChart");
+  if (!canvas || typeof Chart === "undefined") return;
+  const ctx = canvas.getContext("2d");
 
-    if (weatherChart) weatherChart.destroy();
+  if (weatherChart) weatherChart.destroy();
 
-    weatherChart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "Temperature",
-            data: values,
-            backgroundColor: "rgba(99,102,241,0.22)",
-            borderColor: "#6366F1",
-            borderWidth: 2,
-            borderRadius: 6,        // ✅ not too round
-            categoryPercentage: 0.98, // ✅ removes huge gaps
-            barPercentage: 0.92,
-            maxBarThickness: 28,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            displayColors: false,
-            backgroundColor: "#ffffff",
-            titleColor: "#111827",
-            bodyColor: "#111827",
-            borderColor: "#e5e7eb",
-            borderWidth: 1,
-            padding: 10,
-            callbacks: {
-              title: () => "Temperature",
-              label: (ctx) => `${Number(ctx.raw).toFixed(1)} °C`,
-            },
+  // small smoothing for line (optional)
+  const lineVals = (values || []).map((v) => Number(v));
+
+  weatherChart = new Chart(ctx, {
+    data: {
+      labels,
+      datasets: [
+        // ✅ Bars
+        {
+          type: "bar",
+          label: "Temperature (bars)",
+          data: values,
+          backgroundColor: "rgba(99,102,241,0.18)",
+          borderColor: "#6366F1",
+          borderWidth: 2,
+          borderRadius: 6,
+          categoryPercentage: 0.98,
+          barPercentage: 0.92,
+          maxBarThickness: 28,
+        },
+        // ✅ Line overlay
+        {
+          type: "line",
+          label: "Temperature (line)",
+          data: lineVals,
+          borderColor: "#111827",
+          borderWidth: 2,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 3,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: chartAnimStagger(35),
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          displayColors: false,
+          backgroundColor: "#ffffff",
+          titleColor: "#111827",
+          bodyColor: "#111827",
+          borderColor: "#e5e7eb",
+          borderWidth: 1,
+          padding: 10,
+          callbacks: {
+            title: (ctx) => `Time: ${ctx?.[0]?.label || ""}`,
+            label: (ctx) => `${Number(ctx.raw).toFixed(1)} °C`,
           },
         },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: { color: "#6b7280", font: { size: 11 } },
-          },
-          y: {
-            grid: { display: false },
-            ticks: { display: false },
-          },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: "#6b7280", font: { size: 11 } },
+        },
+        y: {
+          grid: { display: false },
+          ticks: { display: false },
         },
       },
-    });
-  }
+    },
+  });
+}
+
 
   async function loadWeatherUsing(lat, lng, label) {
     if ($("wxLocText")) $("wxLocText").textContent = label || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
