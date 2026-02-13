@@ -28,7 +28,7 @@ def request_processing_page():
         manufacturers = list(
             users_col.find(
                 {"role": "manufacturer"},
-                {"_id": 0, "userId": 1, "manufacturerId": 1, "name": 1, "officeName": 1, "location": 1},
+                {"_id": 0, "userId": 1, "name": 1, "role":1, "officeName": 1, "location": 1, "cropType":1},
             )
         )
     else:
@@ -67,7 +67,7 @@ def submit_request():
             manufacturers = list(
                 users_col.find(
                     {"role": "manufacturer"},
-                    {"_id": 0, "userId": 1, "manufacturerId": 1, "name": 1, "officeName": 1, "location": 1, "cropType":1},
+                    {"_id": 0, "userId": 1, "name": 1, "role":1, "officeName": 1, "location": 1, "cropType":1},
                 )
             )
         else:

@@ -116,13 +116,7 @@ def create_order_page():
     # -------------------
     farms = []
     if users_col is not None:
-        farms = _safe_list(
-            users_col.find(
-                {"farmerId": farmer_id},
-                {"_id": 0, "farmId": 1, "name": 1},
-            )
-        )
-
+        farms = session.get("user_id")
     return render_template(
         "AddOrder.html",
         buyers=buyers,
