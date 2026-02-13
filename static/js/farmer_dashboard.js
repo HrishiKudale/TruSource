@@ -618,32 +618,6 @@
     wrap.id = "wxKpiRow";
     wrap.style.marginTop = "12px";
     wrap.innerHTML = `
-      <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:12px;">
-        <div class="metric-item" style="grid-template-columns:12px 1fr; background:#fbfbff;">
-          <span class="dot" style="background:#6366F1"></span>
-          <div class="metric-name">Temperature</div>
-          <div class="metric-value" id="wxTempKpi">—</div>
-        </div>
-        <div class="metric-item" style="grid-template-columns:12px 1fr; background:#fbfbff;">
-          <span class="dot" style="background:#60A5FA"></span>
-          <div class="metric-name">Humidity</div>
-          <div class="metric-value" id="wxHumidityKpi">—</div>
-        </div>
-        <div class="metric-item" style="grid-template-columns:12px 1fr; background:#fbfbff;">
-          <span class="dot" style="background:#8B5CF6"></span>
-          <div class="metric-name">Wind Speed</div>
-          <div class="metric-value" id="wxWindKpi">—</div>
-        </div>
-        <div class="metric-item" style="grid-template-columns:12px 1fr; background:#fbfbff;">
-          <span class="dot" style="background:#111827"></span>
-          <div class="metric-name">Wind Direction</div>
-          <div class="metric-value" id="wxWindDirKpi">—</div>
-        </div>
-      </div>
-
-      <div class="chart-wrap" style="height:260px;">
-        <canvas id="weatherBarChart"></canvas>
-      </div>
     `;
 
     // Insert wrap at the top of weather content

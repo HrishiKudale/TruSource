@@ -470,7 +470,7 @@ class DashboardService:
 
         farmer_orders = _get_collection(db, ["farmer_orders"])
         marketplace = _get_collection(db, ["marketplace_requests", "market_place"])
-        transporter = _get_collection(db, ["transporter_request", "transport_request"])
+        transporter_request = _get_collection(db, ["transporter_request", "transport_request"])
         farmer_request = _get_collection(db, ["farmer_request"])
 
         # A) Pending payments from farmer_orders
@@ -534,15 +534,15 @@ class DashboardService:
                 )
 
         # C) Transport requests pending
-        if transporter is not None:
-            for tr in transporter.find(
+        if transporter_request is not None:
+            for tr in transporter_request.find(
                 {"$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}], "status": {"$in": ["pending", "pending_pickup", "Pending", "PENDING"]}}
             ):
                 dt = _extract_dt(tr)
                 if not _matches_till(dt, till_dt):
                     continue
 
-                ship_id = _first(tr, ["shipment_id", "shipmentId", "request_id", "requestId"], "")
+                ship_id = _first(tr, ["crop_id", "order_id", "request_id", "requestId"], "")
                 tasks.append(
                     TaskItem(
                         title="Upcoming shipment",
