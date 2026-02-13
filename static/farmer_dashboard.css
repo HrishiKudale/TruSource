@@ -129,6 +129,7 @@
   padding:10px;
   border:1px solid #f2f2f2;
   background:#fff;
+  height: 320px;
 }
 .chart-wrap.fixed-h{
   height:260px; /* matches screenshot chart block feel */
@@ -165,7 +166,7 @@
 #soilMetricSelect{ min-width: 180px; }
 #soilRangeSelect{ min-width: 120px; }
 
-
+#shipBarChart { max-height: 190px; }
 
 .muted{color:var(--muted);}
 .small{font-size:14px; text-align: center;}
