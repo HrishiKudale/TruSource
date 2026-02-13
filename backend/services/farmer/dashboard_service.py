@@ -428,34 +428,57 @@ class DashboardService:
         if db is None:
             return ShipmentsOverview()
 
-        col = _get_collection(db, ["transport_request", "transporter_request"])
-        if col is None:
-            return ShipmentsOverview()
+        col = db["transporter_request"]
 
-        docs = list(col.find({"$or": [{"farmer_id": farmer_id}, {"farmerId": farmer_id}]}))
+        query = {
+            "$or": [
+                {"farmer_id": farmer_id},
+                {"farmerId": farmer_id}
+            ]
+        }
+
+        docs = list(col.find(query))
+
+        print("Shipment docs found:", len(docs))
 
         out = ShipmentsOverview()
+
         for s in docs:
-            dt = _extract_dt(s)
-            if not _matches_till(dt, till_dt):
+
+            # ---- DATE FILTER ----
+            dt = s.get("created_at") or s.get("updated_at")
+
+            if isinstance(dt, dict) and "$date" in dt:
+                dt = datetime.fromisoformat(dt["$date"].replace("Z", "+00:00"))
+
+            if till_dt and dt and dt > till_dt:
                 continue
 
-            st = _safe_lower(_first(s, ["status", "shipment_status", "shipmentStatus"]))
+            # ---- STATUS COUNT ----
+            st = str(s.get("status", "")).strip().lower()
 
-            if st in SHIP_REQUESTED:
+            print("Shipment status:", st)
+
+            if st == "requested":
                 out.requested += 1
-            elif st in SHIP_PENDING:
+            elif st == "pending":
                 out.pending += 1
-            elif st in SHIP_IN_TRANSIT:
+            elif st in ["in transit", "in_transit"]:
                 out.in_transit += 1
-            elif st in SHIP_DELIVERED:
+            elif st == "delivered":
                 out.delivered += 1
 
-            pay = _safe_lower(_first(s, ["payment_status", "paymentStatus"]))
-            if pay in PAYMENT_RECEIVED:
-                out.payment += 1
+            # ---- PAYMENT LOGIC ----
+            payment_details = s.get("payment_details", [])
+            if payment_details:
+                terms = str(payment_details[0].get("payment_terms", "")).lower()
+                if "delivery" in terms and st == "delivered":
+                    out.payment += 1
+
+        print("Final shipment overview:", out.__dict__)
 
         return out
+
 
     # -----------------------------
     # Right-side lists
