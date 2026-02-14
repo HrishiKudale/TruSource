@@ -3,6 +3,7 @@
 from flask import Blueprint, redirect, render_template, request, session, jsonify, url_for
 
 from flask_jwt_extended import (
+    get_jwt,
     verify_jwt_in_request,
     get_jwt_identity
 )
@@ -20,31 +21,41 @@ dashboard_bp = Blueprint(
 # ----------------------------
 # HYBRID AUTH HELPERS
 # ----------------------------
+
+
 def _get_farmer_id_web_or_jwt():
-    """
-    Returns farmer_id if authenticated as farmer via:
-      1) Flask cookie session (web)
-      2) JWT Bearer token (mobile)
-    Otherwise returns None.
-    """
     # 1) Web session auth
     if session.get("role") == "farmer" and session.get("user_id"):
         return session.get("user_id")
 
     # 2) JWT auth (mobile)
     try:
-        verify_jwt_in_request(optional=True)  # does not raise if missing
-        ident = get_jwt_identity() or {}
-        role = (ident.get("role") or "").lower()
-        user_id = ident.get("userId") or ident.get("user_id")
+        verify_jwt_in_request(optional=True)
+
+        ident = get_jwt_identity()
+        claims = get_jwt()  # full token claims
+
+        print("✅ JWT OK | ident =", ident)
+        print("✅ JWT claims keys =", list(claims.keys()))
+
+        if not isinstance(ident, dict):
+            print("❌ identity is not dict:", type(ident))
+            return None
+
+        role = (ident.get("role") or "").strip().lower()
+        user_id = (ident.get("userId") or ident.get("user_id") or "").strip()
+
+        print("✅ parsed role=", role, "user_id=", user_id)
+
         if role == "farmer" and user_id:
             return user_id
         return None
-    except NoAuthorizationError:
+
+    except Exception as e:
+        print("❌ JWT VERIFY FAILED:", repr(e))
+        print("❌ Authorization header was:", request.headers.get("Authorization"))
         return None
-    except Exception:
-        # don't crash API if token malformed
-        return None
+
 
 
 def _require_farmer_web_page():
@@ -128,3 +139,12 @@ def api_farms():
         "count": len(farms),
         "farms": farms
     }), 200
+
+
+@dashboard_bp.get("/debug/jwt")
+def debug_jwt():
+    try:
+        verify_jwt_in_request()  # NOT optional
+        return jsonify(ok=True, identity=get_jwt_identity(), claims=get_jwt()), 200
+    except Exception as e:
+        return jsonify(ok=False, error=str(e)), 401
