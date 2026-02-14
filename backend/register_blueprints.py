@@ -61,3 +61,6 @@ def register_all_blueprints(app):
 
     from backend.routes.farmer.setting_routes import settings_bp
     app.register_blueprint(settings_bp)
+
+    from backend.routes.debug import trace_bp
+    app.register_blueprint(trace_bp)
