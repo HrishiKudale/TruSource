@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 
-trace_bp = Blueprint("rfid_bp", __name__, url_prefix="/rfid")
+trace_bp = Blueprint("trace_bp", __name__, url_prefix="/trace")
 @trace_bp.get("/debug-token")
 def debug_token():
     print("Authorization header:", request.headers.get("Authorization"))
