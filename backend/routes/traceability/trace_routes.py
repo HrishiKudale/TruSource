@@ -25,6 +25,22 @@ def _get_user_id_web_or_jwt():
         return None
 
 
+
+@traceability_bp.get("/traceability")
+def traceability_page():
+    """
+    Web page route
+    GET /farmer/traceability
+    """
+    user_id = session.get("user_id")
+    if not user_id:
+        return render_template("new_login.html"), 401
+
+    return render_template(
+        "Traceability.html",
+        active_page="traceability"
+    )
+
 @traceability_bp.get("/api/traceability")
 def traceability_api():
     """
