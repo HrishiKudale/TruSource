@@ -318,7 +318,7 @@ class TraceabilityService:
         out = []
 
         try:
-            crop_ids = contract.functions.getCrop(user_id).call()
+            crop_ids = contract.functions.getUserCrops(user_id).call()
         except Exception as e:
             print("getCropsByUser failed:", str(e))
             return out
