@@ -55,7 +55,7 @@
 .card{
   background:var(--card);
   border:1px solid var(--line);
-  border-radius:var(--radius);
+  border-radius:12px;
   overflow:hidden;
 }
 .big-card{margin-bottom:14px;}
@@ -63,13 +63,13 @@
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:12px 14px;
+  padding:10px 15px;
   border-bottom:1px solid #f3f3f3;
 }
-.card-head.compact{padding:12px 14px;}
+.card-head.compact{padding:10px 15px;}
 .card-head-left{display:flex; align-items:center; gap:10px;}
 .card-title{font-weight:600; color:#111; font-size: 16px;}
-.card-body{padding:12px 14px;}
+.card-body{padding:20px 18px;}
 
 .ico-circle{
   width:34px;height:34px;border-radius:999px;
@@ -99,6 +99,7 @@
   font-size:12px;
   color:#111;
   cursor:pointer;
+  font-family: var(--body-md-reg-font-family);
 }
 
 .segmented{
@@ -110,7 +111,7 @@
 .seg-btn{
   border:0;
   background:#fff;
-  padding:7px 10px;
+  padding:8px 12px;
   font-size:12px;
   cursor:pointer;
   color:#111;
@@ -169,7 +170,7 @@
 #shipBarChart { max-height: 190px; }
 
 .muted{color:var(--muted);}
-.small{font-size:14px; text-align: center;}
+.small{margin-top: 20px;  font-size:14px; text-align: center;}
 
 /* Weather tab matching screenshot */
 .wx-kpi-row{
@@ -177,6 +178,7 @@
   grid-template-columns: repeat(4, 1fr);
   gap:10px;
   margin-bottom:12px;
+  font-family: var(--body-md-reg-font-family);
 }
 @media (max-width: 1100px){
   .wx-kpi-row{grid-template-columns: repeat(2, 1fr);}
@@ -190,12 +192,12 @@
 .wx-kpi-label{
   font-size:11px;
   color:#8b97a7;
-  font-weight:600;
+  font-weight:500;
 }
 .wx-kpi-val{
   margin-top:6px;
-  font-size:16px;
-  font-weight:800;
+  font-size:18px;
+  font-weight:600;
   color:#0f172a;
 }
 
@@ -294,8 +296,8 @@
 .ship-bars {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 8px 6px 6px;
+  gap: 18px;
+  padding: 8px 6px 18px;
 }
 
 .ship-row {
@@ -335,13 +337,13 @@
 
 /* Legends */
 .legend-grid{
-  margin-top:12px;
+  margin-top:40px;
   display:grid;
   grid-template-columns: 1fr 1fr;
-  gap:8px 12px;
+  gap:12px 18px;
 }
 .legend-row{
-  margin-top:12px;
+  margin-top:30px;
   display:grid;
   grid-template-columns: 1fr 1fr;
   gap:8px 12px;
@@ -400,19 +402,19 @@
   align-items:flex-start;
   gap:10px;
   padding:10px;
-  border:1px solid #f1f1f1;
-  border-radius:14px;
+  border-bottom:1px solid #f1f1f1;
+  border-radius:12px;
   background:#fff;
 }
 .task-ico{
-  width:28px;height:28px;border-radius:10px;
+  width:30px;height:30px;border-radius:30px;
   display:flex; align-items:center; justify-content:center;
   background:#f3f4f6;
   color:#111;
   flex:0 0 auto;
 }
-.task-title{font-weight:700; font-size:13px; color:#111; line-height:1.2;}
-.task-sub{font-size:12px; color:var(--muted); margin-top:2px;}
+.task-title{font-weight:500; font-size:13px; color:#111; line-height:1.2;}
+.task-sub{font-size:11px; color:var(--muted); margin-top:2px;}
 
 /* Pie cards */
 .pie-wrap{

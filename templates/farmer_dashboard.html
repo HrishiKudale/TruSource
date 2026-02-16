@@ -69,19 +69,18 @@
         <div class="card-head">
           <div class="card-head-left">
             <span class="ico-circle green" aria-hidden="true">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Weather & Crop Health.svg') }}" alt="Weather">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Weather & Crop Health.svg') }}" alt="Weather"style="height: 38px;width: 38px;">
             </span>
             <div class="card-title">Weather &amp; Crop Health</div>
           </div>
 
           <div class="card-head-right">
-            <select id="cropTypeSelect" class="select-pill">
+            <select id="cropTypeSelect" class="select-pill"style="font-family: var(--body-md-reg-font-family);font-size: 10px;color: lightslategrey;">
               {% set crops = (dashboard.crops if dashboard and dashboard.crops else ["Wheat"]) %}
               {% for c in crops %}
                 <option value="{{ c }}">{{ c }}</option>
               {% endfor %}
             </select>
-
             <div class="segmented" role="tablist" aria-label="Stats Toggle">
               <button class="seg-btn" data-tab="soil" type="button">Soil Data</button>
               <button class="seg-btn active" data-tab="weather" type="button">Weather</button>
@@ -234,7 +233,7 @@
         <div class="card" id="orderOverviewCard">
           <div class="card-head compact">
             <div class="card-head-left">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Order Overview.svg') }}" alt="Orders">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Order Overview.svg') }}" alt="Orders" style="height: 38px;width: 38px;">
               <div class="card-title">Order Overview</div>
             </div>
             <select class="select-ghost" id="orderRangeSelect">
@@ -272,7 +271,7 @@
           <div class="card-head compact">
             <div class="card-head-left">
               <span class="ico-circle yellow" aria-hidden="true">
-                <img src="{{ url_for('static', filename='svg-icons/Dashboard/Shipment Overview.svg') }}" alt="Shipments">
+                <img src="{{ url_for('static', filename='svg-icons/Dashboard/Shipment Overview.svg') }}" alt="Shipments"style="height: 38px;width: 38px;">
               </span>
               <div class="card-title">Shipment Overview</div>
             </div>
@@ -313,7 +312,7 @@
         <div class="card-head compact">
           <div class="card-head-left">
             <span class="ico-circle purple" aria-hidden="true">
-              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Pending Tasks.svg') }}" alt="Tasks">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Pending Tasks.svg') }}" alt="Tasks"style="height: 38px;width: 38px;">
             </span>
             <div class="card-title">Pending Tasks</div>
           </div>
@@ -332,7 +331,7 @@
       <div class="card-head compact">
         <div class="card-head-left">
           <span class="ico-circle amber" aria-hidden="true">
-            <img src="{{ url_for('static', filename='svg-icons/Dashboard/Warehouse.svg') }}" alt="Warehouse">
+            <img src="{{ url_for('static', filename='svg-icons/Dashboard/Warehouse.svg') }}" alt="Warehouse"style="height: 38px;width: 38px;">
           </span>
           <div class="card-title">Warehouse</div>
         </div>
@@ -363,7 +362,7 @@
       <div class="card-head compact">
         <div class="card-head-left">
           <span class="ico-circle orange" aria-hidden="true">
-            <img src="{{ url_for('static', filename='svg-icons/Dashboard/Manufacturer.svg') }}" alt="Manufacturer">
+            <img src="{{ url_for('static', filename='svg-icons/Dashboard/Manufacturer.svg') }}" alt="Manufacturer"style="height: 38px;width: 38px;">
           </span>
           <div class="card-title">Manufacturer</div>
         </div>

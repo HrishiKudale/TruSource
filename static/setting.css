@@ -10,15 +10,15 @@
 
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--text)}
-.settings-page{max-width:none; font-family: sans-serif ;}
+.settings-page{max-width:none; font-family: var(--body-md-reg-font-family) ;}
 
 .settings-header{margin-bottom:16px}
 .settings-title{display:flex;align-items:center;gap:10px}
 .settings-title h1{margin:0;font-size:26px;font-weight:700}
 .settings-icon{font-size:22px}
 
-.settings-section{margin-top:28px}
-.section-label{font-size:18px;color:#888;margin:8px 0}
+.settings-section{margin-top:24px}
+.section-label{font-size:15px;color:#888;margin:8px 0}
 
 .card{
   background:var(--card);
@@ -39,14 +39,14 @@ body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--text
   padding-top:2px;
 }
 
-.field-label{font-size:16px;color:#777;margin-bottom:4px}
+.field-label{font-size:14px;color:#777;margin-bottom:4px}
 .field-value{font-size:14px;color:#111}
 
 .card-actions{display:flex;align-items:flex-start;justify-content:flex-end}
 
 .row-between{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.card-title{font-size:16px;font-weight:700}
-.card-subtitle{font-size:14px;color:#777;margin-top:4px}
+.card-title{font-size:15px;font-weight:var(--body-md-semibold-font-weight)}
+.card-subtitle{font-size:12px;color:#777;margin-top:8px}
 .card-note{font-size:11px;color:#a0a0a0;margin-top:6px}
 
 .doc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
@@ -62,6 +62,7 @@ body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--text
   padding:10px 12px;
   min-width:160px;
   background:#fff;
+  font-family: var(--body-md-reg-font-family);
 }
 
 .btn{
@@ -70,6 +71,7 @@ body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--text
   border:1px solid transparent;
   cursor:pointer;
   font-size:14px;
+  font-family: var(--body-md-reg-font-family);
 }
 .btn-icon{margin-left:8px}
 .btn-outline{background:#fff;border-color:#cfcfcf}

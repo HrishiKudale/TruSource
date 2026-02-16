@@ -308,7 +308,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--body-md-reg-font-family);
 }
 
 
@@ -326,9 +326,9 @@
 
 .logout-title {
   font-size: 18px;     /* ⬅ down from 22+ */
-  font-weight: 600;
+  font-weight: 500;
   margin-bottom: 8px;
-  color: #111827;
+  color: #000000;
 }
 
 .logout-desc {
@@ -352,6 +352,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  font-family:var(--body-md-reg-font-family);;
 }
 
 
@@ -546,7 +547,7 @@
   box-sizing: border-box;
   background-color: var(--white);
   border-radius: 12px;
-  font-family:sans-serif;
+  font-family:var(--body-md-reg-font-family);
 }
 
 .my-crop .frame-14 {
@@ -574,7 +575,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 10px;
 }
 
 .my-crop .grains {
