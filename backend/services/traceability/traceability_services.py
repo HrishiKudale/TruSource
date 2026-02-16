@@ -335,39 +335,39 @@ class TraceabilityService:
 
         return out
 
-@staticmethod
-def get_user_crop_summaries(user_id: str) -> List[Dict[str, Any]]:
-    out = []
-    seen = set()
+    @staticmethod
+    def get_user_crop_summaries(user_id: str) -> List[Dict[str, Any]]:
+        out = []
+        seen = set()
 
-    try:
-        crop_ids = contract.functions.getUserCrops(user_id).call()
-    except Exception as e:
-        print("getUserCrops failed:", str(e))
+        try:
+            crop_ids = contract.functions.getUserCrops(user_id).call()
+        except Exception as e:
+            print("getUserCrops failed:", str(e))
+            return out
+
+        for cid in crop_ids:
+            cid = str(cid).strip()
+            if not cid or cid in seen:
+                continue
+
+            seen.add(cid)
+
+            history = TraceabilityService.get_crop_history(cid)
+            latest_status = None
+
+            if history:
+                latest_status = history[-1][0]  # last status
+
+            crop = TraceabilityService._get_crop_onchain(cid)
+
+            if crop:
+                out.append({
+                    "cropId": crop.get("cropId"),
+                    "cropType": crop.get("cropType"),
+                    "date_planted": crop.get("datePlanted"),
+                    "location": crop.get("location"),
+                    "status": latest_status
+                })
+
         return out
-
-    for cid in crop_ids:
-        cid = str(cid).strip()
-        if not cid or cid in seen:
-            continue
-
-        seen.add(cid)
-
-        history = TraceabilityService.get_crop_history(cid)
-        latest_status = None
-
-        if history:
-            latest_status = history[-1][0]  # last status
-
-        crop = TraceabilityService._get_crop_onchain(cid)
-
-        if crop:
-            out.append({
-                "cropId": crop.get("cropId"),
-                "cropType": crop.get("cropType"),
-                "date_planted": crop.get("datePlanted"),
-                "location": crop.get("location"),
-                "status": latest_status
-            })
-
-    return out
