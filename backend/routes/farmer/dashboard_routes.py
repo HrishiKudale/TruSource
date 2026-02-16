@@ -88,7 +88,7 @@ def dashboard_page():
 
 
 
-@dashboard_bp.get("/farmer/dashboard/data")
+@dashboard_bp.get("/data")
 def farmer_dashboard_data():
     farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
