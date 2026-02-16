@@ -309,3 +309,28 @@ class TraceabilityService:
             )
 
         return ShipmentBlock(shipments=items)
+
+    @staticmethod
+    def get_crops_for_user(user_id: str) -> List[Dict[str, Any]]:
+        """
+        Fetch all crop IDs for a farmer from blockchain
+        """
+        out = []
+
+        try:
+            crop_ids = contract.functions.getCrop(user_id).call()
+        except Exception as e:
+            print("getCropsByUser failed:", str(e))
+            return out
+
+        for cid in crop_ids:
+            crop = TraceabilityService._get_crop_onchain(cid)
+            if crop:
+                out.append({
+                    "cropId": crop.get("cropId"),
+                    "cropType": crop.get("cropType"),
+                    "date_planted": crop.get("datePlanted"),
+                    "location": crop.get("location"),
+                })
+
+        return out

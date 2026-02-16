@@ -11,6 +11,7 @@ from flask_jwt_extended.exceptions import NoAuthorizationError
 
 from backend.services.farmer.crop_service import CropService
 from backend.services.farmer.dashboard_service import DashboardService
+from backend.services.traceability.traceability_services import TraceabilityService
 
 dashboard_bp = Blueprint(
     "farmer_dashboard_bp",
@@ -85,19 +86,16 @@ def dashboard_page():
 # ----------------------------
 @dashboard_bp.get("/data")
 def dashboard_data_api():
-    """
-    Works for:
-      - Web (session)
-      - Mobile (Bearer token)
-    Usage: /farmer/dashboard/data?till=2026-01-10
-    """
     farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
         return jsonify({"error": "unauthorized"}), 401
 
-    till = request.args.get("till")
-    dashboard = DashboardService.build_dashboard(farmer_id, till_date=till)
-    return jsonify(dashboard), 200
+    crops = TraceabilityService.get_crops_for_user(farmer_id)
+
+    return jsonify({
+        "polygons": crops,
+        "count": len(crops)
+    }), 200
 
 
 @dashboard_bp.get("/api/farms")
