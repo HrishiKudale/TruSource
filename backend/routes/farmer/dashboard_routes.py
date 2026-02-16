@@ -84,18 +84,32 @@ def dashboard_page():
 # ----------------------------
 # APIs (WEB AJAX + MOBILE)
 # ----------------------------
-@dashboard_bp.get("/data")
-def dashboard_data_api():
+# dashboard_routes.py (inside your /farmer/dashboard/data handler)
+
+
+
+@dashboard_bp.get("/farmer/dashboard/data")
+def farmer_dashboard_data():
     farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
-        return jsonify({"error": "unauthorized"}), 401
+        return jsonify(ok=False, err="auth"), 401
 
-    crops = TraceabilityService.get_crops_for_user(farmer_id)
+    try:
+        # ✅ NEW: get clean summarized crops
+        crops = TraceabilityService.get_user_crop_summaries(farmer_id)
 
-    return jsonify({
-        "polygons": crops,
-        "count": len(crops)
-    }), 200
+    except Exception as e:
+        print("Dashboard error:", str(e))
+        return jsonify(ok=False, err="server_error"), 500
+
+    return jsonify(
+        ok=True,
+        data={
+            # keep your other dashboard fields here if needed
+            "crops": crops
+        }
+    ), 200
+
 
 
 @dashboard_bp.get("/api/farms")
