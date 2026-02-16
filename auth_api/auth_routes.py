@@ -1,11 +1,10 @@
 # auth_api/auth_routes.py
 import os
-import time
 from datetime import datetime, timezone
 
 from flask import Blueprint, request, jsonify
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import create_access_token, create_refresh_token, JWTManager, get_jwt_identity, jwt_required
 from pymongo import MongoClient
 
 auth_bp = Blueprint("auth", __name__)
@@ -15,6 +14,8 @@ client = MongoClient(os.getenv("MONGO_URI"))
 db = client["crop_traceability_db"]
 users = db["users"]
 
+# If this file is in a Flask app, ensure JWTManager(app) is created in your app factory.
+# (No change needed here if already done.)
 
 @auth_bp.get("/health")
 def health():
@@ -30,6 +31,15 @@ def _public_user(u: dict) -> dict:
     }
 
 
+def _claims_from_public_user(pu: dict) -> dict:
+    # ✅ goes into JWT payload as extra claims, NOT as subject
+    return {
+        "role": pu.get("role", ""),
+        "name": pu.get("name", ""),
+        "email": pu.get("email", ""),
+    }
+
+
 def _norm(v):
     return (v or "").strip()
 
@@ -41,7 +51,6 @@ def _norm_email(v):
 @auth_bp.post("/auth/register")
 def register():
     data = request.get_json(silent=True) or {}
-    # allow form fallback
     if not data:
         data = request.form.to_dict(flat=True) or {}
 
@@ -62,7 +71,6 @@ def register():
     if not role:
         return jsonify(message="Role is required"), 400
 
-    # duplicates
     if users.find_one({"userId": user_id}):
         return jsonify(message="UserId already exists"), 409
     if users.find_one({"email": email, "role": role}):
@@ -85,11 +93,13 @@ def register():
     users.insert_one(doc)
 
     ident = _public_user(doc)
-    return jsonify(
-        user=ident,
-        access_token=create_access_token(identity=ident),
-        refresh_token=create_refresh_token(identity=ident),
-    ), 201
+    claims = _claims_from_public_user(ident)
+
+    # ✅ IMPORTANT: identity MUST be a string
+    access = create_access_token(identity=ident["userId"], additional_claims=claims)
+    refresh = create_refresh_token(identity=ident["userId"], additional_claims=claims)
+
+    return jsonify(user=ident, access_token=access, refresh_token=refresh), 201
 
 
 @auth_bp.post("/auth/login")
@@ -112,11 +122,13 @@ def login():
         return jsonify(message="Invalid password"), 401
 
     ident = _public_user(user)
-    return jsonify(
-        user=ident,
-        access_token=create_access_token(identity=ident),
-        refresh_token=create_refresh_token(identity=ident),
-    ), 200
+    claims = _claims_from_public_user(ident)
+
+    # ✅ IMPORTANT: identity MUST be a string
+    access = create_access_token(identity=ident["userId"], additional_claims=claims)
+    refresh = create_refresh_token(identity=ident["userId"], additional_claims=claims)
+
+    return jsonify(user=ident, access_token=access, refresh_token=refresh), 200
 
 
 @auth_bp.get("/users/<user_id>")
@@ -125,3 +137,12 @@ def get_user(user_id: str):
     if not user:
         return jsonify(message="User not found"), 404
     return jsonify(user=user), 200
+
+
+# ✅ optional refresh in AUTH SERVICE (recommended)
+@auth_bp.post("/auth/refresh")
+@jwt_required(refresh=True)
+def refresh():
+    user_id = get_jwt_identity()  # ✅ string userId
+    # in refresh, claims will also be present; you can copy them or re-fetch user
+    return jsonify(ok=True, access_token=create_access_token(identity=user_id)), 200

@@ -32,28 +32,14 @@ def _get_farmer_id_web_or_jwt():
     try:
         verify_jwt_in_request(optional=True)
 
-        ident = get_jwt_identity()
-        claims = get_jwt()  # full token claims
-
-        print("✅ JWT OK | ident =", ident)
-        print("✅ JWT claims keys =", list(claims.keys()))
-
-        if not isinstance(ident, dict):
-            print("❌ identity is not dict:", type(ident))
-            return None
-
-        role = (ident.get("role") or "").strip().lower()
-        user_id = (ident.get("userId") or ident.get("user_id") or "").strip()
-
-        print("✅ parsed role=", role, "user_id=", user_id)
+        user_id = get_jwt_identity()   # ✅ string now
+        claims = get_jwt() or {}
+        role = (claims.get("role") or "").lower()
 
         if role == "farmer" and user_id:
             return user_id
         return None
-
-    except Exception as e:
-        print("❌ JWT VERIFY FAILED:", repr(e))
-        print("❌ Authorization header was:", request.headers.get("Authorization"))
+    except Exception:
         return None
 
 

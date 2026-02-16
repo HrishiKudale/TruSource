@@ -73,12 +73,20 @@ def _public_user(u: dict) -> dict:
     }
 
 
+from flask_jwt_extended import create_access_token, create_refresh_token
+
 def _issue_tokens(user: dict):
     ident = _public_user(user)
+    claims = {
+        "role": ident.get("role", ""),
+        "name": ident.get("name", ""),
+        "email": ident.get("email", ""),
+    }
     return (
-        create_access_token(identity=ident),
-        create_refresh_token(identity=ident),
+        create_access_token(identity=ident["userId"], additional_claims=claims),
+        create_refresh_token(identity=ident["userId"], additional_claims=claims),
     )
+
 
 
 def _norm(v: str | None) -> str:
