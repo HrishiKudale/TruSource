@@ -353,7 +353,7 @@ class TraceabilityService:
 
             seen.add(cid)
 
-            history = TraceabilityService.get_crop_history(cid)
+            history = TraceabilityService._get_history_onchain(cid)
             latest_status = None
 
             if history:
