@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  font-family: var(--body-sm-reg-font-family);
 }
 
 /* Topbar */
@@ -32,7 +33,7 @@
 }
 
 .back-btn img { width: 32px; height: 32px; }
-.whinfo-title { font-size: 28px; font-weight: 600; margin: 0; color: #1a1a1a; }
+.whinfo-title { font-size: 22px; font-weight: 500; margin: 0; color: #1a1a1a; }
 
 .btn-outline{
   padding: 10px 14px;
@@ -54,7 +55,7 @@
 .card {
   background: #fff;
   border: 1px solid #ececec;
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
 }
 
@@ -62,7 +63,7 @@
 .card-head-grey {
   background: #f3f3f3;
   border-bottom: 1px solid #ececec;
-  padding: 14px 16px;
+  padding: 8px 15px;
 }
 
 .card-head-left {
@@ -72,7 +73,7 @@
 }
 
 .card-title {
-  font-size: 20px;
+  font-size: 18px;
   margin: 0;
   font-weight: 600;
   color: #1a1a1a;
@@ -88,7 +89,7 @@
   border-radius: 12px;
 }
 
-.icon-badge img { width: 40px; height: 40px; opacity: .9; }
+.icon-badge img { width: 38px; height: 38px; opacity: .9; }
 
 .icon-yellow { background: #fff0bf; }
 .icon-green { background: #dff7e8; }
@@ -102,7 +103,7 @@
 }
 
 .wh-field .label { font-size: 12px; color: #7b7b7b; margin-bottom: 4px; }
-.wh-field .value { font-size: 13px; color: #111; font-weight: 700; }
+.wh-field .value { font-size: 13px; color: #111; font-weight: 500; }
 
 @media (max-width: 900px) { .wh-grid { grid-template-columns: 1fr; } }
 
@@ -129,7 +130,7 @@
 
 .crop-list-title {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 600;
   color: #111;
 }
 

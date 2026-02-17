@@ -11,7 +11,7 @@
 .marketinfo-header {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   padding: 10px 0;
 }
 
@@ -21,8 +21,8 @@
 }
 
 .page-title {
-  font-size: 26px;
-  font-weight: 600;
+  font-size: 32px;
+  font-weight: 500;
   margin: 0;
 }
 
@@ -77,7 +77,8 @@
 .right-col {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+  border-radius: 12px;
 }
 
 /* ===============================
@@ -94,14 +95,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 18px;
+  padding: 8px 15px;
   background-color: #f0f0f0;
   border-top-left-radius: 14px;
   border-top-right-radius: 14px;
 }
 
 .card-icon {
-  width: 40px;
+  width: 38px;
 }
 
 .section-title {
@@ -117,7 +118,7 @@
 .label {
   font-size: 14px;
   color: #888;
-  margin: 0 0 6px 0;
+  margin: 2px 0 8px 0;
 }
 
 .value {
@@ -147,7 +148,7 @@
 .summary-grid {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 35px;
 }
 
 .summary-row {

@@ -9,7 +9,7 @@
   display:flex;
   align-items:center;
   justify-content:space-between;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .pricing-title{
@@ -59,6 +59,8 @@
 .pricing-tab.active{
   color:#111;
   font-weight:600;
+  font-family: var(--body-sm-reg-font-family);
+  font-size: 15px;
 }
 .pricing-tab.active:after{
   content:"";
@@ -84,13 +86,13 @@
 }
 
 .pricing-search{
-  width: 320px;
+  width: 200px;
   display:flex;
   align-items:center;
   gap: 10px;
   border:1px solid #e6e6e6;
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 8px 10px;
   background:#fff;
 }
 .pricing-search input{
@@ -134,7 +136,7 @@
 .pricing-table thead th{
   background:#fafafa;
   text-align:left;
-  font-size: 13px;
+  font-size: 14px;
   padding: 14px 16px;
   color:#111;
   font-weight:600;
@@ -142,7 +144,7 @@
 }
 .pricing-table tbody td{
   padding: 18px 16px;
-  font-size: 13px;
+  font-size: 14px;
   border-bottom: 1px solid #f0f0f0;
   color:#222;
 }

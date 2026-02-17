@@ -9,6 +9,7 @@
       <a class="back-btn" href="{{ url_for('farmer_storage.list_storage') }}">
         <img src="{{ url_for('static', filename='svg-icons/Back Order.svg') }}" alt="Back">
       </a>
+      <img src="{{ url_for('static', filename='svg-icons/CaretRightProperty 1=Regular.svg') }}">
       <h1 class="whinfo-title">{{ warehouse.warehouseId if warehouse else 'Warehouse' }}</h1>
     </div>
   </div>
@@ -125,7 +126,7 @@
       <article class="crop-detail" id="cropDetail">
         <div class="detail-top">
           <div class="bigthumb">
-            <img id="dImg" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}" alt="">
+            <img id="dImg" src="{{ url_for('static', filename='svg-icons/Crop/CropSummaryModal.svg') }}" alt="">
           </div>
           <div>
             <div class="detail-title">Crop ID</div>

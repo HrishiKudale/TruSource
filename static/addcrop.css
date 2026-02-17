@@ -12,7 +12,7 @@
 
 .add-crop-card {
   background: var(--white);
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid var(--grey-100);
   display:flex;
   flex-direction:column;
@@ -21,7 +21,7 @@
 
 .card-header {
   background: var(--grey-50);
-  padding: 10px 18px;
+  padding: 8px 15px;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -29,7 +29,7 @@
 }
 .card-header-left { display:flex; align-items:center; gap: 8px; }
 .card-header-icon { width: 42px; height: 42px; }
-.card-title { font-family: var(--body-md-semibold-font-family); font-size: var(--body-lg-semibold-font-size); color: var(--grey-900); }
+.card-title { font-family: var(--body-md-semibold-font-family); font-size: 18px; color: var(--grey-900); }
 
 .add-crop-card-body { padding: 14px 18px 16px; display:flex; flex-direction:column; gap: 12px; }
 .add-crop-left { display:flex; flex-direction:column; gap: 22px; }
@@ -44,7 +44,7 @@
 
 .field-group { display:flex; flex-direction:column; gap: 10px; }
 .field-group-full { grid-column: 1 / -1; }
-.field-label { font-size: 16px; color: var(--grey-500); }
+.field-label { font-size: 14px; color: var(--grey-500); }
 
 .field-input {
   position:relative;
@@ -328,7 +328,7 @@
   .field-label {
     font-family: var(--body-md-reg-font-family);
     font-weight: var(--body-md-reg-font-weight);
-    font-size: 16px;
+    font-size: 14px;
     color: var(--grey-700);
   }
 
@@ -336,7 +336,7 @@
     position: relative;
     display: flex;
     align-items: center;
-    padding: 12px 12px;
+    padding: 10px 12px;
     border-radius: 6px;
     border: 1px solid var(--grey-200);
     background-color: var(--white);

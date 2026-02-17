@@ -21,8 +21,8 @@
 }
 
 .shipment-title{
-  font-size:28px;
-  font-weight:600;
+  font-size:24px;
+  font-weight:500;
   margin:0;
 }
 
@@ -97,12 +97,12 @@
   align-items:center;
   justify-content:flex-start;
   gap:10px;
-  padding:12px 18px;
+  padding:8px 15px;
   background:#f0f0f0;
 }
 
 .card-icon{
-  width:40px;
+  width:38px;
 }
 
 .section-title{
@@ -118,7 +118,7 @@
 }
 
 .value{
-  font-size:16px;
+  font-size:14px;
   font-weight:500;
   margin:0;
 }
@@ -293,7 +293,7 @@
 }
 
 .activity-illustration{
-  width:90px;
+  width:65px;
 }
 
 .activity-texts{
@@ -304,7 +304,7 @@
 }
 
 .activity-title{
-  font-size:18px;
+  font-size:14px;
   font-weight:600;
   margin:0 0 6px 0;
 }
@@ -312,10 +312,11 @@
 .activity-text{
   color:#444;
   margin:0 0 4px 0;
+  font-size: 12px;
 }
 
 .activity-date{
-  font-size:13px;
+  font-size:12px;
   color:#777;
   margin:0;
 }

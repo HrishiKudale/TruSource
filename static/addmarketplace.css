@@ -11,6 +11,7 @@
   flex-direction: column;
   gap: 16px;
   width: 100%;
+  font-family: var(--body-md-semibold-font-family);
 }
 
 /* ============================
@@ -18,9 +19,9 @@
 ============================ */
 .add-marketplace-grid-top {
   display: grid;
-  grid-template-columns: 2fr 3fr; /* 2:3 ratio */
+  grid-template-columns: 1fr 3fr; /* 2:3 ratio */
   gap: 16px;
-  margin-top: 16px;
+  margin-top: 10px;
 }
 
 .add-marketplace-grid-bottom {
@@ -41,7 +42,7 @@
 ============================ */
 .add-marketplace-card {
   background-color: var(--white);
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid var(--grey-100);
   display: flex;
   flex-direction: column;
@@ -53,7 +54,7 @@
 /* Header same as AddCrop */
 .card-header {
   background-color: var(--grey-50);
-  padding: 8px 18px;
+  padding: 8px 15px;
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--grey-100);
@@ -66,14 +67,14 @@
 }
 
 .card-header-icon {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
 }
 
 .card-title {
   font-family: var(--body-md-semibold-font-family);
   font-weight: var(--body-md-semibold-font-weight);
-  font-size: var(--body-lg-semibold-font-size);
+  font-size: 18px;
   color: var(--grey-900);
 }
 
@@ -96,7 +97,7 @@
 
 .field-label {
   font-family: var(--body-md-reg-font-family);
-  font-size: 16px;
+  font-size: 14px;
   color: var(--grey-950);
 }
 
@@ -104,8 +105,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  padding: 12px 14px;
-  border-radius: 10px;
+  padding: 12px 12px;
+  border-radius: 5px;
   border: 1px solid var(--grey-200);
   background-color: var(--white);
 }
@@ -118,7 +119,7 @@
   flex: 1;
   font-family: var(--body-sm-reg-font-family);
   font-size: var(--body-sm-reg-font-size);
-  color: var(--grey-700);
+  color: var(--grey-400);
 }
 
 .field-input--select select {
@@ -228,11 +229,12 @@ input:checked + .slider:before {
 .logistics-options label {
   font-family: var(--body-sm-reg-font-family);
   color: var(--grey-800);
+  font-size: 14px;
 }
 .add-marketplace-submit {
   display: flex;
   justify-content: flex-end;
-  margin-top: 24px;
+  margin-top: 20px;
 }
 
 .primary-submit-btn {

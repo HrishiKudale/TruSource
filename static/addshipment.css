@@ -183,9 +183,9 @@
   align-items: center;
   background: #fff;
   border: 1px solid var(--grey-200);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 0 12px;
-  height: 46px;
+  height: 40px;
   box-sizing: border-box;
 }
 
