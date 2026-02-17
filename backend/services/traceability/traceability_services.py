@@ -336,7 +336,7 @@ class TraceabilityService:
         return out
 
     @staticmethod
-    def get_user_crop_summaries(user_id: str) -> List[Dict[str, Any]]:
+    def get_user_crop_summaries(user_id: str) -> list[dict]:
         out = []
         seen = set()
 
@@ -346,28 +346,28 @@ class TraceabilityService:
             print("getUserCrops failed:", str(e))
             return out
 
-        for cid in crop_ids:
-            cid = str(cid).strip()
+        for cid in crop_ids or []:
+            cid = str(cid or "").strip()
             if not cid or cid in seen:
                 continue
-
             seen.add(cid)
 
+            # ✅ history is list[dict], not list[tuple]
             history = TraceabilityService._get_history_onchain(cid)
-            latest_status = None
 
+            latest_status = ""
             if history:
-                latest_status = history[-1][0]  # last status
+                last = history[-1] or {}
+                latest_status = str(last.get("status") or "")
 
             crop = TraceabilityService._get_crop_onchain(cid)
-
             if crop:
                 out.append({
-                    "cropId": crop.get("cropId"),
-                    "cropType": crop.get("cropType"),
-                    "date_planted": crop.get("datePlanted"),
-                    "location": crop.get("location"),
-                    "status": latest_status
+                    "cropId": crop.get("cropId") or cid,
+                    "cropType": crop.get("cropType") or "",
+                    "date_planted": crop.get("datePlanted") or "",
+                    "location": crop.get("location") or "",
+                    "status": latest_status,  # ✅ now correct
                 })
 
         return out

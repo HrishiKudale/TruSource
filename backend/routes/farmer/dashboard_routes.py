@@ -95,20 +95,16 @@ def farmer_dashboard_data():
         return jsonify(ok=False, err="auth"), 401
 
     try:
-        # ✅ NEW: get clean summarized crops
         crops = TraceabilityService.get_user_crop_summaries(farmer_id)
 
-    except Exception as e:
-        print("Dashboard error:", str(e))
-        return jsonify(ok=False, err="server_error"), 500
+        return jsonify(ok=True, data={"crops": crops}), 200
 
-    return jsonify(
-        ok=True,
-        data={
-            # keep your other dashboard fields here if needed
-            "crops": crops
-        }
-    ), 200
+    except Exception as e:
+        import traceback
+        print("Dashboard error:", repr(e))
+        traceback.print_exc()
+        return jsonify(ok=False, err="server_error", message=str(e)), 500
+
 
 
 
