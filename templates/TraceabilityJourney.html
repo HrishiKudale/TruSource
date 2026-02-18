@@ -15,21 +15,20 @@
 
 <body>
 
-{% set crop_raw  = (events_combined[0].cropType if events_combined else 'Product') %}
-{% set crop_dir  = crop_raw|lower|trim
-    |replace(' ', '_')
-    |replace('/', '_')
-    |replace('&', 'and')
-    |replace('__','_')
+{% set crop_dir = crop_raw|lower|trim
+  |replace(' ', '_')
+  |replace('/', '_')
+  |replace('&', 'and')
+  |replace('__','_')
 %}
 
-{% set placeholder = url_for('static', filename='images/crops/placeholder.jpg') %}
-{% set hero_img    = url_for('static', filename='images/crops/' ~ crop_dir ~ '/' ~ crop_dir ~ '_banner.jpg') %}
-{% set hero_webp   = url_for('static', filename='images/crops/' ~ crop_dir ~ '/' ~ crop_dir ~ '_banner.webp') %}
-{% set product_img = url_for('static', filename='images/crops/' ~ crop_dir ~ '/' ~ crop_dir ~ '_product.jpg') %}
+{# ✅ Use rice assets for assam_red_rice until you create the folder #}
+{% set asset_dir = 'rice' if crop_dir == 'assam_red_rice' else crop_dir %}
 
-{% set base_dir    = '/static/images/crops/' ~ crop_dir %}
-{% set common_dir  = '/static/images/crops/common' %}
+{% set hero_img    = url_for('static', filename='images/crops/' ~ asset_dir ~ '/' ~ asset_dir ~ '_banner.webp') %}
+{% set product_img = url_for('static', filename='images/crops/' ~ asset_dir ~ '/' ~ asset_dir ~ '_product.jpg') %}
+{% set base_dir    = '/static/images/crops/' ~ asset_dir %}
+
 
 <!-- HERO -->
 <section class="hero" id="hero">
