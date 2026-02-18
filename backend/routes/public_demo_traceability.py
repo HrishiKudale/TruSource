@@ -124,7 +124,8 @@ def public_demo_traceability(crop_id: str):
     if api_cache is None:
         abort(503)  # mongo not available
 
-    doc = api_cache.find_one({"id": f"crop_hist:{crop_id}"})
+    doc = api_cache.find_one({"_id": f"crop_hist:{crop_id}"})
+
     if not doc:
         abort(404)
 
@@ -140,3 +141,11 @@ def public_demo_traceability(crop_id: str):
         stage_images=None,
         current_year=datetime.now().year,
     )
+
+
+@public_demo_bp.get("/traceability/ping")
+def traceability_ping():
+    api_cache = get_col("api_cache")
+    if api_cache is None:
+        return {"ok": False, "mongo": "not_initialized"}, 503
+    return {"ok": True, "api_cache_docs": api_cache.count_documents({})}, 200
