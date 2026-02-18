@@ -113,7 +113,7 @@ def _normalize_events(raw_events: list[dict]) -> list[dict]:
     return out
 
 
-@public_demo_bp.get("/t/demo/<crop_id>")
+@public_demo_bp.get("/traceability/journey/<crop_id>")
 def public_demo_traceability(crop_id: str):
     """
     Public demo journey. Reads dummy data from api_cache:
