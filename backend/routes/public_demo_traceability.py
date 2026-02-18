@@ -121,7 +121,7 @@ def public_demo_traceability(crop_id: str):
       value = [events...]
     """
     api_cache = get_col("api_cache")
-    if not api_cache:
+    if api_cache is None:
         abort(503)  # mongo not available
 
     doc = api_cache.find_one({"id": f"crop_hist:{crop_id}"})
