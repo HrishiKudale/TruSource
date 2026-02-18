@@ -101,3 +101,100 @@ def traceability_api():
     )
 
     return jsonify(ok=True, data=vm.to_dict())
+
+
+
+# in your existing traceability_bp file
+from flask import send_file, url_for
+from io import BytesIO
+import qrcode
+
+@traceability_bp.post("/api/traceability/<crop_id>/qr")
+def generate_crop_qr(crop_id):
+    """
+    Farmer-only: returns QR code PNG for this crop (batch-level).
+    QR encodes public URL: /t/<token>
+    """
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify(ok=False, err="unauthorized"), 401
+
+    # 1) get/create token
+    try:
+        token = TraceabilityService.get_or_create_public_token(crop_id=crop_id, user_id=user_id)
+    except ValueError:
+        return jsonify(ok=False, err="not_found_or_unauthorized"), 404
+
+    # 2) build absolute public URL
+    public_url = url_for("public_trace_bp.public_traceability", token=token, _external=True)
+
+    # 3) generate QR image
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=3,
+    )
+    qr.add_data(public_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    # 4) return as PNG
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    return send_file(
+        buf,
+        mimetype="image/png",
+        as_attachment=True,
+        download_name=f"{crop_id}_traceability_qr.png",
+    )
+
+@traceability_bp.get("/api/traceability/<crop_id>/public-link")
+def get_public_link(crop_id):
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify(ok=False, err="unauthorized"), 401
+
+    try:
+        token = TraceabilityService.get_or_create_public_token(crop_id=crop_id, user_id=user_id)
+    except ValueError:
+        return jsonify(ok=False, err="not_found_or_unauthorized"), 404
+
+    public_url = url_for("public_trace_bp.public_traceability", token=token, _external=True)
+    return jsonify(ok=True, token=token, url=public_url)
+
+
+
+from flask import url_for, send_file
+from io import BytesIO
+import qrcode
+
+@traceability_bp.get("/api/traceability/<crop_id>/demo-qr")
+def demo_qr(crop_id):
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify(ok=False, err="unauthorized"), 401
+
+    public_url = url_for("public_demo_bp.public_demo_traceability", crop_id=crop_id, _external=True)
+
+    qr = qrcode.QRCode(
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=3,
+    )
+    qr.add_data(public_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    return send_file(
+        buf,
+        mimetype="image/png",
+        as_attachment=True,
+        download_name=f"{crop_id}_DEMO_traceability_qr.png",
+    )

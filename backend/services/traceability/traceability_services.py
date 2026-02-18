@@ -1,4 +1,5 @@
 # backend/services/traceability/traceability_services.py
+import secrets
 from typing import Any, Dict, List, Optional
 
 from backend.blockchain import contract  # your existing wiring
@@ -371,3 +372,41 @@ class TraceabilityService:
                 })
 
         return out
+
+
+
+
+    # @staticmethod
+    # def get_or_create_public_token(crop_id: str, user_id: str) -> str:
+    #     """
+    #     Called by farmer (authenticated). Ensures crop belongs to farmer.
+    #     Returns stable token for that crop.
+    #     """
+    #     crop = CropRepo.get_by_id_and_farmer(crop_id=crop_id, farmer_user_id=user_id)
+    #     if not crop:
+    #         raise ValueError("crop_not_found_or_unauthorized")
+
+    #     if crop.public_token:
+    #         return crop.public_token
+
+    #     # generate a random token (unguessable)
+    #     token = secrets.token_urlsafe(12)  # ~16 chars; increase if you want
+
+    #     # ensure unique (loop only if collision)
+    #     while CropRepo.exists_public_token(token):
+    #         token = secrets.token_urlsafe(12)
+
+    #     CropRepo.set_public_token(crop_id=crop_id, token=token)
+    #     return token
+
+    # @staticmethod
+    # def get_crop_id_by_public_token(token: str):
+    #     crop = CropRepo.get_by_public_token(token)
+    #     return crop.id if crop else None
+
+    # @staticmethod
+    # def build_traceability_public(crop_id: str):
+    #     """
+    #     Public version: DO NOT require user_id; only return safe fields.
+    #     """
+    #     return TraceabilityService.build_traceability(crop_id=crop_id, user_id=None)
