@@ -1,5 +1,4 @@
-/* traceabilityjourney.css (FULL • paste entire file) */
-
+/* traceabilityjourney.css (FULL • updated with theme gradients on timeline cards) */
 :root{
   --bg1:#f0fdf4;
   --bg2:#ecfeff;
@@ -10,15 +9,15 @@
   --ink:#0b1220;
   --muted:#64748b;
 
-  --shadow2:0 16px 44px rgba(2,8,23,.14);
-  --shadowSoft:0 10px 24px rgba(2,8,23,.10);
+  --shadow2:0 16px 44px rgba(2,8,23,.24);
+  --shadowSoft:0 10px 24px rgba(2,8,23,.20);
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0;
-  font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+   font-family:"Manrope",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   color:var(--ink);
   background:
     radial-gradient(900px 520px at 12% 8%, color-mix(in hsl, var(--brand) 18%, transparent) 0%, transparent 62%),
@@ -28,12 +27,14 @@ body{
 }
 
 .shell{max-width:1400px;margin:0 auto;padding:0 22px}
-
 /* =========================
-   HERO (FULL WIDTH COVER)
-   ✅ This is what you want: it covers screen.
-   ✅ object-position keeps top logos visible.
+   HERO (PREMIUM UPGRADE)
+   ✅ Theme Synced
+   ✅ Luxury D2C Look
+   ✅ Mobile Safe
 ========================= */
+
+/* HERO */
 .hero{
   position:relative;
   height: clamp(420px, 62vh, 760px);
@@ -41,104 +42,267 @@ body{
   background:#e6f4ff;
 }
 
-.hero-media{position:absolute; inset:0}
+.hero-media{ 
+  position:absolute; 
+  inset:0; 
+}
+
 .hero-bg{
   width:100%;
   height:100%;
   display:block;
-  object-fit:cover;              /* ✅ fills the hero */
-  object-position: 50% 12%;      /* ✅ keep top text/logos visible */
+  object-fit:cover;
+  object-position: 50% 12%;
+  transform: scale(1.02); /* subtle cinematic zoom */
 }
 
-/* subtle overlay so card doesn't look stuck */
+/* Overlay with theme tint */
 .hero-overlay{
-  position:absolute; inset:0;
-  background:
-    linear-gradient(90deg, rgba(2,6,23,.10) 0%, rgba(2,6,23,0) 55%),
-    radial-gradient(900px 520px at 15% 35%, rgba(0,0,0,.14) 0%, rgba(0,0,0,0) 55%);
-  pointer-events:none;
+display: none;
 }
 
+/* Smooth fade into white body */
 .hero-bottomfade{
-  position:absolute; left:0; right:0; bottom:0;
-  height:60px;
+  position:absolute;
+  left:0; right:0; bottom:0;
+  height:100px;
   pointer-events:none;
-  background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.55), rgba(255,255,255,1));
+
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,.35) 40%,
+    rgba(255,255,255,.85) 75%,
+    rgba(255,255,255,1) 90%
+  );
 }
 
-.hero-inner{
+
+/* =========================
+   HERO CARD SECTION
+========================= */
+
+.hero-card-wrap{
   position:relative;
-  height:100%;
-  display:flex;
-  align-items:flex-end;
-  padding: 44px 0 30px;
+  z-index:5;
+  margin-top:-120px;   /* desktop only pull */
+  padding-bottom:14px;
 }
 
-/* ✅ Professional info card (NOT blurry, NOT huge, NOT ugly) */
+/* Premium Themed Card */
 .hero-card{
-  width:min(560px, 92vw);
-  border-radius:20px;
-  padding:14px 16px;
-  background: rgba(255,255,255,.62);  /* glass */
-  border: 1px solid rgba(255,255,255,.55);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 22px 60px rgba(2,8,23,.22);
+  position:relative;
+  width:min(680px, 92vw);
+  border-radius:24px;
+  padding:22px 22px 20px;
+
+  /* THEME GRADIENT */
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in hsl, var(--brand) 18%, white),
+      color-mix(in hsl, var(--brand2) 14%, white)
+    );
+
+  border: 1px solid color-mix(in hsl, var(--brand) 28%, white);
+
+  backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 40px 90px rgba(2,8,23,.25),
+    0 3px 0 rgba(255,255,255,.6) inset;
 }
 
-.hero-card-top{display:flex;flex-direction:column;gap:6px}
-.hero-kicker{
-  font-size:12px;
-  letter-spacing:.20em;
-  text-transform:uppercase;
-  font-weight:900;
-  color: rgba(15,23,42,.70);
-}
-.hero-title{
-  font-weight:900;
-  font-size:42px;
-  line-height:1.05;
-  color:#0b1220;
+/* soft glow */
+.hero-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:24px;
+  pointer-events:none;
+
+  background:
+    radial-gradient(
+      500px 260px at 15% 0%,
+      color-mix(in hsl, var(--brand) 30%, transparent),
+      transparent 65%
+    );
+
+  opacity:.45;
 }
 
-.hero-stats{
-  margin-top:12px;
-  display:grid;
-  grid-template-columns: repeat(3, minmax(0,1fr));
+/* =========================
+   TYPOGRAPHY
+========================= */
+
+.hero-card-top{
+  display:flex;
+  flex-direction:column;
   gap:10px;
 }
-.stat{
-  border-radius:14px;
-  padding:10px 10px;
-  background: rgba(255,255,255,.70);
-  border: 1px solid rgba(15,23,42,.06);
-}
-.stat-k{
+
+/* Verified Stamp */
+.hero-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  width:max-content;
+  padding:8px 14px;
+  border-radius:999px;
+
+  background: linear-gradient(
+    135deg,
+    var(--brand),
+    var(--brand2)
+  );
+
   font-size:11px;
-  letter-spacing:.14em;
+  letter-spacing:.22em;
   text-transform:uppercase;
   font-weight:900;
-  color: rgba(100,116,139,1);
-}
-.stat-v{
-  margin-top:4px;
-  font-weight:900;
-  color:#0f172a;
-  font-size:13px;
+  color:#fff;
+
+  box-shadow: 0 14px 32px rgba(0,0,0,.18);
 }
 
+/* Headline */
+.hero-title{
+  margin:0;
+  font-weight:900;
+  letter-spacing:-.035em;
+  line-height:1.05;
+  font-size: clamp(28px, 3.4vw, 46px);
+
+  background: linear-gradient(
+    135deg,
+    #071018,
+    #0b1220
+  );
+
+  /* ✅ Add standard property */
+  background-clip: text;
+  -webkit-background-clip: text;
+
+  /* For Safari */
+  -webkit-text-fill-color: transparent;
+
+  /* Optional fallback for unsupported browsers */
+  color: #071018;
+}
+
+/* Trust Tagline */
 .hero-note{
-  margin-top:10px;
-  color: rgba(15,23,42,.78);
+  margin:0;
+  font-size:15px;
+  line-height:1.6;
   font-weight:700;
-  font-size:13px;
-  line-height:1.5;
+  color: rgba(2,8,23,.82);
+  max-width: 62ch;
+}
+
+/* Trust Chips */
+.hero-trust{
+  margin-top:14px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.hero-trust .chip{
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(15,23,42,.10);
+
+  box-shadow: 0 12px 24px rgba(2,8,23,.08);
+}
+
+
+/* =========================
+   MOBILE SAFE
+   Card BELOW hero
+========================= */
+
+@media (max-width: 980px){
+
+  .hero{
+    height: 360px;
+  }
+
+  .hero-card-wrap{
+    margin-top: 16px;  /* remove pull */
+  }
+
+  .hero-card{
+    width:100%;
+    border-radius:20px;
+    padding:18px 16px;
+  }
+
+  .hero-title{
+    font-size: 26px;
+  }
+
+}
+
+@media (max-width: 520px){
+  .hero{
+    height: 320px;
+  }
+
+  .hero-title{
+    font-size: 22px;
+  }
+
+  .hero-trust .chip{
+    font-size:11px;
+    padding:7px 10px;
+  }
+}
+
+
+
+/* ✅ Mobile: card must NOT overlap banner */
+@media (max-width: 980px){
+  .hero{
+    height: 380px; /* enough banner visible */
+  }
+
+  .hero-bottomfade{
+    height:120px; /* smaller fade for mobile */
+  }
+
+  .hero-card-wrap{
+    margin-top: 14px; /* ✅ card goes BELOW banner */
+    padding-bottom: 0;
+  }
+
+  .hero-card{
+    width: 100%;
+    border-radius:16px;
+    padding:14px 14px;
+  }
+
+  .hero-title{
+    font-size:26px;
+  }
+
+  /* Optional: avoid showing stats on mobile if you want cleaner look */
+  /* .hero-stats{ display:none; } */
+}
+
+@media (max-width: 520px){
+  .hero{ height: 300px; }
+  .hero-title{ font-size:22px; }
 }
 
 /* =========================
    BODY / GRID
 ========================= */
 .body{padding:22px 0 54px}
-
 .grid{
   display:grid;
   grid-template-columns: minmax(0, 1.75fr) minmax(360px, .82fr);
@@ -160,15 +324,14 @@ body{
   justify-content:space-between;
   gap:12px;
   background:
-    radial-gradient(900px 240px at 20% 0%, rgba(34,197,94,.18) 0%, rgba(255,255,255,0) 55%),
-    radial-gradient(900px 240px at 85% 0%, rgba(14,165,233,.18) 0%, rgba(255,255,255,0) 55%),
+    radial-gradient(900px 240px at 20% 0%, color-mix(in hsl, var(--brand) 22%, transparent) 0%, rgba(255,255,255,0) 55%),
+    radial-gradient(900px 240px at 85% 0%, color-mix(in hsl, var(--brand2) 22%, transparent) 0%, rgba(255,255,255,0) 55%),
     linear-gradient(180deg,#ffffff 0%, #f8fafc 100%);
   border-bottom: 1px solid rgba(15,23,42,.06);
 }
 .panel-title{font-weight:900}
 .panel-subtitle{color:var(--muted);font-size:13px;margin-top:4px}
 .panel-head-left{display:flex;flex-direction:column}
-
 .panel-pill{
   display:inline-flex;align-items:center;gap:8px;
   padding:8px 12px;border-radius:999px;
@@ -180,12 +343,14 @@ body{
   background: linear-gradient(135deg,var(--brand),var(--brand2));
 }
 
-/* Timeline */
-.timeline{padding:14px 14px 24px}
+/* =========================
+   TIMELINE (THEME GRADIENT)
+========================= */
+.timeline{padding:0px 12px 24px}
 .rail{
   position:relative;
-  padding-left:14px;
-  border-left:3px dashed rgba(14,165,233,.35);
+  padding-left:10px;
+  border-left:3px dashed color-mix(in hsl, var(--brand2) 28%, rgba(14,165,233,.35));
 }
 
 .event{
@@ -193,45 +358,57 @@ body{
   margin:18px 0;
   margin-left:-6px;
   border-radius: 22px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  box-shadow: var(--shadowSoft);
   overflow:hidden;
   opacity:0;
   transform: translateY(12px);
   transition: .45s ease;
+  box-shadow: var(--shadowSoft);
+
+  /* ✅ subtle theme gradient on full card */
+  background:
+    radial-gradient(1200px 420px at 18% 0%,
+      color-mix(in srgb, var(--brand) 18%, transparent) 0%,
+      transparent 55%),
+    radial-gradient(1200px 420px at 92% 18%,
+      color-mix(in srgb, var(--brand2) 16%, transparent) 0%,
+      transparent 55%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
 }
 .event.show{opacity:1; transform:none}
 
-/* DOT ON THE RAIL (not on the card) */
+/* ✅ circle on rail */
 .event::before{
   content:"";
   position:absolute;
-
-  /* rail border is at x = 0 inside .rail.
-     card is shifted left by margin-left:-6px.
-     so dot must compensate and sit on the border */
-  left: calc(-28px + 1.5px + 6px);   /* ✅ on the rail */
+  left: calc(-28px + 1.5px + 6px);
   top: 18px;
-
   width:16px;
   height:16px;
   border-radius:999px;
   background: linear-gradient(135deg,var(--brand),var(--brand2));
-  box-shadow: 0 0 0 5px rgba(255,255,255,.90);
+  box-shadow: 0 0 0 5px rgba(255,255,255,.92), 0 14px 28px rgba(2,8,23,.18);
 }
 
-
-/* Header strip on each event */
+/* ✅ themed header strip (no dull grey) */
 .event-strip{
   padding:12px 14px;
-  background: linear-gradient(180deg, #f1f5f9 0%, #eef2f7 100%);
-  border-bottom: 1px solid rgba(15,23,42,.06);
+  background:
+    radial-gradient(900px 220px at 16% 30%,
+      color-mix(in srgb, var(--brand) 22%, transparent) 0%,
+      transparent 60%),
+    radial-gradient(900px 220px at 86% 10%,
+      color-mix(in srgb, var(--brand2) 18%, transparent) 0%,
+      transparent 60%),
+    linear-gradient(180deg, rgba(248,250,252,.92) 0%, rgba(241,245,249,.92) 100%);
 }
 .event-strip-left{display:flex; gap:12px; align-items:flex-start}
+
+/* ✅ icon chip with theme */
 .event-strip-icon{
   width:36px;height:36px;border-radius:14px;
   display:grid;place-items:center;
-  background: rgba(15,23,42,.06);
+  background: color-mix(in srgb, var(--brand2) 10%, rgba(15,23,42,.06));
+  border: 1px solid color-mix(in srgb, var(--brand2) 14%, rgba(15,23,42,.06));
   box-shadow: 0 10px 22px rgba(2,8,23,.08);
   font-size:18px;
 }
@@ -240,11 +417,14 @@ body{
 .sep{opacity:.55;margin:0 6px}
 .small{font-size:12px;color:var(--muted);font-weight:800}
 .dotsep{opacity:.5;color:var(--muted)}
+
+/* ✅ Verified pill using theme */
 .proof{
   font-size:11px;font-weight:900;
   padding:4px 10px;border-radius:999px;
-  background: rgba(34,197,94,.12);
-  color: #065f46;
+  background: color-mix(in srgb, var(--brand) 16%, rgba(34,197,94,.12));
+  border: 1px solid color-mix(in srgb, var(--brand) 18%, rgba(34,197,94,.14));
+  color: color-mix(in srgb, var(--brand) 42%, #065f46);
 }
 
 /* body layout */
@@ -252,7 +432,7 @@ body{
   padding:12px 14px 14px;
   display:grid;
   grid-template-columns: 360px 1fr;
-  gap:16px;
+  gap:10px;
 }
 
 /* thumb */
@@ -265,19 +445,16 @@ body{
   display:flex;
   flex-direction:column;
 }
-.thumb img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-  flex:1 1 auto;
-}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block;flex:1 1 auto}
 .byline{
   padding:10px 12px;
   font-weight:900;
   font-size:12px;
   color:#0f172a;
-  background: linear-gradient(180deg, rgba(248,250,252,.98), rgba(255,255,255,1));
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--brand) 7%, rgba(248,250,252,.98)) 0%,
+      rgba(255,255,255,1) 100%);
   border-top: 1px solid rgba(15,23,42,.06);
 }
 
@@ -285,19 +462,27 @@ body{
 .details{
   display:grid;
   grid-template-columns: repeat(2, minmax(0,1fr));
-  gap:10px;
+  gap:8px;
   align-content:start;
 }
+
+/* ✅ make kv cards feel “designed” with theme tint */
 .kv{
   padding:12px 12px;
-  border-radius:18px;
-  background: #f8fafc;
+  border-radius:12px;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--brand2) 6%, #f8fafc) 0%,
+      #f8fafc 100%);
+  border: 1px solid rgba(15,23,42,.06);
   box-shadow: 0 10px 22px rgba(2,8,23,.06);
 }
 .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:900;color:var(--muted)}
 .v{margin-top:4px;font-size:13px;font-weight:800;color:#0f172a}
 
-/* Right column */
+/* =========================
+   RIGHT COLUMN
+========================= */
 .side{
   position:sticky;
   top:16px;
@@ -322,7 +507,7 @@ body{
 
 .product-media{
   position:relative;
-  border-radius: 22px;
+  border-radius: 18px;
   overflow:hidden;
   background:#eef2f7;
   aspect-ratio: 16 / 10;
@@ -369,33 +554,71 @@ body{
 }
 
 /* =========================
-   MOBILE
-   ✅ Product Preview first
-   ✅ Hero card doesn’t overlap
+   MOBILE (FIXED PROPERLY)
+   ✅ hero-card no longer overlaps banner
+   ✅ banner fully visible
 ========================= */
 @media (max-width: 980px){
-  .shell{padding:0 18px}
-  .grid{grid-template-columns:1fr }
+
+  .shell{padding:0 15px}
+  .grid{grid-template-columns:1fr}
 
   .side{position:static; order:-1}
   .timeline-panel{order:0}
 
+  /* HERO smaller */
   .hero{
-    height: clamp(320px, 46vh, 520px);
+    height: 320px;              /* fixed height */
   }
+
+  /* 🔥 KEY FIX */
   .hero-inner{
-    padding: 18px 0 18px;
+    position: static;           /* remove absolute stacking */
+    height:auto;
+    padding:0;
   }
-  .hero-title{font-size:26px}
-  .hero-stats{grid-template-columns:1fr}
-  .hero-card{padding:12px 12px}
+
+  /* 🔥 MOVE CARD OUTSIDE HERO VISUALLY */
+  .hero-card{
+    position: relative;
+    margin-top: 12px;          /* slight overlap edge only */
+    margin-bottom: 12px;
+    width:100%;
+    border-radius:18px;
+    padding:14px;
+    background: rgba(255,255,255,.92); /* more solid */
+    backdrop-filter: blur(6px);
+    box-shadow: 0 14px 40px rgba(2,8,23,.15);
+  }
+
+  .hero-title{
+    font-size:22px;
+  }
+
+  .hero-note{
+    display:none;
+  }
+
+  .hero-stats{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
 
   .meta-grid{grid-template-columns:1fr 1fr}
 
   .event{margin-left:0}
-    .event::before{
-    left: calc(-28px + 1.5px); /* ✅ on rail for mobile (no margin-left:-6px used) */
-}   /* ✅ on rail media rule */
+  .event::before{left: calc(-28px + 1.5px);}
   .event-body{grid-template-columns:1fr}
   .details{grid-template-columns:1fr 1fr}
+}
+
+@media (max-width:520px){
+  .hero{ height: 300px; }
+
+  .hero-card{
+    margin-top:-50px;
+  }
+
+  .details{grid-template-columns:1fr 1fr}
+  .meta-grid{grid-template-columns:1fr 1fr}
 }

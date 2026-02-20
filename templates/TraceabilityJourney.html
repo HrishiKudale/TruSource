@@ -6,15 +6,13 @@
   <title>{{ crop_id }} · Traceability Journey</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="{{ url_for('static', filename='traceabilityjourney.css') }}">
 </head>
 
 <body>
-
 {# -----------------------------
    Crop Name
 ------------------------------ #}
@@ -28,29 +26,35 @@
 
 {# ------------------------------------------------
    FORCE ASSET DIRECTORY (no empty allowed)
+   ✅ Uses your existing folders (rice / turmeric / wheat)
 ------------------------------------------------ #}
 {% if crop_slug in ['rice', 'assam_red_rice'] %}
-    {% set asset_dir = 'rice' %}
+  {% set asset_dir = 'rice' %}
 {% elif crop_slug == 'wheat' %}
-    {% set asset_dir = 'wheat' %}
-{% elif crop_slug == 'turmeric' %}
-    {% set asset_dir = 'turmeric' %}
+  {% set asset_dir = 'wheat' %}
+{% elif crop_slug in ['turmeric', 'lakadong_turmeric', 'lakadong'] %}
+  {% set asset_dir = 'turmeric' %}
 {% else %}
-    {% set asset_dir = 'rice' %}  {# default fallback ALWAYS #}
+  {% set asset_dir = 'rice' %}  {# default fallback ALWAYS #}
 {% endif %}
 
 {# -----------------------------
    Final Image Paths
+   ✅ Use only assets you actually have
 ------------------------------ #}
 {% set hero_img    = url_for('static', filename='images/crops/' ~ asset_dir ~ '/' ~ asset_dir ~ '_banner.webp') %}
+{% set hero_jpg    = url_for('static', filename='images/crops/' ~ asset_dir ~ '/' ~ asset_dir ~ '_banner.jpg') %}
 {% set product_img = url_for('static', filename='images/crops/' ~ asset_dir ~ '/' ~ asset_dir ~ '_product.jpg') %}
+
 {% set base_dir    = '/static/images/crops/' ~ asset_dir %}
+{% set common_dir  = '/static/images/crops/common' %}
 {% set placeholder = url_for('static', filename='images/crops/common/planted.jpg') %}
 
 <!-- HERO -->
+<!-- HERO -->
 <section class="hero" id="hero">
   <picture class="hero-media">
-    <source srcset="{{ hero_webp }}" type="image/webp">
+    <source srcset="{{ hero_img }}" type="image/webp">
     <img class="hero-bg"
          src="{{ hero_img }}"
          alt="{{ crop_raw }} banner"
@@ -58,13 +62,32 @@
          onerror="this.onerror=null;this.src='{{ placeholder }}'">
   </picture>
 
-  <!-- overlays for readability + premium look (no ugly blur box) -->
   <div class="hero-overlay" aria-hidden="true"></div>
   <div class="hero-bottomfade" aria-hidden="true"></div>
+</section>
 
-  <div class="shell hero-inner">
-    <!-- Professional glass info card (dark text since banner is light) -->
+<!-- ✅ HERO CARD OUTSIDE HERO (this prevents banner covering on mobile) -->
+<section class="hero-card-wrap">
+  <div class="shell">
+    <div class="hero-card minimal">
+      
+      <div class="hero-label">
+        Traceability Journey
+      </div>
 
+      <h1 class="hero-title">
+        {{ crop_raw }}
+      </h1>
+
+      <p class="hero-tagline" style="
+          font-size: small;
+          margin-top: 6px;
+          margin-bottom: 6px;
+      ">
+              From farm to retail — verified, transparent, trusted.
+            </p>
+
+    </div>
   </div>
 </section>
 
@@ -100,7 +123,7 @@
                 'distributed_dispatched.jpg' if (key == 'distributed' and stage != 'received') or (key == 'distributed_dispatched') else
                 'retail_received.jpg' if (key == 'retail' and stage == 'received') or (key == 'retail_received') else
                 'retail_sold.jpg' if (key == 'retail' and stage != 'received') or (key == 'retail_sold') else
-                (crop_dir ~ '_product.jpg')
+                (asset_dir ~ '_product.jpg')
               %}
 
               {% set thumb_url = base_dir ~ '/' ~ stage_file %}
@@ -112,10 +135,11 @@
               %}
 
               <article class="event" data-kind="{{ key }}" data-stage="{{ stage }}">
-                <!-- neat header strip -->
+                <!-- header strip -->
                 <div class="event-strip">
                   <div class="event-strip-left">
-                    <span class="event-strip-icon" aria-hidden="true">🔗</span>
+                    <!-- ✅ JS will replace emoji -->
+                    <span class="event-strip-icon icon" aria-hidden="true">🔗</span>
                     <div class="event-strip-titles">
                       <div class="event-strip-title">
                         {{ e.status }}{% if e.stage %} <span class="sep">•</span> {{ e.stage }}{% endif %}
@@ -174,7 +198,7 @@
                         <div class="kv"><div class="k">Distributed Qty</div><div class="v">{{ e.distributedQuantity or '—' }}</div></div>
                       {% endif %}
 
-                    {% elif e.status == 'Retail' %}
+                    {% elif e.status == 'Retail' or e.status == 'Sold' %}
                       {% if (e.stage or '') == 'Received' %}
                         <div class="kv"><div class="k">Received Date</div><div class="v">{{ e.receivedDate or '—' }}</div></div>
                         <div class="kv"><div class="k">Received Qty</div><div class="v">{{ e.receivedQuantity or e.quantity or '—' }}</div></div>
@@ -282,7 +306,9 @@
 </main>
 
 <script>
-  window.__TRACE_CROP__ = "{{ crop_dir }}";
+  // ✅ Make JS theme + nutrition work reliably:
+  // send asset_dir (rice / turmeric / wheat), not crop_dir that might be empty.
+  window.__TRACE_CROP__ = "{{ asset_dir }}";
 </script>
 <script src="{{ url_for('static', filename='js/traceabilityjourney.js') }}"></script>
 </body>
