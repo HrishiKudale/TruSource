@@ -1,6 +1,7 @@
 # backend/routes/farmer/crop_routes.py
 import json
 from flask import Blueprint, redirect, render_template, request, session, jsonify
+from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 from backend.blockchain import get_user_crops
 from backend.services.farmer.crop_service import CropService
 from backend.mongo import mongo
@@ -50,15 +51,31 @@ def my_crops():
         total_harvest_qtl=data["total_harvest_qtl"],
         total_sold_qtl=data["total_sold_qtl"],
     )
+def _get_farmer_id_web_or_jwt():
+    # 1) Web session auth
+    if session.get("role") == "farmer" and session.get("user_id"):
+        return session.get("user_id")
 
+    # 2) JWT auth (mobile)
+    try:
+        verify_jwt_in_request(optional=True)
+
+        user_id = get_jwt_identity()   # ✅ string now
+        claims = get_jwt() or {}
+        role = (claims.get("role") or "").lower()
+
+        if role == "farmer" and user_id:
+            return user_id
+        return None
+    except Exception:
+        return None
 
 # ------------------  MY CROPS (JSON) ------------------
 @crop_bp.get("/api/mycrops")
 def my_crops_api():
-    if session.get("role") != "farmer" or not session.get("user_id"):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
         return jsonify({"error": "unauthorized"}), 401
-
-    farmer_id = session["user_id"]
     return jsonify(CropService.get_my_crops(farmer_id))
 
 
