@@ -71,13 +71,27 @@ def _get_farmer_id_web_or_jwt():
         return None
 
 # ------------------  MY CROPS (JSON) ------------------
-@crop_bp.get("/api/mycrops")
+from flask import jsonify
+# make sure verify_jwt_in_request/get_jwt_identity/get_jwt are imported where _get_farmer_id_web_or_jwt lives
+
+@crop_bp.get("/api/mycrop")
 def my_crops_api():
     farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
-        return jsonify({"error": "unauthorized"}), 401
-    return jsonify(CropService.get_my_crops(farmer_id))
+        return jsonify(ok=False, err="auth"), 401
 
+    data = CropService.get_my_crops(farmer_id)
+
+    return jsonify(
+        ok=True,
+        data={
+            "crops": data["crops"],
+            "total_crops": data["total_crops"],
+            "total_area_acres": data["total_area_acres"],
+            "total_harvest_qtl": data["total_harvest_qtl"],
+            "total_sold_qtl": data["total_sold_qtl"],
+        },
+    ), 200
 
 # ------------------  CROP DETAIL (HTML) ------------------
 @crop_bp.get("/crop/<crop_id>")
