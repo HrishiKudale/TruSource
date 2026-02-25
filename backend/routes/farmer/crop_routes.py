@@ -138,10 +138,29 @@ def crop_info_api(crop_id: str):
         return jsonify(ok=False, err="auth"), 401
 
     data = CropService.get_crop_detail(farmer_id,crop_id)
+        # fetch coordinates for THIS crop
+    db = get_db()
+
+    coord_doc = None
+    if db is not None:
+        coord_doc = db.farm_coordinates.find_one(
+            {"crop_id": crop_id},
+            sort=[("created_at", -1)]
+        )
+    else:
+        print("⚠️ Mongo disabled/unavailable: skipping farm_coordinates lookup")
+
+    coords = coord_doc["coordinates"] if coord_doc else []
+    
+    activities = CropService.get_crop_activity_timeline(farmer_id, crop_id)
+
+    print("✅ activities count:", len(activities or []))  # DEBUG
     return jsonify(
         ok=True,
         data={
             "data": data,
+            "coords":coords,
+            "activities":activities
         },
     ), 200
 
