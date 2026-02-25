@@ -133,11 +133,18 @@ def crop_info_page(crop_id: str):
 # ------------------  CROP DETAIL (JSON) ------------------
 @crop_bp.get("/api/crop/<crop_id>")
 def crop_info_api(crop_id: str):
-    if session.get("role") != "farmer" or not session.get("user_id"):
-        return jsonify({"error": "unauthorized"}), 401
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
 
-    farmer_id = session["user_id"]
-    return jsonify(CropService.get_crop_detail(farmer_id, crop_id))
+    data = CropService.get_my_crops(farmer_id,crop_id)
+    return jsonify(
+        ok=True,
+        data={
+            "data": data,
+        },
+    ), 200
+
 
 
 # ------------------  ADD CROP PAGE ------------------
@@ -237,23 +244,56 @@ def register_crop_api():
 # 2) SEPARATE BLUEPRINT → /farmer/*
 #    Needed for map JS calls
 # ======================================================
+# farm_coord_routes.py
+from flask import Blueprint, request, jsonify, session
+from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, get_jwt
+from typing import Optional
+
 farm_coord_bp = Blueprint("farm_coord_bp", __name__, url_prefix="/farmer")
 
+def _get_farmer_id_web_or_jwt() -> Optional[str]:
+    # Web session auth
+    if session.get("role") == "farmer" and session.get("user_id"):
+        return session.get("user_id")
 
-# ------------------  SAVE COORDINATES ONLY ------------------
-@farm_coord_bp.post("/save_farm_coordinates")
-def save_farm_coordinates():
-    if session.get("role") != "farmer":
-        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    # JWT auth (mobile)
+    try:
+        verify_jwt_in_request(optional=True)
+        user_id = get_jwt_identity()  # string
+        claims = get_jwt() or {}
+        role = (claims.get("role") or "").lower()
+
+        if role == "farmer" and user_id:
+            return user_id
+        return None
+    except Exception:
+        return None
+
+
+@farm_coord_bp.post("/api/save_farm_coordinates")
+def save_farm_coordinates_api():
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
 
     payload = request.get_json(silent=True) or {}
 
+    # expected payload:
+    # {
+    #   "name": "Farm 1",
+    #   "polygon": [{"latitude":..,"longitude":..}, ...],
+    #   "area_acres": 1.23,
+    #   "center": {"latitude":..,"longitude":..}
+    # }
+
     result = CropService.save_coordinates_only(
-        farmer_id=session["user_id"],
+        farmer_id=farmer_id,
         payload=payload
     )
 
-    return jsonify(result)
+    # result should include farmId or polygonId for next step
+    return jsonify(ok=True, data=result), 200
+
 
 
 # ------------------  GET COORDINATES ------------------

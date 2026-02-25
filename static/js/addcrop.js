@@ -367,7 +367,7 @@ window.closeMapModal = function closeMapModal() {
         // Optional: save polygon to backend (requires jQuery in your base template)
         if (window.$) {
           $.ajax({
-            url: "/farmer/save_farm_coordinates",
+            url: "/farmer/api/save_farm_coordinates",
             method: "POST",
             contentType: "application/json",
             data: JSON.stringify({
