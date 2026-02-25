@@ -137,7 +137,7 @@ def crop_info_api(crop_id: str):
     if not farmer_id:
         return jsonify(ok=False, err="auth"), 401
 
-    data = CropService.get_my_crops(farmer_id,crop_id)
+    data = CropService.get_my_crops(crop_id)
     return jsonify(
         ok=True,
         data={
