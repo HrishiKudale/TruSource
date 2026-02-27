@@ -16,7 +16,6 @@
       <h1 class="text-wrapper-4">Store in Warehouse</h1>
     </div>
 
-    <!-- IMPORTANT: button type=button (opens modal) -->
     <button type="button" id="btnOpenStorageSummary" class="send-request-btn">
       Send Request
       <img src="{{ url_for('static', filename='svg-icons/Plus.svg') }}" class="btn-icon" />
@@ -28,235 +27,213 @@
   {% endif %}
 
   <!-- FORM -->
-  <form id="storeForm"
-        method="POST"
-        action="{{ url_for('farmer_storage.submit_storage_request') }}"
-        class="store-warehouse-form">
-
-    <!-- hidden rows injected by JS -->
+  <form id="storeForm" method="POST" action="{{ url_for('farmer_storage.submit_storage_request') }}" class="store-warehouse-form">
     <div id="storageHiddenRows"></div>
 
-<div class="store-warehouse-grid">
+    <div class="store-warehouse-grid">
 
-  <!-- ========== WAREHOUSE DETAILS CARD ========== -->
-  <div class="store-card">
-
-    <div class="store-card-header">
-      <img class="store-card-icon"
-           src="{{ url_for('static', filename='svg-icons/Warehouses/Warehouse Detail.svg') }}">
-      <p class="store-card-title">Warehouse Detail</p>
-    </div>
-
-    <div class="store-card-body warehouse-grid">
-
-      <div class="field-group full-row">
-        <label class="field-label">Warehouse ID</label>
-        <div class="field-input">
-          <input type="text"
-                 id="warehouseIdInput"
-                 name="warehouse_id"
-                 readonly
-                 placeholder="-">
+      <!-- WAREHOUSE DETAILS CARD -->
+      <div class="store-card">
+        <div class="store-card-header">
+          <img class="store-card-icon" src="{{ url_for('static', filename='svg-icons/Warehouses/Warehouse Detail.svg') }}">
+          <p class="store-card-title">Warehouse Detail</p>
         </div>
-      </div>
 
-      <div class="field-group full-row">
-        <label class="field-label">Warehouse</label>
-        <div class="field-input field-input--select">
-          <select id="warehouseSelect" name="warehouse_name" required>
-            <option disabled selected>Select warehouse</option>
-            {% for w in warehouses %}
-              <option
-                value="{{ w.name or w.userId }}"
-                data-id="{{ w.warehouseId or w.userId }}">
-                {{ w.name or w.userId }}
-              </option>
-            {% endfor %}
-          </select>
-          <div class="select-chevron">
-              <img class="sd-caret"
-               src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
-               alt="dropdown">
+        <div class="store-card-body warehouse-grid">
+
+          <div class="field-group full-row">
+            <label class="field-label">Warehouse ID</label>
+            <div class="field-input">
+              <input type="text" id="warehouseIdInput" name="warehouse_id" readonly placeholder="-">
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div class="field-group full-row">
-        <label class="field-label">Date</label>
-        <div class="field-input">
-          <input type="date" id="storageDate" name="date" required>
-        </div>
-      </div>
-
-      <div class="field-group full-row">
-        <label class="field-label">Storage Duration</label>
-        <div class="field-input field-input--select">
-          <select id="storageDuration" name="storage_duration" required>
-            <option disabled selected>Select duration</option>
-            <option value="7 days">7 days</option>
-            <option value="15 days">15 days</option>
-            <option value="30 days">30 days</option>
-            <option value="90 days">90 days</option>
-          </select>
-          <div class="select-chevron">
-                <img class="sd-caret"
-               src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
-               alt="dropdown">
+          <div class="field-group full-row">
+            <label class="field-label">Warehouse</label>
+            <div class="field-input field-input--select">
+              <select id="warehouseSelect" name="warehouse_name" required>
+                <option disabled selected>Select warehouse</option>
+                {% for w in warehouses %}
+                  <option value="{{ w.name or w.userId }}" data-id="{{ w.warehouseId or w.userId }}">
+                    {{ w.name or w.userId }}
+                  </option>
+                {% endfor %}
+              </select>
+              <div class="select-chevron">
+                  <img class="sd-caret" src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}" alt="dropdown">
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div class="field-group">
-        <label class="field-label">Payment Mode</label>
-        <div class="field-input field-input--select">
-          <select id="paymentMode" name="payment_mode" required>
-            <option disabled selected>Select mode</option>
-            <option value="Cash">Cash</option>
-            <option value="Online">Online</option>
-          </select>
-          <div class="select-chevron">
-            <img class="sd-caret"
-                src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
-                alt="dropdown">
+          <div class="field-group full-row">
+            <label class="field-label">Date</label>
+            <div class="field-input">
+              <input type="date" id="storageDate" name="date" required>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div class="field-group">
-        <label class="field-label">Approx. Amount (₹)</label>
-        <div class="field-input">
-          <span id="approxAmount">-</span>
-          <input type="hidden" id="amount" name="amount" value="">
-        </div>
-      </div>
-
-  </div> <!-- end warehouse card body -->
-  </div> <!-- end warehouse card -->
-
-  <!-- ========== CROP DETAILS CARD ========== -->
-  <div class="store-card">
-
-    <div class="store-card-header">
-      <img class="store-card-icon"
-           src="{{ url_for('static', filename='svg-icons/Warehouses/Crop Details.svg') }}">
-      <p class="store-card-title">Crop Details</p>
-    </div>
-
-    <div class="store-card-body crop-grid">
-
-      <div class="field-group">
-        <label class="field-label">Crop ID</label>
-        <div class="field-input field-input--select">
-          <select id="cropIdSelect" >
-            <option disabled selected>Select crop ID</option>
-            {% for crop in crops %}
-              <option
-                value="{{ crop.id }}"
-                data-name="{{ crop.crop_type or crop.cropType or crop.name }}">
-                {{ crop.id }}
-              </option>
-            {% endfor %}
-          </select>
-          <div class="select-chevron">
-              <img class="sd-caret"
-               src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
-               alt="dropdown">
+          <div class="field-group full-row">
+            <label class="field-label">Storage Duration (days)</label>
+            <div class="field-input field-input--select">
+              <select id="storageDuration" name="storage_duration" required>
+                <option disabled selected>Select duration</option>
+                <option value="7">7 days</option>
+                <option value="15">15 days</option>
+                <option value="30">30 days</option>
+                <option value="90">90 days</option>
+              </select>
+              <div class="select-chevron">
+                    <img class="sd-caret" src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}" alt="dropdown">
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div class="field-group">
-        <label class="field-label">Crop</label>
-        <div class="field-input field-input--select">
-          <select id="cropNameSelect">
-            <option disabled selected>Select crop</option>
-            {% for crop in crops %}
-              <option
-                value="{{ crop.crop_type or crop.cropType or crop.name }}"
-                data-id="{{ crop.id }}">
-                {{ crop.crop_name or crop.cropName or crop.name }}
-              </option>
-            {% endfor %}
-          </select>
-          <div class="select-chevron">
-              <img class="sd-caret"
-               src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
-               alt="dropdown">
+          <div class="field-group">
+            <label class="field-label">Payment Mode</label>
+            <div class="field-input field-input--select">
+              <select id="paymentMode" name="payment_mode" required>
+                <option disabled selected>Select mode</option>
+                <option value="Cash">Cash</option>
+                <option value="Online">Online</option>
+              </select>
+              <div class="select-chevron">
+                <img class="sd-caret" src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}" alt="dropdown">
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div class="field-group full-row">
-        <label class="field-label">Quantity</label>
-        <div class="field-input">
-          <input type="number" id="cropQty" >
-          <span class="field-suffix">kg</span>
-        </div>
-      </div>
-
-      <div class="field-group full-row">
-        <label class="field-label">Packaging Type</label>
-        <div class="field-input field-input--select">
-          <select id="packagingType">
-            <option disabled selected>Select packaging</option>
-            <option value="Gunny Bag">Gunny Bag</option>
-            <option value="Plastic Bag">Plastic Bag</option>
-            <option value="Box">Box</option>
-          </select>
-          <div class="select-chevron">
-              <img class="sd-caret"
-               src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
-               alt="dropdown">
+          <div class="field-group">
+            <label class="field-label">Approx. Amount (₹)</label>
+            <div class="field-input">
+              <span id="approxAmount">-</span>
+              <input type="hidden" id="amount" name="amount" value="">
+            </div>
           </div>
+
+        </div> <!-- end warehouse card body -->
+      </div> <!-- end warehouse card -->
+
+      <!-- CROP DETAILS CARD -->
+      <div class="store-card">
+
+        <div class="store-card-header">
+          <img class="store-card-icon" src="{{ url_for('static', filename='svg-icons/Warehouses/Crop Details.svg') }}">
+          <p class="store-card-title">Crop Details</p>
         </div>
-      </div>
 
-      <div class="field-group full-row">
-        <label class="field-label">Number of Bags (optional)</label>
-        <div class="field-input">
-          <input type="number" id="bagCount">
-        </div>
-      </div>
+        <div class="store-card-body crop-grid">
 
-      <div class="field-group full-row">
-        <label class="field-label">Moisture</label>
-        <div class="field-input">
-          <input type="number" id="moisture">
-          <span class="field-suffix">%</span>
-        </div>
-      </div>
+          <div class="field-group">
+            <label class="field-label">Crop ID</label>
+            <div class="field-input field-input--select">
+              <select id="cropIdSelect">
+                <option disabled selected>Select crop ID</option>
+                {% for crop in crops %}
+                  <option value="{{ crop.id }}" data-name="{{ crop.crop_type or crop.cropType or crop.name }}">
+                    {{ crop.id }}
+                  </option>
+                {% endfor %}
+              </select>
+              <div class="select-chevron">
+                  <img class="sd-caret" src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}" alt="dropdown">
+              </div>
+            </div>
+          </div>
 
-    </div> <!-- end crop card body -->
+          <div class="field-group">
+            <label class="field-label">Crop</label>
+            <div class="field-input field-input--select">
+              <select id="cropNameSelect">
+                <option disabled selected>Select crop</option>
+                {% for crop in crops %}
+                  <option value="{{ crop.crop_type or crop.cropType or crop.name }}" data-id="{{ crop.id }}">
+                    {{ crop.crop_name or crop.cropName or crop.name }}
+                  </option>
+                {% endfor %}
+              </select>
+              <div class="select-chevron">
+                  <img class="sd-caret" src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}" alt="dropdown">
+              </div>
+            </div>
+          </div>
 
-    <button type="button" class="add-storage-btn" id="btnAddCropRow">
-      + Add Crop to Storage
-    </button>
+          <div class="field-group full-row">
+            <label class="field-label">Quantity</label>
+            <div class="field-input">
+              <input type="number" id="cropQty">
+              <span class="field-suffix">kg</span>
+            </div>
+          </div>
 
-  </div> <!-- end crop details card -->
+          <div class="field-group full-row">
+            <label class="field-label">Packaging Type</label>
+            <div class="field-input field-input--select">
+              <select id="packagingType">
+                <option disabled selected>Select packaging</option>
+                <option value="Gunny Bag">Gunny Bag</option>
+                <option value="Plastic Bag">Plastic Bag</option>
+                <option value="Box">Box</option>
+              </select>
+              <div class="select-chevron">
+                  <img class="sd-caret" src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}" alt="dropdown">
+              </div>
+            </div>
+          </div>
 
-</div> <!-- end store-warehouse-grid -->
+          <div class="field-group full-row">
+            <label class="field-label">Number of Bags (optional)</label>
+            <div class="field-input">
+              <input type="number" id="bagCount">
+            </div>
+          </div>
 
-    <!-- TABLE CARD -->
-    <div class="storage-table-wrapper">
-      <table class="storage-table" id="storageTable">
-        <thead>
-          <tr>
-            <th>Crop ID</th>
-            <th>Crop Name</th>
-            <th>Stored Quantity</th>
-            <th>Packaging Type</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="storageTbody">
-          <!-- rows inserted via JS -->
-        </tbody>
-      </table>
+          <div class="field-group full-row">
+            <label class="field-label">Moisture</label>
+            <div class="field-input">
+              <input type="number" id="moisture">
+              <span class="field-suffix">%</span>
+            </div>
+          </div>
 
-      <div class="storage-empty-state" id="storageEmptyState">
-        <img src="{{ url_for('static', filename='svg-icons/Warehouses/BlankStorage.svg') }}">
-      </div>
-    </div>
+        </div> <!-- end crop card body -->
+
+        <button type="button" class="add-storage-btn" id="btnAddCropRow">
+          + Add Crop to Storage
+        </button>
+
+      </div> <!-- end crop details card -->
+
+    </div> <!-- end store-warehouse-grid -->
+
+    <!-- STORAGE TABLE -->
+<!-- TABLE CARD -->
+<div class="storage-table-wrapper">
+  <table class="storage-table" id="storageTable">
+    <thead>
+      <tr>
+        <th>Crop ID</th>
+        <th>Crop Name</th>
+        <th>Stored Quantity</th>
+        <th>Packaging Type</th>
+        <th>Amount (₹)</th> <!-- New column -->
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="storageTbody">
+      <!-- rows inserted via JS -->
+    </tbody>
+    <tfoot>
+      <tr>
+
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="storage-empty-state" id="storageEmptyState">
+    <img src="{{ url_for('static', filename='svg-icons/Warehouses/BlankStorage.svg') }}">
+  </div>
+</div>
 
   </form>
 </div>
@@ -302,6 +279,10 @@
             <span class="s-label">Storage Period</span>
             <span class="s-value" id="sumDuration">-</span>
           </div>
+          <div class="summary-row">
+            <span class="s-label">Total Amount</span>
+            <span class="s-value" id="sumTotalAmount">-</span> <!-- New row for total -->
+          </div>
         </div>
 
         <p class="summary-error" id="storageSummaryError" style="display:none;"></p>
@@ -315,29 +296,32 @@
     </div>
   </div>
 </div>
+<!-- SUCCESS STATE -->
+<div id="storageSummarySuccess" style="display:none; text-align:center;">
 
-<!-- ===================== SUCCESS MODAL ===================== -->
-<div class="summary-modal" id="storageSummarySuccess" style="display:none;" aria-hidden="true">
-  <div class="summary-modal-backdrop" id="storageSuccessBackdrop"></div>
-
-  <div class="summary-modal-dialog" role="dialog" aria-modal="true">
-    <div class="summary-modal-content">
-      <div class="summary-illus">
-        <img src="{{ url_for('static', filename='illustrations/Success Modal.svg') }}" alt="">
-      </div>
-
-      <h3 class="summary-title">Request Sent</h3>
-
-      <p class="summary-subtext">
-        Your request to store the crop has been successfully sent to the warehouse.
-      </p>
-
-      <div class="summary-actions single">
-        <a class="summary-btn primary" href="{{ url_for('farmer_storage.list_storage') }}">View</a>
-      </div>
-    </div>
+  <div class="summary-illus">
+    <img src="{{ url_for('static', filename='svg-icons/Warehouses/StorageSuccess.svg') }}" alt="">
   </div>
+
+  <h3 class="summary-title">Request Sent Successfully 🎉</h3>
+
+  <p class="summary-subtext">
+    Your storage request has been sent to the warehouse.<br>
+    You will be notified once it is approved.
+  </p>
+
+  <div class="summary-actions single">
+    <button class="summary-btn primary" type="button" onclick="location.reload()">
+      Done
+    </button>
+  </div>
+
 </div>
+<!-- Pass warehouses to JS -->
+<div id="warehouseData" data-json='{{ warehouses | tojson | safe }}'></div>
+<script>
+  window.warehouses = JSON.parse(document.getElementById("warehouseData").dataset.json);
+</script>
 
 <!-- Page JS -->
 <script src="{{ url_for('static', filename='js/addstorage.js') }}"></script>

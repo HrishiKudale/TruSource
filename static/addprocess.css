@@ -92,10 +92,10 @@
 .process-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0,1fr));
-  gap: 14px;
+  gap: 22px;
 }
 
-.process-grid-2 .full-row { grid-column: 1 / -1; }
+
 
 @media (max-width: 768px) {
   .process-grid-2 { grid-template-columns: 1fr; }
@@ -107,7 +107,8 @@
 .field-group { display: flex; flex-direction: column; gap: 8px; }
 .field-label {
   font-family: var(--body-sm-reg-font-family);
-  color: var(--grey-700);
+  font-size: 14px;
+  color: var(--grey-950);
 }
 
 .field-input {
@@ -229,8 +230,9 @@
 }
 
 /* =========================
-   SUMMARY MODAL (YOUR DESIGN)
+   SUMMARY MODAL (COMPACT DESIGN MATCH)
 ========================= */
+
 .summary-modal {
   position: fixed;
   inset: 0;
@@ -239,139 +241,164 @@
   justify-content: center;
   z-index: 2000;
 }
-.summary-modal.is-open { display: flex; }
+
+.summary-modal.is-open {
+  display: flex;
+}
 
 .summary-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.55); /* darker like previous */
+  z-index: 0;
 }
 
 .summary-modal-dialog {
   position: relative;
   z-index: 1;
-  width: min(640px, calc(100% - 24px));
+  width: min(420px, calc(100% - 32px)); /* reduced width */
+  margin: 0; /* remove offset centering issues */
 }
 
 .summary-modal-content {
   background: #fff;
-  border-radius: 14px;
-  padding: 22px 22px 18px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
-  width: fit-content;
+  border-radius: 12px;
+  padding: 16px 16px 14px; /* tighter padding */
+  box-shadow: 0 14px 35px rgba(0,0,0,0.18);
 }
 
+/* Illustration */
 .summary-illus {
   display: flex;
   justify-content: center;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
-.summary-illus img { width: 120px; height: auto; }
 
+.summary-illus img {
+  width: 130px; /* smaller icon */
+  height: auto;
+}
+
+/* Title */
 .summary-title {
-  margin: 0;
+  margin: 10px 0;
   text-align: center;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 16px; /* reduced */
+  font-weight: 500;
 }
 
+/* Subtext */
 .summary-subtext {
-  margin: 10px 18px 16px;
+  margin: 6px 10px 12px;
   text-align: center;
-  color: #555;
-  line-height: 1.5;
+  color: #666;
+  line-height: 1.4;
+  font-size: 13px;
 }
 
+/* Summary Card */
 .summary-card {
   border: 1px solid #eee;
-  border-radius: 12px;
-  padding: 14px 14px;
+  border-radius: 10px;
+  padding: 10px 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
+/* Rows */
 .summary-row {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
+  font-size: 13px; /* smaller text */
 }
 
-.s-label { color: #777; font-size: 16px; }
+.s-label {
+  color: #777;
+  font-weight: 500;
+}
+
 .s-value {
   color: #111;
-  font-size: 14px;
   font-weight: 600;
   text-align: right;
   max-width: 60%;
   word-break: break-word;
 }
 
+/* Buttons */
 .summary-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 16px;
+  gap: 8px;
+  margin-top: 12px;
 }
-.summary-actions.single { justify-content: center; }
+
+.summary-actions.single {
+  justify-content: center;
+}
 
 .summary-btn {
   flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 14px;
-  border-radius: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
   font-weight: 600;
+  font-size: 14px;
   border: none;
   cursor: pointer;
   text-decoration: none;
+  height: 36px; /* smaller button height */
 }
 
 .summary-btn.secondary {
   background: #fff;
-  border: 1px solid #111;
+  border: 1px solid #dcdcdc;
   color: #111;
 }
 
 .summary-btn.primary {
-  background: #16a34a;
+  background: #0f913d; /* match previous modal green */
   color: #fff;
 }
 
+/* Error */
 .summary-error {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   text-align: center;
   color: #b00020;
-  font-size: 13px;
-}
-/* ✅ Card header strip proper radius + grey bg */
-.card {
-  overflow: hidden; /* IMPORTANT so header corners clip */
+  font-size: 12px;
 }
 
-.card-header{
+/* =========================
+   CARD HEADER FIX (unchanged but cleaned)
+========================= */
+
+.card {
+  overflow: hidden;
+}
+
+.card-header {
   background: var(--grey-50);
   border-bottom: 1px solid var(--grey-100);
   padding: 12px 14px;
-  margin: -18px;          /* matches .card padding */
+  margin: -18px;
   margin-bottom: 14px;
   border-top-left-radius: 14px;
   border-top-right-radius: 14px;
 }
 
-.card-header-left{
-  display:flex;
-  align-items:center;
-  gap:10px;
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-/* ✅ inputs default WHITE */
+/* Inputs */
 .field input,
-.field select{
-  background: #fff;            /* default white */
+.field select {
+  background: #fff;
 }
 
-/* ✅ only prefilled become grey */
-.is-prefilled{
+.is-prefilled {
   background: #f6f6f6 !important;
 }
