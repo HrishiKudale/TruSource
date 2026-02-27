@@ -115,54 +115,80 @@ class FarmerStorageService:
     # -----------------------------
     # CREATE STORAGE REQUEST
     # -----------------------------
-@staticmethod
-def create_storage_requests(farmer_id: str, form) -> Dict[str, Any]:
-    col = get_col("farmer_request")
-    if col is None:
-        return {"ok": False, "error": "Mongo is disabled/unavailable. Cannot create storage request."}
+    @staticmethod
+    def create_storage_requests(farmer_id: str, form) -> Dict[str, Any]:
+        col = get_col("farmer_request")
+        if col is None:
+            return {"ok": False, "error": "Mongo is disabled/unavailable. Cannot create storage request."}
 
-    now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc)
 
-    # ---------- Warehouse ----------
-    warehouse_id = (form.get("warehouse_id") or "").strip()
-    warehouse_name = (form.get("warehouse_name") or "").strip()
+        # ---------- Warehouse ----------
+        warehouse_id = (form.get("warehouse_id") or "").strip()
+        warehouse_name = (form.get("warehouse_name") or "").strip()
 
-    if not warehouse_id:
-        return {"ok": False, "error": "Warehouse is required"}
+        if not warehouse_id:
+            return {"ok": False, "error": "Warehouse is required"}
 
-    storage_date = form.get("date") or ""
-    storage_duration = form.get("storage_duration") or ""
-    payment_mode = form.get("payment_mode") or ""
-    notes = form.get("note") or ""
+        storage_date = form.get("date") or ""
+        storage_duration = form.get("storage_duration") or ""
+        payment_mode = form.get("payment_mode") or ""
+        notes = form.get("note") or ""
 
-    # ---------- Crop (Single or Multiple Support) ----------
-    crop_details = []
+        # ---------- Crop (Single or Multiple Support) ----------
+        crop_details = []
 
-    # Try multiple-crop submission first (from table)
-    items_crop_ids = form.getlist("items_crop_id[]")
-    items_crop_names = form.getlist("items_crop_name[]")
-    items_quantities = form.getlist("items_quantity[]")
-    items_packaging = form.getlist("items_packaging_type[]")
-    items_bags = form.getlist("items_bags[]")
-    items_moisture = form.getlist("items_moisture[]")
+        # Try multiple-crop submission first (from table)
+        items_crop_ids = form.getlist("items_crop_id[]")
+        items_crop_names = form.getlist("items_crop_name[]")
+        items_quantities = form.getlist("items_quantity[]")
+        items_packaging = form.getlist("items_packaging_type[]")
+        items_bags = form.getlist("items_bags[]")
+        items_moisture = form.getlist("items_moisture[]")
 
-    if items_crop_ids:
-        # MULTIPLE CROPS MODE
-        for i in range(len(items_crop_ids)):
-            crop_id = (items_crop_ids[i] or "").strip()
-            crop_name = (items_crop_names[i] or "").strip()
+        if items_crop_ids:
+            # MULTIPLE CROPS MODE
+            for i in range(len(items_crop_ids)):
+                crop_id = (items_crop_ids[i] or "").strip()
+                crop_name = (items_crop_names[i] or "").strip()
+
+                try:
+                    quantity = float(items_quantities[i] or 0)
+                except (ValueError, IndexError):
+                    quantity = 0
+
+                packaging_type = items_packaging[i] if i < len(items_packaging) else ""
+                bagqty = items_bags[i] if i < len(items_bags) else ""
+                moisture = items_moisture[i] if i < len(items_moisture) else ""
+
+                if not crop_id or quantity <= 0:
+                    return {"ok": False, "error": "Each crop must have valid quantity"}
+
+                crop_details.append({
+                    "crop_id": crop_id,
+                    "crop_name": crop_name,
+                    "quantity": quantity,
+                    "packaging_type": packaging_type,
+                    "bagqty": bagqty,
+                    "moisture": moisture,
+                })
+
+        else:
+            # SINGLE CROP FALLBACK MODE
+            crop_id = (form.get("crop_id") or "").strip()
+            crop_name = (form.get("crop_name") or form.get("crop") or "").strip()
 
             try:
-                quantity = float(items_quantities[i] or 0)
-            except (ValueError, IndexError):
+                quantity = float(form.get("quantity") or 0)
+            except ValueError:
                 quantity = 0
 
-            packaging_type = items_packaging[i] if i < len(items_packaging) else ""
-            bagqty = items_bags[i] if i < len(items_bags) else ""
-            moisture = items_moisture[i] if i < len(items_moisture) else ""
+            packaging_type = form.get("packaging_type") or ""
+            bagqty = form.get("bags") or ""
+            moisture = form.get("moisture") or ""
 
             if not crop_id or quantity <= 0:
-                return {"ok": False, "error": "Each crop must have valid quantity"}
+                return {"ok": False, "error": "Crop and quantity are required"}
 
             crop_details.append({
                 "crop_id": crop_id,
@@ -173,61 +199,35 @@ def create_storage_requests(farmer_id: str, form) -> Dict[str, Any]:
                 "moisture": moisture,
             })
 
-    else:
-        # SINGLE CROP FALLBACK MODE
-        crop_id = (form.get("crop_id") or "").strip()
-        crop_name = (form.get("crop_name") or form.get("crop") or "").strip()
+        # ---------- Final Document ----------
+        doc = {
+            # Keep both keys for compatibility
+            "farmer_id": farmer_id,
+            "farmerId": farmer_id,
 
-        try:
-            quantity = float(form.get("quantity") or 0)
-        except ValueError:
-            quantity = 0
+            "request_id": FarmerStorageService._generate_request_id(),
+            "requestKind": "storage",
+            "status": "pending",
 
-        packaging_type = form.get("packaging_type") or ""
-        bagqty = form.get("bags") or ""
-        moisture = form.get("moisture") or ""
+            "created_at": now,
+            "updated_at": now,
 
-        if not crop_id or quantity <= 0:
-            return {"ok": False, "error": "Crop and quantity are required"}
+            "warehouse_detail": [{
+                "warehouse_id": warehouse_id,
+                "warehouse_name": warehouse_name,
+                "date": storage_date,
+                "storage_duration": storage_duration,
+                "payment_mode": payment_mode,
+            }],
 
-        crop_details.append({
-            "crop_id": crop_id,
-            "crop_name": crop_name,
-            "quantity": quantity,
-            "packaging_type": packaging_type,
-            "bagqty": bagqty,
-            "moisture": moisture,
-        })
+            "crop_detail": crop_details,
 
-    # ---------- Final Document ----------
-    doc = {
-        # Keep both keys for compatibility
-        "farmer_id": farmer_id,
-        "farmerId": farmer_id,
+            "notes": notes,
+        }
 
-        "request_id": FarmerStorageService._generate_request_id(),
-        "requestKind": "storage",
-        "status": "pending",
+        col.insert_one(doc)
 
-        "created_at": now,
-        "updated_at": now,
-
-        "warehouse_detail": [{
-            "warehouse_id": warehouse_id,
-            "warehouse_name": warehouse_name,
-            "date": storage_date,
-            "storage_duration": storage_duration,
-            "payment_mode": payment_mode,
-        }],
-
-        "crop_detail": crop_details,
-
-        "notes": notes,
-    }
-
-    col.insert_one(doc)
-
-    return {"ok": True, "request_id": doc["request_id"]}
+        return {"ok": True, "request_id": doc["request_id"]}
 
     # -----------------------------
     # FIND STORAGE REQUEST
