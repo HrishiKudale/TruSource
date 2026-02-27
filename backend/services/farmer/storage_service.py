@@ -115,28 +115,68 @@ class FarmerStorageService:
     # -----------------------------
     # CREATE STORAGE REQUEST
     # -----------------------------
-    @staticmethod
-    def create_storage_requests(farmer_id: str, form) -> Dict[str, Any]:
-        col = get_col("farmer_request")
-        if col is None:
-            return {"ok": False, "error": "Mongo is disabled/unavailable. Cannot create storage request."}
+@staticmethod
+def create_storage_requests(farmer_id: str, form) -> Dict[str, Any]:
+    col = get_col("farmer_request")
+    if col is None:
+        return {"ok": False, "error": "Mongo is disabled/unavailable. Cannot create storage request."}
 
-        now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
 
-        # ---------- Warehouse ----------
-        warehouse_id = (form.get("warehouse_id") or "").strip()
-        warehouse_name = (form.get("warehouse_name") or "").strip()
-        if not warehouse_id:
-            return {"ok": False, "error": "Warehouse is required"}
+    # ---------- Warehouse ----------
+    warehouse_id = (form.get("warehouse_id") or "").strip()
+    warehouse_name = (form.get("warehouse_name") or "").strip()
 
-        storage_date = form.get("date") or ""
-        storage_duration = form.get("storage_duration") or ""
-        payment_mode = form.get("payment_mode") or ""
-        notes = form.get("note") or ""
+    if not warehouse_id:
+        return {"ok": False, "error": "Warehouse is required"}
 
-        # ---------- Crop ----------
+    storage_date = form.get("date") or ""
+    storage_duration = form.get("storage_duration") or ""
+    payment_mode = form.get("payment_mode") or ""
+    notes = form.get("note") or ""
+
+    # ---------- Crop (Single or Multiple Support) ----------
+    crop_details = []
+
+    # Try multiple-crop submission first (from table)
+    items_crop_ids = form.getlist("items_crop_id[]")
+    items_crop_names = form.getlist("items_crop_name[]")
+    items_quantities = form.getlist("items_quantity[]")
+    items_packaging = form.getlist("items_packaging_type[]")
+    items_bags = form.getlist("items_bags[]")
+    items_moisture = form.getlist("items_moisture[]")
+
+    if items_crop_ids:
+        # MULTIPLE CROPS MODE
+        for i in range(len(items_crop_ids)):
+            crop_id = (items_crop_ids[i] or "").strip()
+            crop_name = (items_crop_names[i] or "").strip()
+
+            try:
+                quantity = float(items_quantities[i] or 0)
+            except (ValueError, IndexError):
+                quantity = 0
+
+            packaging_type = items_packaging[i] if i < len(items_packaging) else ""
+            bagqty = items_bags[i] if i < len(items_bags) else ""
+            moisture = items_moisture[i] if i < len(items_moisture) else ""
+
+            if not crop_id or quantity <= 0:
+                return {"ok": False, "error": "Each crop must have valid quantity"}
+
+            crop_details.append({
+                "crop_id": crop_id,
+                "crop_name": crop_name,
+                "quantity": quantity,
+                "packaging_type": packaging_type,
+                "bagqty": bagqty,
+                "moisture": moisture,
+            })
+
+    else:
+        # SINGLE CROP FALLBACK MODE
         crop_id = (form.get("crop_id") or "").strip()
-        crop_name = (form.get("crop_name") or "").strip()
+        crop_name = (form.get("crop_name") or form.get("crop") or "").strip()
 
         try:
             quantity = float(form.get("quantity") or 0)
@@ -150,40 +190,44 @@ class FarmerStorageService:
         if not crop_id or quantity <= 0:
             return {"ok": False, "error": "Crop and quantity are required"}
 
-        doc = {
-            # ✅ store both keys to keep all code compatible
-            "farmer_id": farmer_id,
-            "farmerId": farmer_id,
+        crop_details.append({
+            "crop_id": crop_id,
+            "crop_name": crop_name,
+            "quantity": quantity,
+            "packaging_type": packaging_type,
+            "bagqty": bagqty,
+            "moisture": moisture,
+        })
 
-            "request_id": FarmerStorageService._generate_request_id(),
-            "requestKind": "storage",
-            "status": "pending",
+    # ---------- Final Document ----------
+    doc = {
+        # Keep both keys for compatibility
+        "farmer_id": farmer_id,
+        "farmerId": farmer_id,
 
-            "created_at": now,
-            "updated_at": now,
+        "request_id": FarmerStorageService._generate_request_id(),
+        "requestKind": "storage",
+        "status": "pending",
 
-            "warehouse_detail": [{
-                "warehouse_id": warehouse_id,
-                "warehouse_name": warehouse_name,
-                "date": storage_date,
-                "storage_duration": storage_duration,
-                "payment_mode": payment_mode,
-            }],
+        "created_at": now,
+        "updated_at": now,
 
-            "crop_detail": [{
-                "crop_id": crop_id,
-                "crop_name": crop_name,
-                "quantity": quantity,
-                "packaging_type": packaging_type,
-                "bagqty": bagqty,
-                "moisture": moisture,
-            }],
+        "warehouse_detail": [{
+            "warehouse_id": warehouse_id,
+            "warehouse_name": warehouse_name,
+            "date": storage_date,
+            "storage_duration": storage_duration,
+            "payment_mode": payment_mode,
+        }],
 
-            "notes": notes,
-        }
+        "crop_detail": crop_details,
 
-        col.insert_one(doc)
-        return {"ok": True, "request_id": doc["request_id"]}
+        "notes": notes,
+    }
+
+    col.insert_one(doc)
+
+    return {"ok": True, "request_id": doc["request_id"]}
 
     # -----------------------------
     # FIND STORAGE REQUEST

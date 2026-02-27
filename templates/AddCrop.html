@@ -436,7 +436,7 @@
     <img class="map-btn-icon" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}" alt="" aria-hidden="true" />
   </button>
 
-  <form id="add-crop-form" class="add-crop-form" action="{{ url_for('farm_coord_bp.save_farm_coordinates') }}" method="POST">
+  <form id="add-crop-form" class="add-crop-form" action="{{ url_for('farm_coord_bp.save_farm_coordinates_api') }}" method="POST">
     <button type="button" class="map-btn-continue" id="map-modal-continue">
       <span class="map-btn-continue-text">Confirm &amp; Apply</span>
       <img class="map-btn-icon" src="{{ url_for('static', filename='img/icon-placeholder.svg') }}" alt="" aria-hidden="true" />

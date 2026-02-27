@@ -211,34 +211,32 @@
   }
 
   // ---------- Validate + Populate Summary ----------
-  function buildSummary() {
-    // Ensure warehouse selected
-    const wname = warehouseSelect?.value || "";
-    const wid = warehouseIdInput?.value || "";
-    const dateVal = storageDate?.value || "";
-    const durVal = storageDuration?.value || "";
+function buildSummary() {
+  const wname = warehouseSelect?.value || "";
+  const wid = warehouseIdInput?.value || "";
+  const dateVal = storageDate?.value || "";
+  const durVal = storageDuration?.value || "";
 
-    if (!wid || !wname) return { ok: false, error: "Please select a warehouse." };
-    if (!dateVal) return { ok: false, error: "Please select a date." };
-    if (!durVal) return { ok: false, error: "Please select storage duration." };
+  if (!wid || !wname) return { ok: false, error: "Please select a warehouse." };
+  if (!dateVal) return { ok: false, error: "Please select a date." };
+  if (!durVal) return { ok: false, error: "Please select storage duration." };
 
-    // If user didn’t press “Add Crop” even once, auto-add current crop inputs as 1 row
-    if (rows.length === 0) {
-      const attempt = addRowFromInputs();
-      if (!attempt.ok) return attempt;
-    }
-
-    const cropNames = rows.map(r => r.cropName);
-    const packTypes = rows.map(r => r.packaging);
-
-    sumWarehouse.textContent = wname;
-    sumCrop.textContent = formatMulti(cropNames);
-    sumPackaging.textContent = formatMulti(packTypes);
-    sumDate.textContent = formatDateReadable(dateVal);
-    sumDuration.textContent = durVal;
-
-    return { ok: true };
+  // ✅ Require at least one crop row
+  if (rows.length === 0) {
+    return { ok: false, error: "Please click 'Add Crop to Storage' before submitting." };
   }
+
+  const cropNames = rows.map(r => r.cropName);
+  const packTypes = rows.map(r => r.packaging);
+
+  sumWarehouse.textContent = wname;
+  sumCrop.textContent = formatMulti(cropNames);
+  sumPackaging.textContent = formatMulti(packTypes);
+  sumDate.textContent = formatDateReadable(dateVal);
+  sumDuration.textContent = durVal;
+
+  return { ok: true };
+}
 
   // ---------- Events ----------
   document.addEventListener("DOMContentLoaded", () => {

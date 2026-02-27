@@ -146,7 +146,7 @@
           <div class="field-group">
             <label class="field-label">Crop ID</label>
             <div class="field-input field-input--select">
-              <select id="cropIdSelect" name="crop_id">
+              <select id="cropIdSelect" >
                 <option disabled selected>Select crop ID</option>
                 {% for crop in crops %}
                   <option
@@ -167,7 +167,7 @@
           <div class="field-group">
             <label class="field-label">Crop</label>
             <div class="field-input field-input--select">
-              <select id="cropNameSelect" name="crop">
+              <select id="cropNameSelect">
                 <option disabled selected>Select crop</option>
                 {% for crop in crops %}
                   <option
@@ -188,7 +188,7 @@
           <div class="field-group full-row">
             <label class="field-label">Quantity</label>
             <div class="field-input">
-              <input type="number" id="cropQty" name="quantity" placeholder="Enter quantity" min="1">
+              <input type="number" id="cropQty" >
               <span class="field-suffix">kg</span>
             </div>
           </div>
@@ -196,7 +196,7 @@
           <div class="field-group full-row">
             <label class="field-label">Packaging Type</label>
             <div class="field-input field-input--select">
-              <select id="packagingType" name="packaging_type">
+              <select id="packagingType">
                 <option disabled selected>Select packaging</option>
                 <option value="Gunny Bag">Gunny Bag</option>
                 <option value="Plastic Bag">Plastic Bag</option>
@@ -213,14 +213,14 @@
           <div class="field-group full-row">
             <label class="field-label">Number of Bags (optional)</label>
             <div class="field-input">
-              <input type="number" id="bagCount" name="bags" placeholder="Enter number" min="1">
+              <input type="number" id="bagCount">
             </div>
           </div>
 
           <div class="field-group full-row">
             <label class="field-label">Moisture</label>
             <div class="field-input">
-              <input type="number" id="moisture" name="moisture" placeholder="Select %" min="0" max="100" step="0.1">
+              <input type="number" id="moisture">
               <span class="field-suffix">%</span>
             </div>
           </div>
@@ -272,7 +272,7 @@
 
         <div class="summary-illus">
           <!-- use your warehouse confirm illustration -->
-          <img src="{{ url_for('static', filename='svg-icons/StorageSummaryModal.svg') }}" alt="">
+          <img src="{{ url_for('static', filename='svg-icons/Warehouses/StorageSummaryModal.svg') }}" alt="">
         </div>
 
         <h3 class="summary-title">Confirm Storage Request</h3>
