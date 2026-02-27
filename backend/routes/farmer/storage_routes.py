@@ -130,6 +130,7 @@ def submit_storage_request():
             active_page="storage",
             active_submenu="warehouse",
             coord_doc=warehouses,
+            warehouses=warehouses,   # ✅ ADD THIS LINE
             crops=crops,
             items=[],
             error=res.get("error", "Failed to create storage request."),
