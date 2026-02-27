@@ -68,9 +68,7 @@
     const name = opt?.dataset?.name;
     if (!name) return;
 
-    [...cropNameSelect.options].forEach(o => {
-      o.selected = o.value === name;
-    });
+    [...cropNameSelect.options].forEach(o => o.selected = o.value === name);
   }
 
   function syncFromName() {
@@ -79,28 +77,22 @@
     const id = opt?.dataset?.id;
     if (!id) return;
 
-    [...cropIdSelect.options].forEach(o => {
-      o.selected = o.value === id;
-    });
+    [...cropIdSelect.options].forEach(o => o.selected = o.value === id);
   }
 
   // ---------- Calculate Approx Amount ----------
   function calculateApproxAmount() {
     const warehouseId = warehouseSelect?.value;
     const duration = Number(storageDuration?.value || 0);
-
+    if (!window.warehouses || !Array.isArray(window.warehouses)) return 0;
     if (!warehouseId || duration <= 0) return 0;
 
-    const warehouse = warehouses.find(
+    const warehouse = window.warehouses.find(
       w => w.userId === warehouseId || w.warehouseId === warehouseId
     );
-
-    if (!warehouse || !warehouse.storage_services || warehouse.storage_services.length === 0)
-      return 0;
+    if (!warehouse || !warehouse.storage_services || warehouse.storage_services.length === 0) return 0;
 
     const rate = parseFloat(warehouse.storage_services[0].rate_per_kg_day || 0);
-
-    // Sum amount for all rows
     let totalAmount = 0;
     rows.forEach(r => {
       const qty = Number(r.quantity || 0);
@@ -116,10 +108,6 @@
     if (amountInput) amountInput.value = amount || "";
   }
 
-  if (warehouseSelect) warehouseSelect.addEventListener("change", updateAmountDisplay);
-  if (cropQty) cropQty.addEventListener("input", updateAmountDisplay);
-  if (storageDuration) storageDuration.addEventListener("input", updateAmountDisplay);
-
   // ---------- Render table ----------
   function renderTable() {
     if (!tbody) return;
@@ -127,7 +115,6 @@
 
     rows.forEach((r, idx) => {
       const tr = document.createElement("tr");
-
       tr.innerHTML = `
         <td>${escapeHtml(r.cropId)}</td>
         <td>${escapeHtml(r.cropName)}</td>
@@ -137,11 +124,9 @@
           <button type="button" class="row-delete-btn" data-idx="${idx}">Remove</button>
         </td>
       `;
-
       tbody.appendChild(tr);
     });
 
-    // bind remove
     tbody.querySelectorAll(".row-delete-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         const i = Number(btn.dataset.idx);
@@ -187,16 +172,14 @@
     }
 
     rows.push({ cropId: cid, cropName: cname, quantity: qty, packaging: pack, bags, moisture });
-
     rebuildHiddenInputs();
     renderTable();
     setEmptyState();
     updateAmountDisplay();
 
-    // reset inputs
-    if (cropQty) cropQty.value = "";
-    if (bagCount) bagCount.value = "";
-    if (moisture) moisture.value = "";
+    cropQty.value = "";
+    bagCount.value = "";
+    moisture.value = "";
 
     return { ok: true };
   }
@@ -213,9 +196,7 @@
     if (!iso || typeof iso !== "string" || iso.length < 10) return "-";
     const [y, m, d] = iso.split("-");
     const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    const mi = Number(m) - 1;
-    const mn = monthNames[mi] || m;
-    return `${d} ${mn} ${y}`;
+    return `${d} ${monthNames[Number(m)-1] || m} ${y}`;
   }
 
   function showError(msg) {
@@ -275,7 +256,6 @@
   if (warehouseSelect) warehouseSelect.addEventListener("change", syncWarehouseId);
   if (cropIdSelect) cropIdSelect.addEventListener("change", syncFromId);
   if (cropNameSelect) cropNameSelect.addEventListener("change", syncFromName);
-
   if (btnAdd) btnAdd.addEventListener("click", () => {
     const res = addRowFromInputs();
     if (!res.ok) alert(res.error);
@@ -314,7 +294,6 @@
 
       closeModal();
 
-      // Show success state
       const successState = document.getElementById("storageSummarySuccess");
       if (successState) successState.style.display = "block";
     } catch (err) {
@@ -336,4 +315,12 @@
   function escapeAttr(s) {
     return escapeHtml(s).replaceAll("`", "&#096;");
   }
+
+  // ---------- Recalculate amount whenever rows change ----------
+  const originalAddRowFromInputs = addRowFromInputs;
+  addRowFromInputs = function() {
+    const res = originalAddRowFromInputs();
+    updateAmountDisplay();
+    return res;
+  };
 })();
