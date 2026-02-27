@@ -40,6 +40,10 @@
   const sumDate = document.getElementById("sumDate");
   const sumDuration = document.getElementById("sumDuration");
 
+  // Amount field
+  const amountInput = document.getElementById("amount");
+  const approxAmountDisplay = document.getElementById("approxAmount");
+
   // In-memory rows
   let rows = [];
 
@@ -54,6 +58,7 @@
     if (warehouseIdInput) {
       warehouseIdInput.value = opt ? (opt.dataset.id || "") : "";
     }
+    updateAmountDisplay();
   }
 
   // ---------- Crop sync ----------
@@ -64,7 +69,7 @@
     if (!name) return;
 
     [...cropNameSelect.options].forEach(o => {
-      if (o.value === name) o.selected = true;
+      o.selected = o.value === name;
     });
   }
 
@@ -75,9 +80,45 @@
     if (!id) return;
 
     [...cropIdSelect.options].forEach(o => {
-      if (o.value === id) o.selected = true;
+      o.selected = o.value === id;
     });
   }
+
+  // ---------- Calculate Approx Amount ----------
+  function calculateApproxAmount() {
+    const warehouseId = warehouseSelect?.value;
+    const duration = Number(storageDuration?.value || 0);
+
+    if (!warehouseId || duration <= 0) return 0;
+
+    const warehouse = warehouses.find(
+      w => w.userId === warehouseId || w.warehouseId === warehouseId
+    );
+
+    if (!warehouse || !warehouse.storage_services || warehouse.storage_services.length === 0)
+      return 0;
+
+    const rate = parseFloat(warehouse.storage_services[0].rate_per_kg_day || 0);
+
+    // Sum amount for all rows
+    let totalAmount = 0;
+    rows.forEach(r => {
+      const qty = Number(r.quantity || 0);
+      totalAmount += qty * duration * rate;
+    });
+
+    return totalAmount.toFixed(2);
+  }
+
+  function updateAmountDisplay() {
+    const amount = calculateApproxAmount();
+    if (approxAmountDisplay) approxAmountDisplay.textContent = amount ? `₹ ${amount}` : "-";
+    if (amountInput) amountInput.value = amount || "";
+  }
+
+  if (warehouseSelect) warehouseSelect.addEventListener("change", updateAmountDisplay);
+  if (cropQty) cropQty.addEventListener("input", updateAmountDisplay);
+  if (storageDuration) storageDuration.addEventListener("input", updateAmountDisplay);
 
   // ---------- Render table ----------
   function renderTable() {
@@ -109,12 +150,13 @@
           rebuildHiddenInputs();
           renderTable();
           setEmptyState();
+          updateAmountDisplay();
         }
       });
     });
   }
 
-  // ---------- Hidden inputs for backend ----------
+  // ---------- Hidden inputs ----------
   function rebuildHiddenInputs() {
     if (!hiddenRows) return;
     hiddenRows.innerHTML = "";
@@ -137,7 +179,6 @@
     const cname = cropNameSelect?.value || "";
     const qty = Number(cropQty?.value || 0);
     const pack = packagingType?.value || "";
-
     const bags = bagCount?.value || "";
     const moist = moisture?.value || "";
 
@@ -145,20 +186,14 @@
       return { ok: false, error: "Please select Crop ID, Crop, Quantity and Packaging Type before adding." };
     }
 
-    rows.push({
-      cropId: cid,
-      cropName: cname,
-      quantity: qty,
-      packaging: pack,
-      bags,
-      moisture: moist
-    });
+    rows.push({ cropId: cid, cropName: cname, quantity: qty, packaging: pack, bags, moisture });
 
     rebuildHiddenInputs();
     renderTable();
     setEmptyState();
+    updateAmountDisplay();
 
-    // optional: reset crop inputs after add
+    // reset inputs
     if (cropQty) cropQty.value = "";
     if (bagCount) bagCount.value = "";
     if (moisture) moisture.value = "";
@@ -175,10 +210,8 @@
   }
 
   function formatDateReadable(iso) {
-    // ISO yyyy-mm-dd -> dd Mon yyyy
     if (!iso || typeof iso !== "string" || iso.length < 10) return "-";
     const [y, m, d] = iso.split("-");
-    if (!y || !m || !d) return iso;
     const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const mi = Number(m) - 1;
     const mn = monthNames[mi] || m;
@@ -210,33 +243,28 @@
     clearError();
   }
 
-  // ---------- Validate + Populate Summary ----------
-function buildSummary() {
-  const wname = warehouseSelect?.value || "";
-  const wid = warehouseIdInput?.value || "";
-  const dateVal = storageDate?.value || "";
-  const durVal = storageDuration?.value || "";
+  function buildSummary() {
+    const wname = warehouseSelect?.value || "";
+    const wid = warehouseIdInput?.value || "";
+    const dateVal = storageDate?.value || "";
+    const durVal = storageDuration?.value || "";
 
-  if (!wid || !wname) return { ok: false, error: "Please select a warehouse." };
-  if (!dateVal) return { ok: false, error: "Please select a date." };
-  if (!durVal) return { ok: false, error: "Please select storage duration." };
+    if (!wid || !wname) return { ok: false, error: "Please select a warehouse." };
+    if (!dateVal) return { ok: false, error: "Please select a date." };
+    if (!durVal) return { ok: false, error: "Please select storage duration." };
+    if (rows.length === 0) return { ok: false, error: "Please click 'Add Crop to Storage' before submitting." };
 
-  // ✅ Require at least one crop row
-  if (rows.length === 0) {
-    return { ok: false, error: "Please click 'Add Crop to Storage' before submitting." };
+    const cropNames = rows.map(r => r.cropName);
+    const packTypes = rows.map(r => r.packaging);
+
+    sumWarehouse.textContent = wname;
+    sumCrop.textContent = formatMulti(cropNames);
+    sumPackaging.textContent = formatMulti(packTypes);
+    sumDate.textContent = formatDateReadable(dateVal);
+    sumDuration.textContent = durVal;
+
+    return { ok: true };
   }
-
-  const cropNames = rows.map(r => r.cropName);
-  const packTypes = rows.map(r => r.packaging);
-
-  sumWarehouse.textContent = wname;
-  sumCrop.textContent = formatMulti(cropNames);
-  sumPackaging.textContent = formatMulti(packTypes);
-  sumDate.textContent = formatDateReadable(dateVal);
-  sumDuration.textContent = durVal;
-
-  return { ok: true };
-}
 
   // ---------- Events ----------
   document.addEventListener("DOMContentLoaded", () => {
@@ -248,53 +276,52 @@ function buildSummary() {
   if (cropIdSelect) cropIdSelect.addEventListener("change", syncFromId);
   if (cropNameSelect) cropNameSelect.addEventListener("change", syncFromName);
 
-  if (btnAdd) {
-    btnAdd.addEventListener("click", () => {
-      const res = addRowFromInputs();
-      if (!res.ok) {
-        // light feedback; you can replace with toast
-        alert(res.error);
-      }
-    });
-  }
+  if (btnAdd) btnAdd.addEventListener("click", () => {
+    const res = addRowFromInputs();
+    if (!res.ok) alert(res.error);
+  });
 
-  if (btnOpenSummary) {
-    btnOpenSummary.addEventListener("click", () => {
-      clearError();
-      const res = buildSummary();
-      if (!res.ok) {
-        // show error near modal, but also open modal so user sees context
-        openModal();
-        showError(res.error);
-        return;
-      }
+  if (btnOpenSummary) btnOpenSummary.addEventListener("click", () => {
+    clearError();
+    const res = buildSummary();
+    if (!res.ok) {
       openModal();
-    });
-  }
+      showError(res.error);
+      return;
+    }
+    openModal();
+  });
 
   if (btnEdit) btnEdit.addEventListener("click", closeModal);
   if (backdrop) backdrop.addEventListener("click", closeModal);
-
-  // ESC closes modal
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && modal?.classList.contains("open")) closeModal();
   });
 
-  if (btnConfirm) {
-    btnConfirm.addEventListener("click", () => {
-      clearError();
+  if (btnConfirm) btnConfirm.addEventListener("click", async (e) => {
+    e.preventDefault();
+    clearError();
+    rebuildHiddenInputs();
 
-      // Final sanity: ensure hidden inputs exist
-      rebuildHiddenInputs();
+    try {
+      const formData = new FormData(form);
+      const res = await fetch(form.action, { method: "POST", body: formData });
 
-      // Submit form
-      try {
-        form.submit();
-      } catch (err) {
-        showError("Unable to submit form. Please try again.");
+      if (!res.ok) {
+        showError("Failed to save: please check your data.");
+        return;
       }
-    });
-  }
+
+      closeModal();
+
+      // Show success state
+      const successState = document.getElementById("storageSummarySuccess");
+      if (successState) successState.style.display = "block";
+    } catch (err) {
+      showError("Unable to submit form. Please try again.");
+      console.error(err);
+    }
+  });
 
   // ---------- Utils ----------
   function escapeHtml(s) {

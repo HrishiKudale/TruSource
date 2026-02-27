@@ -105,32 +105,31 @@
               </div>
             </div>
           </div>
-
-          <div class="field-group">
-            <label class="field-label">Payment Mode</label>
-            <div class="field-input field-input--select">
-              <select id="paymentMode" name="payment_mode" required>
-                <option disabled selected>Select mode</option>
-                <option value="Cash">Cash</option>
-                <option value="Online">Online</option>
-              </select>
-              <div class="select-chevron">
+            <div class="field-group">
+              <label class="field-label">Payment Mode</label>
+              <div class="field-input field-input--select">
+                <select id="paymentMode" name="payment_mode" required>
+                  <option disabled selected>Select mode</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Online">Online</option>
+                </select>
+                <div class="select-chevron">
                   <img class="sd-caret"
-                   src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
-                   alt="dropdown">
+                      src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                      alt="dropdown">
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="field-group">
-            <label class="field-label">Amount</label>
-            <div class="field-input">
-              <input type="number" id="amount" name="amount" placeholder="-" min="0" step="0.01">
+            <div class="field-group">
+              <label class="field-label">Approx. Amount (₹)</label>
+              <div class="field-input">
+                <!-- readonly span to show calculated amount -->
+                <span id="approxAmount">-</span>
+                <!-- optional hidden input to submit actual value to backend -->
+                <input type="hidden" id="amount" name="amount" value="">
+              </div>
             </div>
-          </div>
-
-        </div>
-      </div>
 
       <!-- ========== CROP DETAILS CARD ========== -->
       <div class="store-card">
@@ -260,7 +259,7 @@
   </form>
 </div>
 
-<!-- ===================== SUMMARY MODAL ===================== -->
+<!-- ===================== REVIEW MODAL ===================== -->
 <div class="summary-modal" id="storageSummaryModal" aria-hidden="true">
   <div class="summary-modal-backdrop" id="storageSummaryBackdrop"></div>
 
@@ -269,9 +268,8 @@
 
       <!-- REVIEW STATE -->
       <div id="storageSummaryReview">
-
         <div class="summary-illus">
-          <!-- use your warehouse confirm illustration -->
+          <!-- Warehouse confirm illustration -->
           <img src="{{ url_for('static', filename='svg-icons/Warehouses/StorageSummaryModal.svg') }}" alt="">
         </div>
 
@@ -310,26 +308,31 @@
           <button class="summary-btn secondary" type="button" id="btnStorageEdit">Edit</button>
           <button class="summary-btn primary" type="button" id="btnStorageConfirm">Confirm</button>
         </div>
-
       </div>
 
-      <!-- SUCCESS STATE (optional; mainly for future use) -->
-      <div id="storageSummarySuccess" style="display:none;">
-        <div class="summary-illus">
-          <img src="{{ url_for('static', filename='illustrations/Success Modal.svg') }}" alt="">
-        </div>
+    </div>
+  </div>
+</div>
 
-        <h3 class="summary-title">Request Sent</h3>
+<!-- ===================== SUCCESS MODAL ===================== -->
+<div class="summary-modal" id="storageSummarySuccess" style="display:none;" aria-hidden="true">
+  <div class="summary-modal-backdrop" id="storageSuccessBackdrop"></div>
 
-        <p class="summary-subtext">
-          Your request to store the crop has been successfully sent to the warehouse.
-        </p>
-
-        <div class="summary-actions single">
-          <a class="summary-btn primary" href="{{ url_for('farmer_storage.list_storage') }}">View</a>
-        </div>
+  <div class="summary-modal-dialog" role="dialog" aria-modal="true">
+    <div class="summary-modal-content">
+      <div class="summary-illus">
+        <img src="{{ url_for('static', filename='illustrations/Success Modal.svg') }}" alt="">
       </div>
 
+      <h3 class="summary-title">Request Sent</h3>
+
+      <p class="summary-subtext">
+        Your request to store the crop has been successfully sent to the warehouse.
+      </p>
+
+      <div class="summary-actions single">
+        <a class="summary-btn primary" href="{{ url_for('farmer_storage.list_storage') }}">View</a>
+      </div>
     </div>
   </div>
 </div>

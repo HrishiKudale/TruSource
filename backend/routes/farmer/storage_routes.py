@@ -71,6 +71,7 @@ def add_storage_page():
                     "warehouseId": 1,
                     "name": 1,
                     "location": 1,
+                    "storage_services.rate_per_kg_day": 1,  # add rate
                 },
             )
         )
