@@ -247,3 +247,36 @@
   height:32px;
   object-fit:contain;
 }
+/* -----------------------------
+   Traceability dropdown style
+----------------------------- */
+.tr-search .search-box select {
+  flex: 1;                     /* fill available width */
+  height: 38px;                /* match input height */
+  padding: 0 12px;             /* inner spacing */
+  font-size: 14px;             /* text size */
+  border: 1px solid #ccc;      /* border color */
+  border-radius: 4px;          /* rounded corners */
+  background-color: #fff;      /* white background */
+  -webkit-appearance: none;    /* remove default style on Chrome/Safari */
+  -moz-appearance: none;       /* remove default style on Firefox */
+  appearance: none;            /* remove default style */
+  cursor: pointer;             /* pointer on hover */
+  margin-right: 8px;           /* space before search button */
+}
+
+/* Add a custom down arrow */
+.tr-search .search-box select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpolygon points='0,0 12,0 6,6' fill='%23777'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 12px;
+  padding-right: 28px;         /* make space for arrow */
+}
+
+/* Optional: hover/focus style */
+.tr-search .search-box select:focus {
+  outline: none;
+  border-color: #007bff;      /* highlight color */
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.2);
+}

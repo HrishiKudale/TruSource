@@ -13,7 +13,6 @@
       <h1 class="page-title">New Order</h1>
     </div>
 
-    <!-- open modal instead of submitting directly -->
     <button type="button" class="send-request-btn" id="openOrderSummaryBtn">
       Send Request
       <img src="{{ url_for('static', filename='svg-icons/Plus.svg') }}" class="btn-icon" alt="">
@@ -50,15 +49,18 @@
 
         <div class="field">
           <label>Payment Terms</label>
-          
           <select id="paymentTerms" name="payment_terms" required>
             <option value="" disabled selected>Select payment method</option>
             <option value="Cash">Cash</option>
             <option value="Net 10">Net 10</option>
             <option value="Net 15">Net 15</option>
             <option value="Net 30">Net 30</option>
-              </span>
           </select>
+          <span class="select-chevron">
+            <img class="sd-caret"
+              src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+              alt="dropdown">
+          </span>
         </div>
 
         <div class="field">
@@ -68,7 +70,11 @@
             <option value="Manufacturer">Manufacturer</option>
             <option value="Retailer">Retailer</option>
           </select>
-
+          <span class="select-chevron">
+            <img class="sd-caret"
+              src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+              alt="dropdown">
+          </span>
         </div>
 
         <div class="field">
@@ -81,9 +87,12 @@
               </option>
             {% endfor %}
           </select>
-
+          <span class="select-chevron">
+            <img class="sd-caret"
+              src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+              alt="dropdown">
+          </span>
         </div>
-
 
         <div class="field">
           <label>Address</label>
@@ -132,7 +141,11 @@
                 </option>
               {% endfor %}
             </select>
-          
+            <span class="select-chevron">
+              <img class="sd-caret"
+                src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                alt="dropdown">
+            </span>
           </div>
 
           <div class="field">
@@ -142,11 +155,15 @@
               {% for c in crops %}
                 <option value="{{ c.crop_type or c.name or c.cropName }}"
                         data-id="{{ c.id or c.cropId or c._id }}">
-                  {{ c.crop_name or crop.name or c.cropName }}
+                  {{ c.crop_name or c.name or c.cropName }}
                 </option>
               {% endfor %}
             </select>
-
+            <span class="select-chevron">
+              <img class="sd-caret"
+                src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                alt="dropdown">
+            </span>
           </div>
 
           <div class="field">
@@ -161,7 +178,7 @@
         </div>
       </div>
 
-            <!-- PICKUP DETAILS -->
+      <!-- PICKUP DETAILS -->
       <div class="card">
         <div class="card-header">
           <div class="card-header-left">
@@ -184,7 +201,6 @@
         </div>
 
         <div class="grid-2">
-          <!-- Warehouse dropdown -->
           <div class="field" id="pickupWarehouseWrap">
             <label>Pickup From (Warehouse)</label>
             <select id="pickupWarehouseSelect" name="pickupLocationId">
@@ -195,11 +211,14 @@
                 </option>
               {% endfor %}
             </select>
+            <span class="select-chevron">
+              <img class="sd-caret"
+                src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                alt="dropdown">
+            </span>
             <input type="hidden" name="pickupFromLabel" id="pickupFromLabelWarehouse">
-
           </div>
 
-          <!-- Farm dropdown -->
           <div class="field" id="pickupFarmWrap" style="display:none;">
             <label>Pickup From (Farm)</label>
             <select id="pickupFarmSelect" name="pickupFarmId">
@@ -210,6 +229,11 @@
                 </option>
               {% endfor %}
             </select>
+            <span class="select-chevron">
+              <img class="sd-caret"
+                src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+                alt="dropdown">
+            </span>
             <input type="hidden" name="pickupFromLabel" id="pickupFromLabelFarm">
           </div>
 
@@ -225,78 +249,8 @@
         </div>
       </div>
 
-
     </div>
   </form>
-</div>
-
-
-<!-- ===================== SUMMARY MODAL ===================== -->
-<div class="summary-modal" id="orderSummaryModal" aria-hidden="true">
-  <div class="summary-modal-backdrop" id="orderSummaryBackdrop"></div>
-
-  <div class="summary-modal-dialog" role="dialog" aria-modal="true">
-    <div class="summary-modal-content">
-      
-      <div class="summary-illus">
-        <img src="{{ url_for('static', filename='svg-icons/Order/OrderSummaryModal.svg') }}" alt="">
-      </div>
-      <!-- REVIEW STATE -->
-      <div id="orderSummaryReview">
-
-        <div class="summary-illus">
-          <img src="{{ url_for('static', filename='illustrations/Confirm Modal.svg') }}" alt="">
-        </div>
-
-        <h3 class="summary-title">Confirm Order Request</h3>
-
-        <p class="summary-subtext">
-          Once confirmed, order details cannot be edited.<br>
-          Please review carefully before continuing.
-        </p>
-
-        <div class="summary-card">
-          <div class="summary-row"><span class="s-label">Order ID</span><span class="s-value" id="sumOrderId">-</span></div>
-          <div class="summary-row"><span class="s-label">Request ID</span><span class="s-value" id="sumRequestId">-</span></div>
-          <div class="summary-row"><span class="s-label">Buyer Type</span><span class="s-value" id="sumBuyerType">-</span></div>
-          <div class="summary-row"><span class="s-label">Buyer</span><span class="s-value" id="sumBuyer">-</span></div>
-          <div class="summary-row"><span class="s-label">Crop</span><span class="s-value" id="sumCrop">-</span></div>
-          <div class="summary-row"><span class="s-label">Crop ID</span><span class="s-value" id="sumCropId">-</span></div>
-          <div class="summary-row"><span class="s-label">Quantity</span><span class="s-value" id="sumQty">-</span></div>
-          <div class="summary-row"><span class="s-label">Total Value</span><span class="s-value" id="sumValue">-</span></div>
-          <div class="summary-row"><span class="s-label">Payment</span><span class="s-value" id="sumPayment">-</span></div>
-        </div>
-
-        <p class="summary-error" id="orderSummaryError" style="display:none;"></p>
-
-        <div class="summary-actions">
-          <button class="summary-btn secondary" type="button" id="btnOrderEdit">Go Back & Edit</button>
-          <button class="summary-btn primary" type="button" id="btnOrderConfirm">Confirm & Save</button>
-        </div>
-
-      </div>
-
-      <!-- SUCCESS STATE -->
-      <div id="orderSummarySuccess" style="display:none;">
-
-        <div class="summary-illus">
-          <img src="{{ url_for('static', filename='illustrations/Success Modal.svg') }}" alt="">
-        </div>
-
-        <h3 class="summary-title">Order Created Successfully</h3>
-
-        <p class="summary-subtext">
-          Your order has been successfully created and added to your records.
-        </p>
-
-        <div class="summary-actions single">
-          <a class="summary-btn primary" href="{{ url_for('farmer_sales_bp.orders_page') }}">View Orders</a>
-        </div>
-
-      </div>
-
-    </div>
-  </div>
 </div>
 
 <script>

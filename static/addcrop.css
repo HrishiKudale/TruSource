@@ -230,7 +230,7 @@
   /* ===== Base card ===== */
   .add-crop-card {
     background-color: var(--white);
-    border-radius: 16px;
+    border-radius: 12px;
     border: 1px solid var(--grey-100);
     display: flex;
     flex-direction: column;
@@ -242,7 +242,7 @@
 
   .card-header {
     background-color: var(--grey-50);
-    padding: 10px 18px;
+    padding: 8px 15px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -264,8 +264,8 @@
   .card-title {
     font-family: var(--body-md-semibold-font-family);
     font-weight: var(--body-md-semibold-font-weight);
-    font-size: var(--body-lg-semibold-font-size);
-    color: var(--grey-900);
+    font-size: 18px;
+    color: var(--grey-950);
   }
 
   .add-crop-card-body {
@@ -329,14 +329,14 @@
     font-family: var(--body-md-reg-font-family);
     font-weight: var(--body-md-reg-font-weight);
     font-size: 14px;
-    color: var(--grey-700);
+    color: var(--grey-950);
   }
 
   .field-input {
     position: relative;
     display: flex;
     align-items: center;
-    padding: 10px 12px;
+    padding: 12px 12px;
     border-radius: 6px;
     border: 1px solid var(--grey-200);
     background-color: var(--white);

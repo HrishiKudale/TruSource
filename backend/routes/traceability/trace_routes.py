@@ -10,6 +10,10 @@ traceability_bp = Blueprint("traceability_bp", __name__, url_prefix="/farmer")
 # ------------------------------
 # PAGE (HTML) — NO crop_id needed
 # ------------------------------
+# backend/routes/traceability_routes.py (or wherever your blueprint is)
+
+from backend.services.traceability.traceability_services import TraceabilityService
+
 @traceability_bp.get("/traceability")
 def traceability_page():
     """
@@ -19,11 +23,16 @@ def traceability_page():
     """
     user_id = session.get("user_id")
     if not user_id:
-        # redirect to login if you want
-        return render_template("new_login.html"), 401
+        return render_template("newlogin.html"), 401
 
-    return render_template("Traceability.html", active_page="traceability")
+    # Fetch crops for this user
+    crops = TraceabilityService.get_crops_for_user(user_id)
 
+    return render_template(
+        "Traceability.html",
+        crops=crops,
+        active_page="traceability"
+    )
 
 # -----------------------------------------
 # OPTIONAL legacy route: /traceability/<id>
@@ -31,16 +40,18 @@ def traceability_page():
 # -----------------------------------------
 @traceability_bp.get("/traceability/<crop_id>")
 def traceability_page_with_crop(crop_id):
-    """
-    Renders page and pre-fills search via crop_id (optional).
-    """
     user_id = session.get("user_id")
     if not user_id:
         return render_template("new_login.html"), 401
 
-    return render_template("Traceability.html", crop_id=crop_id, active_page="traceability")
+    crops = TraceabilityService.get_crops_for_user(user_id)
 
-
+    return render_template(
+        "Traceability.html",
+        crops=crops,
+        crop_id=crop_id,  # preselect this crop
+        active_page="traceability"
+    )
 # ------------------------------
 # API (JSON)
 # ------------------------------

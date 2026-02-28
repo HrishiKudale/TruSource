@@ -177,36 +177,36 @@
     });
   }
 
-  async function search() {
-    const q = (input.value || "").trim();
-    if (!q) return showMsg("Enter Crop ID or Crop Name.");
+async function search() {
+  const cropId = (input.value || "").trim();
+  if (!cropId) return showMsg("Select a crop.");
 
-    showMsg("");
-    cropChip.textContent = "…";
-    timeline.innerHTML = "";
-    docBody.innerHTML = "";
+  showMsg("");
+  cropChip.textContent = "…";
+  timeline.innerHTML = "";
+  docBody.innerHTML = "";
 
-    try {
-      const url = `${window.TRACE_API}?q=${encodeURIComponent(q)}`;
-      const res = await fetch(url, { cache: "no-store" });
-      const out = await res.json().catch(() => ({}));
+  try {
+    const url = `${window.TRACE_API}?cropId=${encodeURIComponent(cropId)}`; // ✅ changed
+    const res = await fetch(url, { cache: "no-store" });
+    const out = await res.json().catch(() => ({}));
 
-      if (!res.ok || !out.ok) {
-        cropChip.textContent = "—";
-        showMsg(out.message || "Not found.");
-        return;
-      }
-
-      const data = out.data;
-      cropChip.textContent = data.cropId || "—";
-
-      renderTimeline(data);
-      renderDocs(data.documents || []);
-    } catch (e) {
+    if (!res.ok || !out.ok) {
       cropChip.textContent = "—";
-      showMsg(e.message || "Failed to fetch traceability.");
+      showMsg(out.message || out.err || "Not found.");
+      return;
     }
+
+    const data = out.data;
+    cropChip.textContent = data.cropId || "—";
+
+    renderTimeline(data);
+    renderDocs(data.documents || []);
+  } catch (e) {
+    cropChip.textContent = "—";
+    showMsg(e.message || "Failed to fetch traceability.");
   }
+}
 
   btn.addEventListener("click", search);
   input.addEventListener("keydown", (e) => {

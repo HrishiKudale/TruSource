@@ -26,9 +26,16 @@
   <div class="tr-search">
     <div class="search-box">
       <span class="search-ico">🔎</span>
-      <input id="trSearchInput" type="text" placeholder="Enter Crop ID or Crop Name" autocomplete="off">
-    </div>
+      <select id="trSearchInput" name="cropId">
+  <option value="" disabled selected>Select crop</option>
+  {% for c in crops %}
+    <option value="{{ c.id or c.cropId or c._id }}">
+      {{ c.crop_type or c.name or c.cropName }} - {{ c.id or c.cropId or c._id }}
+    </option>
+  {% endfor %}
+</select>
     <button class="btn-dark" id="trSearchBtn">Search</button>
+  </div>
   </div>
 
   <!-- Cards -->
