@@ -236,12 +236,12 @@ def register_harvest_api():
 # ------------------  REGISTER CROP (CHAIN + MONGO) ------------------
 @crop_bp.post("/register")
 def register_crop_api():
-    if session.get("role") != "farmer" or not session.get("user_id"):
-        return jsonify({"error": "unauthorized"}), 401
+    farmer_id = _get_farmer_id_web_or_jwt()  # ✅ use same auth
+    if not farmer_id:
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
 
     raw = request.get_json(silent=True) if request.is_json else request.form.to_dict()
 
-    # coordinates may be JSON string
     if isinstance(raw.get("coordinates"), str):
         try:
             raw["coordinates"] = json.loads(raw["coordinates"])
@@ -250,13 +250,12 @@ def register_crop_api():
 
     try:
         res = CropService.register_crop_with_blockchain(
-            farmer_id=session["user_id"],
+            farmer_id=farmer_id,   # ✅ use farmer_id from jwt
             payload=raw,
         )
         return jsonify(res), (200 if res.get("ok") else 400)
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
-
 
 
 # ======================================================
@@ -297,22 +296,13 @@ def save_farm_coordinates_api():
 
     payload = request.get_json(silent=True) or {}
 
-    # expected payload:
-    # {
-    #   "name": "Farm 1",
-    #   "polygon": [{"latitude":..,"longitude":..}, ...],
-    #   "area_acres": 1.23,
-    #   "center": {"latitude":..,"longitude":..}
-    # }
-
     result = CropService.save_coordinates_only(
         farmer_id=farmer_id,
         payload=payload
     )
 
-    # result should include farmId or polygonId for next step
-    return jsonify(ok=True, data=result), 200
-
+    # ✅ return proper success/fail
+    return jsonify(result), (200 if result.get("ok") else 400)
 
 
 # ------------------  GET COORDINATES ------------------
