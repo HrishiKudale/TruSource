@@ -360,6 +360,7 @@ class CropService:
         normalized = {
             "farmerId": farmer_id,
             "cropId": payload.get("cropId"),
+            "cropName": payload.get("cropName") or payload.get("crop_name"),
             "cropType": payload.get("cropType"),
             "farmerName": payload.get("farmerName")
             or payload.get("farmer_name")
@@ -384,6 +385,7 @@ class CropService:
             "user_id": reg.farmerId,
             "crop_id": reg.cropId,
             "cropType": reg.cropType,
+            "cropName": reg.cropName,
             "area_size": str(reg.areaSize or ""),
             "date_planted": reg.datePlanted,
             "coordinates": reg.coordinates,
