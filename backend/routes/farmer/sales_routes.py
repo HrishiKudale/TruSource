@@ -4,6 +4,8 @@ from flask import Blueprint, render_template, session, redirect, request, jsonif
 from datetime import datetime
 import random
 
+from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
+
 from backend.mongo_safe import get_db
 from backend.services.farmer.orders_service import OrderService
 from backend.services.farmer.crop_service import CropService
@@ -37,6 +39,26 @@ def _users_collection():
     return db, db.users
 
 
+def _get_farmer_id_web_or_jwt():
+    # 1) Web session auth
+    if session.get("role") == "farmer" and session.get("user_id"):
+        return session.get("user_id")
+
+    # 2) JWT auth (mobile)
+    try:
+        verify_jwt_in_request(optional=True)
+
+        user_id = get_jwt_identity()   # ✅ string now
+        claims = get_jwt() or {}
+        role = (claims.get("role") or "").lower()
+
+        if role == "farmer" and user_id:
+            return user_id
+        return None
+    except Exception:
+        return None
+
+
 # -------------------- PAGES --------------------
 
 @sales_bp.get("/orders")
@@ -58,6 +80,28 @@ def orders_page():
         active_page="sales",
         active_submenu="orders",
     )
+
+
+@sales_bp.get("/api/orders")
+def my_orders_api():
+    farmer_id= _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+    data= OrderService.list_orders_for_farmer(farmer_id)
+    return jsonify(
+        ok=True,
+        data={
+            "orders":data["orders"],
+            "total_active_orders": data["total_active_orders"],
+            "total_pending_orders":data["total_pending_orders"],
+            "total_delivered_orders":data["total_delivered_orders"],
+            "total_revenue":data["total_revenue"]
+        },
+    ), 200
+
+
+
+
 
 
 @sales_bp.get("/order/create")

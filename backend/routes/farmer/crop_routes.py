@@ -207,8 +207,10 @@ def add_crop_page(crop_id: str):
     )
 @crop_bp.post("/harvest/register")
 def register_harvest_api():
-    if session.get("role") != "farmer" or not session.get("user_id"):
-        return jsonify({"error": "unauthorized"}), 401
+    # ✅ support both web session and mobile JWT
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
 
     payload = request.get_json(silent=True) if request.is_json else request.form.to_dict()
 
@@ -218,9 +220,8 @@ def register_harvest_api():
         return jsonify({"ok": False, "error": "crop_id is required"}), 400
 
     try:
-        # (Optional) validate crop belongs to farmer (recommended)
-        farmer_id = session["user_id"]
-        crop = CropService.get_crop_detail(farmer_id, crop_id)  # <-- NOTE signature
+        # ✅ validate crop belongs to this farmer
+        crop = CropService.get_crop_detail(farmer_id, crop_id)
         if not crop:
             return jsonify({"ok": False, "error": "Crop not found"}), 404
 
