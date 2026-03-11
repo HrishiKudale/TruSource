@@ -88,14 +88,16 @@ def my_orders_api():
     if not farmer_id:
         return jsonify(ok=False, err="auth"), 401
     data= OrderService.list_orders_for_farmer(farmer_id)
+    total_active, total_pending, total_delivered, total_revenue = OrderService.get_kpis(farmer_id)
+
     return jsonify(
         ok=True,
         data={
             "orders":data["orders"],
-            "total_active_orders": data["total_active_orders"],
-            "total_pending_orders":data["total_pending_orders"],
-            "total_delivered_orders":data["total_delivered_orders"],
-            "total_revenue":data["total_revenue"]
+            "total_active": total_active,
+            "total_pending":total_pending,
+            "total_delivered":total_delivered,
+            "total_revenue":total_revenue
         },
     ), 200
 
