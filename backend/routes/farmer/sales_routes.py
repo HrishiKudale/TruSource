@@ -289,7 +289,7 @@ def orders_info_page(order_id: str):
     )
 
 @sales_bp.get("/order/<order_id>")
-def orders_info_page(order_id: str):
+def orders_info_page_api(order_id: str):
     farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
         return jsonify(ok=False, err="auth"), 401
