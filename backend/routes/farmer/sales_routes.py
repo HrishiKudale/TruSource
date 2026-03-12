@@ -287,3 +287,20 @@ def orders_info_page(order_id: str):
         active_submenu="orders",
         order=order,
     )
+
+@sales_bp.get("/order/<order_id>")
+def orders_info_page(order_id: str):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    order = OrderService.get_order_for_farmer(farmer_id, order_id)
+
+
+    return jsonify(
+        ok=True,
+        data={
+            "order": order,
+        },
+    ), 200
+
