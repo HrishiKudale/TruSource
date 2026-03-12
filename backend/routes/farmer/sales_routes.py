@@ -288,7 +288,7 @@ def orders_info_page(order_id: str):
         order=order,
     )
 
-@sales_bp.get("/order/<order_id>")
+@sales_bp.get("/api/order/<order_id>")
 def orders_info_page_api(order_id: str):
     farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
