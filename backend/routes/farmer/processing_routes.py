@@ -1,6 +1,7 @@
 # backend/routes/farmer/processing_routes.py
 
 from flask import Blueprint, render_template, session, jsonify, redirect, request, url_for, flash
+from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 
 from backend.mongo_safe import get_col
 from backend.services.farmer.processing_service import FarmerProcessingService
@@ -11,7 +12,26 @@ processing_bp = Blueprint(
     __name__,
     url_prefix="/farmer/processing",
 )
+def _get_farmer_id_web_or_jwt():
+    # 1) Web session auth
+    if session.get("role") == "farmer" and session.get("user_id"):
+        return session.get("user_id")
 
+    # 2) JWT auth (mobile)
+    try:
+        verify_jwt_in_request(optional=True)
+
+        user_id = get_jwt_identity()   # ✅ string now
+        claims = get_jwt() or {}
+        role = (claims.get("role") or "").lower()
+
+        if role == "farmer" and user_id:
+            return user_id
+        return None
+    except Exception:
+        return None
+
+  
 # ----------------- REQUEST PROCESSING PAGE (FORM) -----------------
 @processing_bp.get("/request")
 def request_processing_page():
@@ -142,24 +162,38 @@ def processing_detail(crop_id: str):
 # ----------------- JSON APIs -----------------
 @processing_bp.get("/api/overview")
 def processing_overview_api():
-    if session.get("role") != "farmer" or not session.get("user_id"):
-        return jsonify({"error": "unauthorized"}), 401
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
 
     farmer_id = session["user_id"]
     return jsonify(FarmerProcessingService.get_processing_overview(farmer_id))
 
+
+@processing_bp.get("/api/request")
+def processing_request_api():
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    farmer_id = session["user_id"]
+    return jsonify(CropService.get_my_crops(farmer_id))
+
+
 @processing_bp.get("/api/request/<request_id>")
 def processing_request_detail_api(request_id: str):
-    if session.get("role") != "farmer" or not session.get("user_id"):
-        return jsonify({"error": "unauthorized"}), 401
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
 
     farmer_id = session["user_id"]
     return jsonify(FarmerProcessingService.get_processing_request_detail(farmer_id, request_id))
 
 @processing_bp.get("/api/crop/<crop_id>")
 def processing_detail_api(crop_id: str):
-    if session.get("role") != "farmer" or not session.get("user_id"):
-        return jsonify({"error": "unauthorized"}), 401
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
 
     farmer_id = session["user_id"]
     return jsonify(FarmerProcessingService.get_processing_detail(farmer_id, crop_id))

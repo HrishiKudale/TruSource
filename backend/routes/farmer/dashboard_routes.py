@@ -86,6 +86,38 @@ def dashboard_page():
 # ----------------------------
 # dashboard_routes.py (inside your /farmer/dashboard/data handler)
 
+@dashboard_bp.get("/data-full")
+def farmer_dashboard_full_data():
+    # Authenticate using JWT or web cookie
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    try:
+        # Optional query param ?till=YYYY-MM-DD
+        till = request.args.get("till")
+
+        # Build full dashboard data
+        dashboard = DashboardService.build_dashboard(farmer_id, till_date=till)
+
+        # Get crop list
+        crop_data = CropService.get_my_crops(farmer_id)
+        crops = crop_data.get("crops", [])
+
+        # Return JSON instead of HTML template
+        return jsonify(
+            ok=True,
+            data={
+                "dashboard": dashboard,
+                "crops": crops
+            }
+        ), 200
+
+    except Exception as e:
+        import traceback
+        print("Dashboard error:", repr(e))
+        traceback.print_exc()
+        return jsonify(ok=False, err="server_error", message=str(e)), 500
 
 
 @dashboard_bp.get("/data")
