@@ -1,13 +1,38 @@
 from dataclasses import dataclass, asdict, field
 from typing import Any, Dict, List, Optional
 
-
 @dataclass
 class KPIBlock:
-    active_crops: int = 0
-    pending_payments: int = 0
-    buyer_offers: int = 0
-    upcoming_shipments: int = 0
+    total_products: int=0
+    requested_products: int =0
+    active_operations: int=0
+    processed_operations: int=0
+
+
+@dataclass
+class ProductMgmt:
+    total_products: int=0
+    requested_products: int =0
+    active_operations: int=0
+    processed_operations: int=0
+
+
+@dataclass
+class ProcessingOverview:
+    total_products: int=0
+    processing_service: int =0
+    processing_stage: int=0
+    processed_products: int=0
+
+
+
+@dataclass
+class PackagingOverview:
+    total_products: int=0
+    total_qrcode: int =0
+    total_rfid: int=0
+    inprocess: int=0
+
 
 
 @dataclass
@@ -37,11 +62,6 @@ class TaskItem:
     meta: Dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass
-class GeoBlock:
-    lat: str = ""
-    lng: str = ""
-    address: str = ""
 
 
 @dataclass
@@ -50,28 +70,20 @@ class CropMeta:
     crop_name: str = ""
     crop_type: str = ""
     grade: str = ""
-    planting_date: str = ""
-    harvest_date: str = ""
+    received_date: str = ""
+    processed_date: str = ""
+
 
 
 @dataclass
 class DashboardData:
     kpis: KPIBlock = field(default_factory=KPIBlock)
-    crops: List[str] = field(default_factory=lambda: ["Wheat"])
-    soil: Dict[str, Any] = field(default_factory=dict)
+    products: List[str] = field(default_factory=lambda:["Wheat"])
+    processing: ProcessingOverview = field(default_factory=ProcessingOverview)
     orders: OrdersOverview = field(default_factory=OrdersOverview)
     shipments: ShipmentsOverview = field(default_factory=ShipmentsOverview)
     pending_tasks: List[TaskItem] = field(default_factory=list)
-    warehouse_requests: List[TaskItem] = field(default_factory=list)
-    manufacturer_requests: List[TaskItem] = field(default_factory=list)
+    farmer_requests: List[TaskItem] = field(default_factory=list)
     weather_image_url: str = ""
-    geo: GeoBlock = field(default_factory=GeoBlock)
     crop_meta: CropMeta = field(default_factory=CropMeta)
-
-    def to_dict(self) -> Dict[str, Any]:
-        d = asdict(self)
-        # Convert TaskItem dataclasses to dict cleanly
-        d["pending_tasks"] = [asdict(x) for x in self.pending_tasks]
-        d["warehouse_requests"] = [asdict(x) for x in self.warehouse_requests]
-        d["manufacturer_requests"] = [asdict(x) for x in self.manufacturer_requests]
-        return d
+    

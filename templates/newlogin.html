@@ -1,259 +1,579 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
-    <style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        /* Global Styling */
-        body {
-            font-family: Arial, sans-serif;
-            background: url("{{ url_for('static', filename='images/login5.png') }}") no-repeat center center fixed;
-            background-size: cover;  /* Makes the background image cover the entire screen */
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            padding: 20px;
-            margin: 0;
-        }
+  <title>Precision Grow Login</title>
 
-        /* Add styles for any text, form, or other elements that need to be centered or aligned */
-        .container {
-            background-color: rgba(0, 0, 0, 0.2);  /* Optional: makes the container background slightly transparent */
-            padding: 70px;
-            border-radius: 10px;
-            text-align: center;
-            color: white;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-        .header {
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: white;
-        }
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      background: #fff;
+      color: #111;
+    }
 
-        input, select {
-            width: 100%;
-            padding: 12px;
-            margin: 12px 0;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            font-size: 16px;
-        }
+    /* LEFT SIDE */
+    .left-side {
+      width: 520px;
+      background: linear-gradient(
+        180deg,
+        #0F913D 0%,
+        #ABD9BB 0%,
+        #FFFFFF 100%
+      );
+      flex-shrink: 0;
+    }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: #388e3c;
-        }
+    /* RIGHT SIDE */
+    .right-side {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: #fff;
+    }
 
-        .button {
-            width: 110%;
-            padding: 15px;
-            background-color: #7e57c2;
-            border: none;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+    /* LOGO */
+    .logo-wrapper {
+      text-align: center;
+      margin-bottom: 35px;
+    }
 
-        .button:hover {
-            background-color: #5e35b1;
-        }
+    .logo-wrapper img {
+      width: 280px;
+    }
 
-        .password-container {
-            position: relative;
-        }
+    /* CARD */
+    .login-card {
+      width: 500px;
+      background: #fff;
+      border: 1px solid #E5E5E5;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.07);
+    }
 
-        .eye-icon {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-        }
+    /* TOGGLE */
+    .toggle-wrapper {
+      display: flex;
+      background: #F3F3F3;
+      border-radius: 8px;
+      padding: 5px;
+      margin-bottom: 26px;
+    }
 
-        .role-container {
-            margin-bottom: 20px;
-        }
+    .toggle-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      height: 42px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      color: #555;
+    }
 
-        .text-center {
-            text-align: center;
-            color: white;
-        }
+    .toggle-btn.active {
+      background: white;
+      color: #111;
+      font-weight: 600;
+    }
 
-        .signup-link {
-            color: #7e57c2;
-        }
+    /* LABELS */
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 15px;
+      color: #111;
+    }
 
-        /* Styling for the dropdown */
-        select {
-            background-color: #f1f1f1;
-            transition: background-color 0.3s;
-            width: 110%;
-        }
+    /* COMMON INPUT */
+    input,
+    select {
+      width: 100%;
+      height: 44px;
+      border: 1px solid #D6D6D6;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-size: 15px;
+      outline: none;
+      background: white;
+      margin-bottom: 24px;
+    }
 
-        select:hover {
-            background-color: #e8eaf6;
-        }
+    input:focus,
+    select:focus {
+      border-color: #0F913D;
+    }
 
-        .role-container label {
-            color: #388e3c;
-            font-size: 18px;
-        }
+    /* REMOVE DEFAULT PASSWORD EYE */
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear {
+      display: none;
+    }
 
-        /* Responsive Design for Mobile */
-        @media (max-width: 600px) {
-            .container {
-                padding: 30px;
-                width: 90%;
-            }
-        }
-                #loaderOverlay {
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        background: rgba(255,255,255,0.8);
-        z-index: 9999;
-        top: 0;
-        left: 0;
+    input[type="password"]::-webkit-credentials-auto-fill-button {
+      visibility: hidden;
+      display: none !important;
+      pointer-events: none;
+      position: absolute;
+      right: 0;
+    }
+
+    /* SELECT */
+    .field-input--select {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .field-input--select select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      margin-bottom: 0;
+      padding-right: 56px;
+      cursor: pointer;
+    }
+
+    /* GREY DROPDOWN BUTTON */
+    .field-input--select::after {
+      content: "";
+      position: absolute;
+      top: 1px;
+      right: 1px;
+
+      width: 44px;
+      height: 42px;
+
+      background: #F3F4F6;
+      border-left: 1px solid #D6D6D6;
+
+      border-top-right-radius: 7px;
+      border-bottom-right-radius: 7px;
+
+      pointer-events: none;
+    }
+
+    /* DROPDOWN ICON */
+    .select-chevron {
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
+      z-index: 2;
+      pointer-events: none;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sd-caret {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* PASSWORD */
+    .password-wrapper {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .password-wrapper input {
+      margin-bottom: 0;
+      padding-right: 56px;
+    }
+
+    /* EYE BUTTON */
+    .eye-btn {
+      position: absolute;
+      top: 1px;
+      right: 1px;
+
+      width: 44px;
+      height: 42px;
+
+      background: #F3F4F6;
+      border-left: 1px solid #D6D6D6;
+
+      border-top-right-radius: 7px;
+      border-bottom-right-radius: 7px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      cursor: pointer;
+    }
+
+    .eye-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: #555;
+    }
+
+    /* LOGIN BUTTON */
+    .login-btn {
+      width: 100%;
+      height: 42px;
+      border: none;
+      border-radius: 8px;
+      background: #B4B4B4;
+      color: white;
+      font-size: 18px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .login-btn:hover {
+      background: #0F913D;
+    }
+
+    /* SIGNUP */
+    .signup-row {
+      margin-top: 24px;
+      font-size: 14px;
+    }
+
+    .signup-row a {
+      color: #0F913D;
+      text-decoration: underline;
+    }
+
+    /* FOOTER */
+    .footer-links {
+      margin-top: 14px;
+      display: flex;
+      gap: 14px;
+      font-size: 14px;
+    }
+
+    .footer-links a {
+      color: #666;
+    }
+
+
+/* LOADER OVERLAY */
+#loaderOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.82);
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+
+  backdrop-filter: blur(2px);
+}
+
+/* VIDEO LOADER */
+#loader-video {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+}
+
+    /* MOBILE */
+    @media (max-width: 900px) {
+      .left-side {
         display: none;
-        align-items: center;
-        justify-content: center;
-        }
+      }
 
-        .spinner {
-        border: 6px solid #f3f3f3;
-        border-top: 6px solid #388e3c;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 0.8s linear infinite;
-        }
+      .login-card {
+        width: 100%;
+        max-width: 500px;
+      }
 
-        @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-        }
-
-    </style>
+      body {
+        overflow-y: auto;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-    <div class="container">
-        <h1 class="header">Welcome to Traceability</h1>
-        <form id="loginForm">
-            <input type="email" id="email" name="email" placeholder="Email" required><br>
-            <div class="password-container">
-                <input type="password" id="password" name="password" placeholder="Password" required><br>
-                <span class="eye-icon" onclick="togglePasswordVisibility()">👁️</span>
-            </div>
-            <div class="role-container">
-                <label for="role">Role</label>
-                <select id="role" name="role" required>
-                    <option value="farmer">Farmer</option>
-                    <option value="manufacturer">Manufacturer</option>
-                    <option value="distributor">Distributor</option>
-                    <option value="transporter">Transporter</option>
-                    <option value="warehousing">Warehousing</option>
-                    <option value="retailer">Retailer</option>
-                </select><br>
-            </div>
-            <button type="submit" class="button" id="submitBtn">Login</button>
-        </form>
-        <p class="text-center">
-            Don't have an account? <a href="/newregister" class="signup-link">Sign up</a>
-        </p>
+  <!-- LEFT -->
+  <div class="left-side"></div>
+
+  <!-- RIGHT -->
+  <div class="right-side">
+
+    <!-- LOGO -->
+    <div class="logo-wrapper">
+      <img
+        src="{{ url_for('static', filename='images/PrecisionGrow.svg') }}"
+        alt="Precision Grow">
     </div>
+
+    <!-- CARD -->
+    <div class="login-card">
+
+      <!-- TOGGLE -->
+      <div class="toggle-wrapper">
+        <button type="button" class="toggle-btn active">
+          User
+        </button>
+
+        <button type="button" class="toggle-btn">
+          Admin
+        </button>
+      </div>
+
+      <!-- FORM -->
+      <form id="loginForm">
+
+        <!-- ROLE -->
+        <label>Select Role</label>
+
+        <div class="field-input--select">
+
+          <select id="role" name="role" required>
+            <option value="farmer">Farmer</option>
+            <option value="manufacturer">Manufacturer</option>
+            <option value="distributor">Distributor</option>
+            <option value="transporter">Transporter</option>
+            <option value="warehousing">Warehousing</option>
+            <option value="retailer">Retailer</option>
+          </select>
+
+          <span class="select-chevron">
+            <img
+              class="sd-caret"
+              src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+              alt="dropdown">
+          </span>
+
+        </div>
+
+        <!-- EMAIL -->
+        <label>Email</label>
+
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Enter email"
+          required>
+
+        <!-- PASSWORD -->
+        <label>Password</label>
+
+        <div class="password-wrapper">
+
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter password"
+            required>
+
+          <div
+            class="eye-btn"
+            onclick="togglePasswordVisibility()">
+
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M1 12C1 12 5 5 12 5C19 5 23 12 23 12C23 12 19 19 12 19C5 19 1 12 1 12Z"
+                stroke-width="2" />
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+                stroke-width="2" />
+            </svg>
+
+          </div>
+
+        </div>
+
+        <!-- LOGIN -->
+        <button type="submit" class="login-btn">
+          Login
+        </button>
+
+      </form>
+
+      <!-- SIGNUP -->
+      <div class="signup-row">
+        New to Precision Grow?
+        <a href="/newregister">Create New Account</a>
+        →
+      </div>
+
+      <!-- FOOTER -->
+      <div class="footer-links">
+        <a href="#">Help</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+
+    </div>
+
+  </div>
+
+
+<!-- LOADER -->
+<div id="loaderOverlay">
+
+  <video id="loader-video"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto">
+
+    <source
+      src="{{ url_for('media.stream_media', filename='loading.webm') }}"
+      type="video/webm">
+
+  </video>
+
+</div>
+
 <script>
   const AUTH_BASE = "https://trusource.onrender.com";
 
+  /* PASSWORD TOGGLE */
+  function togglePasswordVisibility() {
+    const passwordInput = document.getElementById("password");
+
+    passwordInput.type =
+      passwordInput.type === "password" ? "text" : "password";
+  }
+
+  /* WAKE AUTH SERVICE */
   async function warmupAuthService(maxWaitMs = 25000) {
+
     const started = Date.now();
     let attempt = 0;
 
     while (Date.now() - started < maxWaitMs) {
-      attempt += 1;
+
+      attempt++;
+
       try {
-        console.log("[warmup] hitting:", `${AUTH_BASE}/health`);
         const res = await fetch(`${AUTH_BASE}/health`, {
           method: "GET",
           cache: "no-store",
           mode: "cors",
         });
-        console.log("[warmup] status:", res.status);
+
         if (res.ok) return true;
+
       } catch (e) {
-        console.log("[warmup] error:", e?.message || e);
+        console.log(e);
       }
 
-      await new Promise((r) => setTimeout(r, Math.min(800 * attempt, 3000)));
+      await new Promise((r) =>
+        setTimeout(r, Math.min(800 * attempt, 3000))
+      );
     }
+
     return false;
   }
 
-  document.getElementById("loginForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
+  /* LOGIN */
+  document
+    .getElementById("loginForm")
+    .addEventListener("submit", async function (e) {
 
-    // show loader
-    const overlay = document.getElementById("loaderOverlay");
-    if (overlay) overlay.style.display = "flex";
+      e.preventDefault();
 
-    // ✅ warmup FIRST
-    const ok = await warmupAuthService();
-    if (!ok) {
-      if (overlay) overlay.style.display = "none";
-      alert("Auth service is waking up. Please try again in a few seconds.");
-      return;
-    }
+      const overlay = document.getElementById("loaderOverlay");
 
-    // then normal login
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const role = document.getElementById("role").value;
+      /* SHOW LOADING VIDEO */
+      overlay.style.display = "flex";
 
-    try {
-      const resp = await fetch("/newlogin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role }),
-      });
+      /* warmup */
+      const ok = await warmupAuthService();
 
-      const data = await resp.json();
-
-      if (data.success) {
-        switch (data.role) {
-          case "farmer": window.location.href = "/farmer/dashboard"; break;
-          case "manufacturer": window.location.href = "/manufacturer/dashboard"; break;
-          case "distributor": window.location.href = "/distributor/dashboard"; break;
-          case "transporter": window.location.href = "/transporter/dashboard"; break;
-          case "warehousing": window.location.href = "/warehouse/dashboard"; break;
-          case "retailer": window.location.href = "/retailer/dashboard"; break;
-          default:
-            alert("Role is invalid");
-            if (overlay) overlay.style.display = "none";
-        }
-      } else {
-        alert(data.message || "Login failed");
-        if (overlay) overlay.style.display = "none";
+      if (!ok) {
+        overlay.style.display = "none";
+        alert("Auth service is waking up. Please try again.");
+        return;
       }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred during login. Please try again.");
-      if (overlay) overlay.style.display = "none";
-    }
-  });
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+
+      try {
+
+        const resp = await fetch("/newlogin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+
+          body: JSON.stringify({
+            email,
+            password,
+            role
+          }),
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+
+          switch (data.role) {
+            case "farmer":
+              window.location.href = "/farmer/dashboard";
+              break;
+
+            case "manufacturer":
+              window.location.href = "/manufacturer/dashboard";
+              break;
+
+            case "distributor":
+              window.location.href = "/distributor/dashboard";
+              break;
+
+            case "transporter":
+              window.location.href = "/transporter/dashboard";
+              break;
+
+            case "warehousing":
+              window.location.href = "/warehouse/dashboard";
+              break;
+
+            case "retailer":
+              window.location.href = "/retailer/dashboard";
+              break;
+
+            default:
+              alert("Invalid role");
+              overlay.style.display = "none";
+          }
+
+        } else {
+          alert(data.message || "Login failed");
+          overlay.style.display = "none";
+        }
+
+      } catch (err) {
+
+        console.error(err);
+
+        alert("An error occurred during login.");
+        overlay.style.display = "none";
+      }
+    });
 </script>
 
-<!-- Loader Overlay -->
-<div id="loaderOverlay">
-  <div class="spinner"></div>
-</div>
-
 </body>
+
 </html>

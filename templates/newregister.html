@@ -1,172 +1,420 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Signup Page</title>
+
   <style>
-    /* Styling for the form */
+    
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: url("{{ url_for('static', filename='images/login5.png') }}") no-repeat center center fixed;
-      background-size: cover; 
-      min-height: 100vh;
+      font-family: sans-serif;
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      color: black;
+    }
+
+    /* LEFT GRADIENT PANEL */
+    .left-side {
+      width: 520px;
+      background: linear-gradient(180deg,
+          #0F913D 0%,
+          #ABD9BB 0%,
+          #FFFFFF 100%);
+    }
+
+    /* RIGHT SIDE PANEL */
+    .right-side {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* LOGO */
+    .logo {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .logo img {
+      width: 270px;
+      height: auto;
+      display: inline-block;
+    }
+
+    /* CARD */
+    .card {
+      width: 500px;
+      padding: 25px 30px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.07);
+    }
+
+    /* PROGRESS BAR */
+    .progress-container {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 35px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .progress-bar {
+      width: 30%;
+      height: 4px;
+      background: #E6E6E6;
+      border-radius: 3px;
+      opacity: 0.4;
+      transition: 0.3s ease;
+    }
+
+    .progress-bar.active {
+      background: #0F913D;
+      opacity: 1;
+    }
+
+    /* LABELS */
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 15px;
+      font-weight: 200;
+    }
+
+    /* INPUTS */
+    input,
+    select {
+      width: 100%;
+      height: 42px;
+      padding: 12px 14px;
+      border: 1px solid #D6D6D6;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      outline: none;
+      background: white;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #0F913D;
+    }
+
+    /* CUSTOM SELECT */
+    .select-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .select-wrapper select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding-right: 45px;
+      cursor: pointer;
+    }
+
+    .select-chevron {
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
+      pointer-events: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
-      color: white;
     }
-    .container {
-      background-color: rgba(0, 0, 0, 0.2);  
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    .sd-caret {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* BUTTON */
+    .btn {
       width: 100%;
-      max-width: 300px;
-      max-height: 700px;
-    }
-    .header {
-      text-align: center;
-      font-size: 24px;
-      margin-bottom: 20px;
+      padding: 12px;
+      font-size: 15px;
+      border: none;
+      border-radius: 6px;
+      background: #0F913D;
       color: white;
+      cursor: pointer;
+      transition: 0.2s ease;
     }
+
+    .btn:hover {
+      background: #0c6f2f;
+    }
+
+    /* FORM SECTIONS */
     .form-section {
       display: none;
     }
+
     .form-section.active {
       display: block;
     }
-    input, select {
-      width: 90%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    .button {
-      width: 100%;
-      padding: 10px;
-      background-color: #7e57c2;
-      border: none;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
+
+    /* FOOTER */
+    .footer-text {
       font-size: 14px;
+      margin-top: 20px;
+      margin-bottom: 2px;
+      text-align: start;
     }
-    .button:hover {
-      background-color: #5e35b1;
+
+    .footer-text a {
+      color: #0F913D;
+      text-decoration: none;
     }
-    .button:disabled {
-      background-color: #ddd;
-      cursor: not-allowed;
-    }
+
+
+/* INPUTS */
+input,
+select {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #D6D6D6;
+  border-radius: 8px;
+  font-size: 15px;
+  margin-bottom: 22px;
+  outline: none;
+  background: white;
+  line-height: 42px;
+}
+
+input {
+  display: block;
+}
+
+/* SELECT FIELD */
+.field-input--select {
+  position: relative;
+  width: 100%;
+}
+
+/* REMOVE DEFAULT ARROW */
+.field-input--select select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  padding-right: 52px;
+  cursor: pointer;
+}
+
+/* GREY RIGHT SECTION */
+.field-input--select::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+
+  width: 44px;
+  height: 42px;
+
+  background: #F3F4F6;
+  border-left: 1px solid #D6D6D6;
+  border-right: 1px solid #D6D6D6;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+
+  pointer-events: none;
+}
+
+/* CHEVRON */
+.select-chevron {
+  position: absolute;
+  top: 35%;
+  right: 14px;
+  transform: translateY(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* CARET */
+.sd-caret {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+
+
+
+    
+
+    
   </style>
 </head>
+
 <body>
 
-  <div class="container">
-    <h1 class="header">Sign Up</h1>
+  <!-- LEFT SIDE -->
+  <div class="left-side"></div>
 
-    <form id="signupForm" action="/newregister" method="POST">
-      <!-- Step 1: Basic Info -->
-      <div id="step1Section" class="form-section active">
-        <input type="text" name="name" id="name" placeholder="Full Name" required>
-        <input type="email" name="email" id="email" placeholder="Email" required>
-        <input type="password" name="password" id="password" placeholder="Password" required>
-        <button type="button" class="button" onclick="nextStep(2)">Next</button>
+  <!-- RIGHT SIDE -->
+  <div class="right-side">
+
+    <!-- LOGO -->
+    <div class="logo">
+      <img src="/static/images/PrecisionGrow.svg" alt="Precision Grow Logo" />
+    </div>
+
+    <!-- CARD -->
+    <div class="card">
+
+      <!-- PROGRESS BAR -->
+      <div class="progress-container">
+        <div class="progress-bar active" id="bar1" onclick="jumpTo(1)"></div>
+        <div class="progress-bar" id="bar2" onclick="jumpTo(2)"></div>
+        <div class="progress-bar" id="bar3" onclick="jumpTo(3)"></div>
       </div>
 
-      <!-- Step 2: Contact Info -->
-      <div id="step2Section" class="form-section">
-        <input type="text" name="phone" id="phone" placeholder="Phone" required>
-        <input type="text" name="location" id="location" placeholder="Location" required>
-        <select name="role" id="role" required>
-          <option value="">Select Role</option>
-          <option value="farmer">Farmer</option>
-          <option value="manufacturer">Manufacturer</option>
-          <option value="distributor">Distributor</option>
-          <option value="retailer">Retailer</option>
-          <option value="transporter">Transporter</option>
-          <option value="warehousing">Warehousing</option>
-        </select>
-        <button type="button" class="button" onclick="prevStep(1)">Back</button>
-        <button type="button" class="button" onclick="nextStep(3)">Next</button>
-      </div>
+      <!-- FORM -->
+      <form id="signupForm" action="/newregister" method="POST">
 
-      <!-- Step 3: Additional Info -->
-      <div id="step3Section" class="form-section">
-        <div id="addressSection" class="additional-info">
-          <input type="text" name="address" id="address" placeholder="Address (for farmers)">
+<!-- STEP 1 -->
+<div id="step1Section" class="form-section active">
+
+  <label>Select Role</label>
+
+  <!-- SELECT FIELD -->
+  <div class="field-input field-input--select">
+
+    <select name="role" id="role" required>
+      <option value="">Select role</option>
+      <option value="farmer">Farmer</option>
+      <option value="manufacturer">Manufacturer</option>
+      <option value="distributor">Distributor</option>
+      <option value="retailer">Retailer</option>
+      <option value="transporter">Transporter</option>
+      <option value="warehousing">Warehousing</option>
+    </select>
+
+    <span class="select-chevron">
+      <img class="sd-caret"
+        src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+        alt="dropdown">
+    </span>
+
+  </div>
+
+  <label>Name</label>
+
+  <input type="text"
+    name="name"
+    id="name"
+    placeholder="Enter name"
+    required />
+
+  <button type="button" class="btn" onclick="nextStep(2)">
+    Next
+  </button>
+
+</div>
+
+        <!-- STEP 2 -->
+        <div id="step2Section" class="form-section">
+
+          <label>Email</label>
+          <input type="email" name="email" id="email" required />
+
+          <label>Password</label>
+          <input type="password" name="password" id="password" required />
+
+          <button type="button" class="btn" onclick="nextStep(3)">
+            Next
+          </button>
+
         </div>
-        <div id="officeInfoSection" class="additional-info">
-          <input type="text" name="officeName" id="officeName" placeholder="Office Name (for others)">
-          <input type="text" name="officeAddress" id="officeAddress" placeholder="Office Address (for others)">
-          <input type="text" name="gstNumber" id="gstNumber" placeholder="GST Number (for others)">
+
+        <!-- STEP 3 -->
+        <div id="step3Section" class="form-section">
+
+          <label>Phone</label>
+          <input type="text" name="phone" id="phone" required />
+
+          <label>Location</label>
+          <input type="text" name="location" id="location" required />
+
+          <label>Address</label>
+          <input type="text" name="address" />
+
+          <label>Office Name</label>
+          <input type="text" name="officeName" />
+
+          <label>Office Address</label>
+          <input type="text" name="officeAddress" />
+
+          <label>GST Number</label>
+          <input type="text" name="gstNumber" />
+
+          <button type="submit" class="btn">
+            Submit
+          </button>
+
         </div>
-        <button type="button" class="button" onclick="prevStep(2)">Back</button>
-        <button type="submit" class="button">Submit</button>
-      </div>
-    </form>
+
+      </form>
+
+      <p class="footer-text">
+        Already have an account?
+        <a href="/newlogin">Login →</a>
+      </p>
+
+    </div>
   </div>
 
   <script>
     let step = 1;
 
+    function updateProgress() {
+      document.getElementById("bar1").classList.toggle("active", step >= 1);
+      document.getElementById("bar2").classList.toggle("active", step >= 2);
+      document.getElementById("bar3").classList.toggle("active", step >= 3);
+    }
+
+    function showStep() {
+      document.querySelectorAll(".form-section")
+        .forEach(s => s.classList.remove("active"));
+
+      document.getElementById(`step${step}Section`)
+        .classList.add("active");
+
+      updateProgress();
+    }
+
     function nextStep(newStep) {
-      if (step === 1 && !validateStep1()) return;
-      if (step === 2 && !validateStep2()) return;
-      if (step === 3 && !validateStep3()) return;
-
-      document.getElementById(`step${step}Section`).classList.remove('active');
-      document.getElementById(`step${newStep}Section`).classList.add('active');
-      
       step = newStep;
+      showStep();
     }
 
-    function prevStep(prevStep) {
-      document.getElementById(`step${step}Section`).classList.remove('active');
-      document.getElementById(`step${prevStep}Section`).classList.add('active');
-      
-      step = prevStep;
-    }
-
-    function validateStep1() {
-      const name = document.getElementById("name").value;
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      if (!name || !email || !password || password.length < 6) {
-        alert("Please fill in all fields and make sure the password is at least 6 characters long.");
-        return false;
+    function jumpTo(targetStep) {
+      if (targetStep < step) {
+        step = targetStep;
+        showStep();
       }
-      return true;
-    }
-
-    function validateStep2() {
-      const phone = document.getElementById("phone").value;
-      const location = document.getElementById("location").value;
-      const role = document.getElementById("role").value;
-      if (!phone || !location || !role) {
-        alert("Please fill in all fields.");
-        return false;
-      }
-      return true;
-    }
-
-    function validateStep3() {
-      const role = document.getElementById("role").value;
-      if (role === "farmer" && !document.getElementById("address").value) {
-        alert("Please provide your address.");
-        return false;
-      }
-      if (role !== "farmer" && (!document.getElementById("officeName").value || !document.getElementById("officeAddress").value || !document.getElementById("gstNumber").value)) {
-        alert("Please provide all office details and GST number.");
-        return false;
-      }
-      return true;
     }
   </script>
 
 </body>
+
 </html>
