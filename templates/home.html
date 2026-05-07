@@ -1,136 +1,579 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <title>🌾 Crop Traceability System</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Precision Grow Login</title>
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-            background: url("{{ url_for('static', filename='images/login5.png') }}") no-repeat center center fixed;
-            background-size: cover;  /* Makes the background image cover the entire screen */
-
-      color: #1b5e20;
-      padding: 20px;
-      text-align: center;
+      font-family: sans-serif;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      background: #fff;
+      color: #111;
     }
 
-    .hero img {
-      width: 220px;
-      height: 220px;
-      object-fit: cover;
-      border-radius: 50%;
-      border: 6px solid #a5d6a7;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      margin-top: 10px;
+    /* LEFT SIDE */
+    .left-side {
+      width: 520px;
+      background: linear-gradient(
+        180deg,
+        #0F913D 0%,
+        #ABD9BB 0%,
+        #FFFFFF 100%
+      );
+      flex-shrink: 0;
     }
 
-    h1 {
-      font-size: 2rem;
-      margin: 15px 0 5px;
-    }
-
-    .tagline {
-      font-size: 1.1rem;
-      color: #4e734e;
-      margin-bottom: 30px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      justify-content: center;
-      max-width: 480px;
-      margin: 0 auto;
-    }
-
-    .button-card {
-      background-color: #ffffffdd;
-      padding: 6px 4px;
-      border-radius: 12px;
-      border: 2px solid #c8e6c9;
-      text-decoration: none;
-      color: #1b5e20;
-      font-weight: 600;
-      font-size: 0.85rem;
+    /* RIGHT SIDE */
+    .right-side {
+      flex: 1;
       display: flex;
       flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: #fff;
+    }
+
+    /* LOGO */
+    .logo-wrapper {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .logo-wrapper img {
+      width: 280px;
+    }
+
+    /* CARD */
+    .login-card {
+      width: 500px;
+      background: #fff;
+      border: 1px solid #E5E5E5;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.07);
+    }
+
+    /* TOGGLE */
+    .toggle-wrapper {
+      display: flex;
+      background: #F3F3F3;
+      border-radius: 8px;
+      padding: 5px;
+      margin-bottom: 26px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      height: 42px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      color: #555;
+    }
+
+    .toggle-btn.active {
+      background: white;
+      color: #111;
+      font-weight: 600;
+    }
+
+    /* LABELS */
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 15px;
+      color: #111;
+    }
+
+    /* COMMON INPUT */
+    input,
+    select {
+      width: 100%;
+      height: 44px;
+      border: 1px solid #D6D6D6;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-size: 15px;
+      outline: none;
+      background: white;
+      margin-bottom: 24px;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #0F913D;
+    }
+
+    /* REMOVE DEFAULT PASSWORD EYE */
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear {
+      display: none;
+    }
+
+    input[type="password"]::-webkit-credentials-auto-fill-button {
+      visibility: hidden;
+      display: none !important;
+      pointer-events: none;
+      position: absolute;
+      right: 0;
+    }
+
+    /* SELECT */
+    .field-input--select {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .field-input--select select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      margin-bottom: 0;
+      padding-right: 56px;
+      cursor: pointer;
+    }
+
+    /* GREY DROPDOWN BUTTON */
+    .field-input--select::after {
+      content: "";
+      position: absolute;
+      top: 1px;
+      right: 1px;
+
+      width: 44px;
+      height: 42px;
+
+      background: #F3F4F6;
+      border-left: 1px solid #D6D6D6;
+
+      border-top-right-radius: 7px;
+      border-bottom-right-radius: 7px;
+
+      pointer-events: none;
+    }
+
+    /* DROPDOWN ICON */
+    .select-chevron {
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
+      z-index: 2;
+      pointer-events: none;
+
+      display: flex;
       align-items: center;
       justify-content: center;
-      aspect-ratio: 2 / 1;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .button-card span {
-      font-size: 0.72rem;
-      color: #555;
-      margin-top: 4px;
+    .sd-caret {
+      width: 16px;
+      height: 16px;
     }
 
-    .button-card:hover {
-      transform: scale(1.03);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+    /* PASSWORD */
+    .password-wrapper {
+      position: relative;
+      margin-bottom: 24px;
     }
 
-    footer {
-      margin-top: 40px;
-      font-size: 0.85rem;
-      color: #4e734e;
+    .password-wrapper input {
+      margin-bottom: 0;
+      padding-right: 56px;
     }
 
-    @media (max-width: 600px) {
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+    /* EYE BUTTON */
+    .eye-btn {
+      position: absolute;
+      top: 1px;
+      right: 1px;
+
+      width: 44px;
+      height: 42px;
+
+      background: #F3F4F6;
+      border-left: 1px solid #D6D6D6;
+
+      border-top-right-radius: 7px;
+      border-bottom-right-radius: 7px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      cursor: pointer;
+    }
+
+    .eye-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: #555;
+    }
+
+    /* LOGIN BUTTON */
+    .login-btn {
+      width: 100%;
+      height: 42px;
+      border: none;
+      border-radius: 8px;
+      background: #B4B4B4;
+      color: white;
+      font-size: 18px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .login-btn:hover {
+      background: #0F913D;
+    }
+
+    /* SIGNUP */
+    .signup-row {
+      margin-top: 24px;
+      font-size: 14px;
+    }
+
+    .signup-row a {
+      color: #0F913D;
+      text-decoration: underline;
+    }
+
+    /* FOOTER */
+    .footer-links {
+      margin-top: 14px;
+      display: flex;
+      gap: 14px;
+      font-size: 14px;
+    }
+
+    .footer-links a {
+      color: #666;
+    }
+
+
+/* LOADER OVERLAY */
+#loaderOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.82);
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+
+  backdrop-filter: blur(2px);
+}
+
+/* VIDEO LOADER */
+#loader-video {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+}
+
+    /* MOBILE */
+    @media (max-width: 900px) {
+      .left-side {
+        display: none;
       }
 
-      .button-card {
-        padding: 12px 8px;
-        font-size: 0.85rem;
+      .login-card {
+        width: 100%;
+        max-width: 500px;
       }
 
-      .hero img {
-        width: 180px;
-        height: 140px;
-      }
-
-      h1 {
-        font-size: 1.5rem;
-      }
-
-      .tagline {
-        font-size: 1rem;
-      }
-
-      footer {
-        font-size: 0.75rem;
+      body {
+        overflow-y: auto;
       }
     }
   </style>
 </head>
+
 <body>
 
-  <div class="hero">
-    <img src="{{ url_for('static', filename='images/Precision Grow LOGO round-03.png') }}" alt="Farmer Logo" />
-    <h1>🌾 Product Traceability System</h1>
-    <p class="tagline">Empowering farmers and consumers with blockchain-powered food transparency.</p>
+  <!-- LEFT -->
+  <div class="left-side"></div>
+
+  <!-- RIGHT -->
+  <div class="right-side">
+
+    <!-- LOGO -->
+    <div class="logo-wrapper">
+      <img
+        src="{{ url_for('static', filename='images/PrecisionGrow.svg') }}"
+        alt="Precision Grow">
+    </div>
+
+    <!-- CARD -->
+    <div class="login-card">
+
+      <!-- TOGGLE -->
+      <div class="toggle-wrapper">
+        <button type="button" class="toggle-btn active">
+          User
+        </button>
+
+        <button type="button" class="toggle-btn">
+          Admin
+        </button>
+      </div>
+
+      <!-- FORM -->
+      <form id="loginForm">
+
+        <!-- ROLE -->
+        <label>Select Role</label>
+
+        <div class="field-input--select">
+
+          <select id="role" name="role" required>
+            <option value="farmer">Farmer</option>
+            <option value="manufacturer">Manufacturer</option>
+            <option value="distributor">Distributor</option>
+            <option value="transporter">Transporter</option>
+            <option value="warehousing">Warehousing</option>
+            <option value="retailer">Retailer</option>
+          </select>
+
+          <span class="select-chevron">
+            <img
+              class="sd-caret"
+              src="{{ url_for('static', filename='svg-icons/CaretDownProperty 1=Regular.svg') }}"
+              alt="dropdown">
+          </span>
+
+        </div>
+
+        <!-- EMAIL -->
+        <label>Email</label>
+
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Enter email"
+          required>
+
+        <!-- PASSWORD -->
+        <label>Password</label>
+
+        <div class="password-wrapper">
+
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter password"
+            required>
+
+          <div
+            class="eye-btn"
+            onclick="togglePasswordVisibility()">
+
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M1 12C1 12 5 5 12 5C19 5 23 12 23 12C23 12 19 19 12 19C5 19 1 12 1 12Z"
+                stroke-width="2" />
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+                stroke-width="2" />
+            </svg>
+
+          </div>
+
+        </div>
+
+        <!-- LOGIN -->
+        <button type="submit" class="login-btn">
+          Login
+        </button>
+
+      </form>
+
+      <!-- SIGNUP -->
+      <div class="signup-row">
+        New to Precision Grow?
+        <a href="/newregister">Create New Account</a>
+        →
+      </div>
+
+      <!-- FOOTER -->
+      <div class="footer-links">
+        <a href="#">Help</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+
+    </div>
+
   </div>
 
-  <div class="grid">
-    <a href="/newregister" class="button-card">🌱 Farmer<span>(Plantation & Harvest)</span></a>
-    <a href="/newlogin" class="button-card">🏭 Manufacturer<span></span>(Processing)</a>
-    <a href="/newlogin" class="button-card">🚚 Distributor<span>(Log Entry)</span></a>
-    <a href="/newlogin" class="button-card">🛒 Retailer<span>(Update Status)</span></a>
-    <a href="/owner_panel" class="button-card">🔐 Admin<span>(Monitor & Verify)</span></a>
-    <a href="/consumer/scan" class="button-card">🔍 Track Product<span>(Consumer)</span></a>
-  </div>
 
-  <footer>
-    © 2025 PrecisionGrow | Built with ⚙️ Blockchain & Agri-Tech
-  </footer>
+<!-- LOADER -->
+<div id="loaderOverlay">
+
+  <video id="loader-video"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto">
+
+    <source
+      src="{{ url_for('media.stream_media', filename='loading.webm') }}"
+      type="video/webm">
+
+  </video>
+
+</div>
+
+<script>
+  const AUTH_BASE = "https://trusource.onrender.com";
+
+  /* PASSWORD TOGGLE */
+  function togglePasswordVisibility() {
+    const passwordInput = document.getElementById("password");
+
+    passwordInput.type =
+      passwordInput.type === "password" ? "text" : "password";
+  }
+
+  /* WAKE AUTH SERVICE */
+  async function warmupAuthService(maxWaitMs = 25000) {
+
+    const started = Date.now();
+    let attempt = 0;
+
+    while (Date.now() - started < maxWaitMs) {
+
+      attempt++;
+
+      try {
+        const res = await fetch(`${AUTH_BASE}/health`, {
+          method: "GET",
+          cache: "no-store",
+          mode: "cors",
+        });
+
+        if (res.ok) return true;
+
+      } catch (e) {
+        console.log(e);
+      }
+
+      await new Promise((r) =>
+        setTimeout(r, Math.min(800 * attempt, 3000))
+      );
+    }
+
+    return false;
+  }
+
+  /* LOGIN */
+  document
+    .getElementById("loginForm")
+    .addEventListener("submit", async function (e) {
+
+      e.preventDefault();
+
+      const overlay = document.getElementById("loaderOverlay");
+
+      /* SHOW LOADING VIDEO */
+      overlay.style.display = "flex";
+
+      /* warmup */
+      const ok = await warmupAuthService();
+
+      if (!ok) {
+        overlay.style.display = "none";
+        alert("Auth service is waking up. Please try again.");
+        return;
+      }
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+
+      try {
+
+        const resp = await fetch("/newlogin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+
+          body: JSON.stringify({
+            email,
+            password,
+            role
+          }),
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+
+          switch (data.role) {
+            case "farmer":
+              window.location.href = "/farmer/dashboard";
+              break;
+
+            case "manufacturer":
+              window.location.href = "/manufacturer/dashboard";
+              break;
+
+            case "distributor":
+              window.location.href = "/distributor/dashboard";
+              break;
+
+            case "transporter":
+              window.location.href = "/transporter/dashboard";
+              break;
+
+            case "warehousing":
+              window.location.href = "/warehouse/dashboard";
+              break;
+
+            case "retailer":
+              window.location.href = "/retailer/dashboard";
+              break;
+
+            default:
+              alert("Invalid role");
+              overlay.style.display = "none";
+          }
+
+        } else {
+          alert(data.message || "Login failed");
+          overlay.style.display = "none";
+        }
+
+      } catch (err) {
+
+        console.error(err);
+
+        alert("An error occurred during login.");
+        overlay.style.display = "none";
+      }
+    });
+</script>
 
 </body>
+
 </html>
