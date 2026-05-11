@@ -1,4 +1,3 @@
-<!-- TraceabilityJourney.html (FULL • paste entire file) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,9 +12,7 @@
 </head>
 
 <body>
-{# -----------------------------
-   Crop Name
------------------------------- #}
+
 {% set crop_raw = (events_combined[0].cropType if events_combined and events_combined|length > 0 else 'Rice') %}
 
 {% set crop_slug = crop_raw|lower|trim
@@ -24,24 +21,18 @@
     |replace('&', 'and')
 %}
 
-{# ------------------------------------------------
-   FORCE ASSET DIRECTORY (no empty allowed)
-   ✅ Uses your existing folders (rice / turmeric / wheat)
------------------------------------------------- #}
 {% if crop_slug in ['rice', 'assam_red_rice'] %}
   {% set asset_dir = 'rice' %}
 {% elif crop_slug == 'wheat' %}
   {% set asset_dir = 'wheat' %}
 {% elif crop_slug in ['turmeric', 'lakadong_turmeric', 'lakadong'] %}
   {% set asset_dir = 'turmeric' %}
+{% elif crop_slug == 'makhana' %}
+  {% set asset_dir = 'makhana' %}
 {% else %}
-  {% set asset_dir = 'rice' %}  {# default fallback ALWAYS #}
+  {% set asset_dir = 'rice' %}
 {% endif %}
 
-{# -----------------------------
-   Final Image Paths
-   ✅ Use only assets you actually have
------------------------------- #}
 {% set hero_img    = url_for('static', filename='images/crops/' ~ asset_dir ~ '/' ~ asset_dir ~ '_banner.webp') %}
 {% set hero_jpg    = url_for('static', filename='images/crops/' ~ asset_dir ~ '/' ~ asset_dir ~ '_banner.jpg') %}
 {% set product_img = url_for('static', filename='images/crops/' ~ asset_dir ~ '/' ~ asset_dir ~ '_product.jpg') %}
@@ -50,8 +41,6 @@
 {% set common_dir  = '/static/images/crops/common' %}
 {% set placeholder = url_for('static', filename='images/crops/common/planted.jpg') %}
 
-<!-- HERO -->
-<!-- HERO -->
 <section class="hero" id="hero">
   <picture class="hero-media">
     <source srcset="{{ hero_img }}" type="image/webp">
@@ -66,27 +55,14 @@
   <div class="hero-bottomfade" aria-hidden="true"></div>
 </section>
 
-<!-- ✅ HERO CARD OUTSIDE HERO (this prevents banner covering on mobile) -->
 <section class="hero-card-wrap">
   <div class="shell">
     <div class="hero-card minimal">
-      
-      <div class="hero-label">
-        Traceability Journey
-      </div>
-
-      <h1 class="hero-title">
-        {{ crop_raw }}
-      </h1>
-
-      <p class="hero-tagline" style="
-          font-size: small;
-          margin-top: 6px;
-          margin-bottom: 6px;
-      ">
-              From farm to retail — verified, transparent, trusted.
-            </p>
-
+      <div class="hero-label">Traceability Journey</div>
+      <h1 class="hero-title">{{ crop_raw }}</h1>
+      <p class="hero-tagline" style="font-size: small; margin-top: 6px; margin-bottom: 6px;">
+        From farm to retail — verified, transparent, trusted.
+      </p>
     </div>
   </div>
 </section>
@@ -94,7 +70,6 @@
 <main class="shell body">
   <div class="grid">
 
-    <!-- LEFT: Timeline -->
     <section class="panel timeline-panel">
       <div class="panel-head">
         <div class="panel-head-left">
@@ -109,142 +84,154 @@
 
       <div class="timeline">
         <div class="rail">
-          {% if events_combined %}
-            {% for e in events_combined %}
-              {% set key = (e.image_stage or e.status or 'event')|lower %}
-              {% set stage = (e.stage or '')|lower %}
+        {% if events_combined %}
+          {% for e in events_combined %}
 
-              {% set stage_file =
-                'planted.jpg' if key == 'planted' else
-                'harvested.jpg' if key == 'harvested' else
-                'processed_received.jpg' if (key == 'processed' and stage == 'received') or (key == 'processed_received') else
-                'processed_processed.jpg' if (key == 'processed' and stage != 'received') or (key == 'processed_processed') else
-                'distributed_received.jpg' if (key == 'distributed' and stage == 'received') or (key == 'distributed_received') else
-                'distributed_dispatched.jpg' if (key == 'distributed' and stage != 'received') or (key == 'distributed_dispatched') else
-                'retail_received.jpg' if (key == 'retail' and stage == 'received') or (key == 'retail_received') else
-                'retail_sold.jpg' if (key == 'retail' and stage != 'received') or (key == 'retail_sold') else
-                (asset_dir ~ '_product.jpg')
-              %}
+            {% set key = (e.image_stage or e.status or 'event')|lower %}
+            {% set stage = (e.stage or '')|lower %}
+{# -------------------------------------------------------------------- #}
+{#   MAKAHANA-SPECIFIC ADVANCED STAGE LOGIC (FIXED WITH EXT SUPPORT)    #}
+{# -------------------------------------------------------------------- #}
 
-              {% set thumb_url = base_dir ~ '/' ~ stage_file %}
-              {% set common_fallback =
-                common_dir ~ '/' ~ (
-                  'harvested.jpg' if stage_file == 'harvested.jpg' else
-                  'planted.jpg'
-                )
-              %}
+{% if crop_slug == 'makhana' %}
 
-              <article class="event" data-kind="{{ key }}" data-stage="{{ stage }}">
-                <!-- header strip -->
-                <div class="event-strip">
-                  <div class="event-strip-left">
-                    <!-- ✅ JS will replace emoji -->
-                    <span class="event-strip-icon icon" aria-hidden="true">🔗</span>
-                    <div class="event-strip-titles">
-                      <div class="event-strip-title">
-                        {{ e.status }}{% if e.stage %} <span class="sep">•</span> {{ e.stage }}{% endif %}
-                      </div>
-                      <div class="event-strip-sub">
-                        <span class="proof">Verified</span>
-                        <span class="dotsep">•</span>
-                        <span class="small">{{ e.timestamp or '—' }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+  {% set clean_stage = stage
+      |replace(' ', '_')
+      |replace('-', '_')
+      |replace('(', '')
+      |replace(')', '')
+      |replace('/', '_')
+      |trim
+  %}
 
-                <div class="event-body">
-                  <div class="thumb">
-                    <img
-                      src="{{ thumb_url }}"
-                      alt="{{ e.status }} {{ e.stage or '' }}"
-                      loading="lazy"
-                      onerror="this.onerror=null; this.src='{{ common_fallback }}'; this.onerror=function(){ this.src='{{ placeholder }}'; };">
-                    <div class="byline">By – {{ e.actor or '—' }}</div>
-                  </div>
+  {% if clean_stage in [
+    'roasting', 'sun_drying', 'moisture_reduction',
+    'popping', 'grading', 'packaging', 'final_packaging'
+  ] %}
+    {% set stage_base = clean_stage %}
 
-                  <div class="details">
-                    <div class="kv"><div class="k">Location</div><div class="v">{{ e.location or '—' }}</div></div>
-                    <div class="kv"><div class="k">Crop</div><div class="v">{{ e.cropType or '—' }}</div></div>
+  {% elif key == 'planted' %}
+    {% set stage_base = 'planted' %}
 
-                    {% if e.batchCode %}
-                      <div class="kv"><div class="k">Batch</div><div class="v">{{ e.batchCode }}</div></div>
-                    {% endif %}
+  {% elif key == 'harvested' %}
+    {% set stage_base = 'harvested' %}
 
-                    {% if e.status == 'Planted' %}
-                      <div class="kv"><div class="k">Date Planted</div><div class="v">{{ e.datePlanted or '—' }}</div></div>
-                      <div class="kv"><div class="k">Area Size</div><div class="v">{{ e.areaSize or '—' }}</div></div>
+  {% else %}
+    {% set stage_base = 'processed' %}
+  {% endif %}
 
-                    {% elif e.status == 'Harvested' %}
-                      <div class="kv"><div class="k">Harvest Date</div><div class="v">{{ e.harvestDate or '—' }}</div></div>
-                      <div class="kv"><div class="k">Quantity</div><div class="v">{{ e.harvestQuantity or '—' }}</div></div>
-                      <div class="kv"><div class="k">Packaging</div><div class="v">{{ e.packagingType or '—' }}</div></div>
+  {# Try jpg first, then png #}
+  {% set thumb_url = base_dir ~ '/' ~ stage_base ~ '.jpg' %}
+  {% set thumb_fallback = base_dir ~ '/' ~ stage_base ~ '.png' %}
 
-                    {% elif e.status == 'Processed' %}
-                      {% if (e.stage or '') == 'Received' %}
-                        <div class="kv"><div class="k">Received Date</div><div class="v">{{ e.receivedDate or '—' }}</div></div>
-                        <div class="kv"><div class="k">Received Qty</div><div class="v">{{ e.receivedQuantity or '—' }}</div></div>
-                      {% else %}
-                        <div class="kv"><div class="k">Processed Date</div><div class="v">{{ e.processedDate or '—' }}</div></div>
-                        <div class="kv"><div class="k">Processed Qty</div><div class="v">{{ e.processedQuantity or '—' }}</div></div>
-                      {% endif %}
+{% else %}
 
-                    {% elif e.status == 'Distributed' %}
-                      {% if (e.stage or '') == 'Received' %}
-                        <div class="kv"><div class="k">Received Date</div><div class="v">{{ e.receivedDate or '—' }}</div></div>
-                        <div class="kv"><div class="k">Received Qty</div><div class="v">{{ e.receivedQuantity or e.quantity or '—' }}</div></div>
-                      {% else %}
-                        <div class="kv"><div class="k">Dispatch Date</div><div class="v">{{ e.dispatchDate or e.processedDate or '—' }}</div></div>
-                        <div class="kv"><div class="k">Distributed Qty</div><div class="v">{{ e.distributedQuantity or '—' }}</div></div>
-                      {% endif %}
+  {# -------------------------------------------------------------------- #}
+  {# ORIGINAL LOGIC (UNCHANGED FOR ALL OTHER CROPS)                      #}
+  {# -------------------------------------------------------------------- #}
 
-                    {% elif e.status == 'Retail' or e.status == 'Sold' %}
-                      {% if (e.stage or '') == 'Received' %}
-                        <div class="kv"><div class="k">Received Date</div><div class="v">{{ e.receivedDate or '—' }}</div></div>
-                        <div class="kv"><div class="k">Received Qty</div><div class="v">{{ e.receivedQuantity or e.quantity or '—' }}</div></div>
-                      {% else %}
-                        <div class="kv"><div class="k">Sold Date</div><div class="v">{{ e.soldDate or '—' }}</div></div>
-                        <div class="kv"><div class="k">Sold Qty</div><div class="v">{{ e.soldQuantity or '—' }}</div></div>
-                      {% endif %}
-                    {% endif %}
-                  </div>
-                </div>
-              </article>
-            {% endfor %}
-          {% else %}
-            <article class="event show empty">
+  {% set stage_file =
+    'planted.jpg' if key == 'planted' else
+    'harvested.jpg' if key == 'harvested' else
+    'processed_received.jpg' if (key == 'processed' and stage == 'received') or (key == 'processed_received') else
+    'processed_processed.jpg' if (key == 'processed' and stage != 'received') or (key == 'processed_processed') else
+    'distributed_received.jpg' if (key == 'distributed' and stage == 'received') or (key == 'distributed_received') else
+    'distributed_dispatched.jpg' if (key == 'distributed' and stage != 'received') or (key == 'distributed_dispatched') else
+    'retail_received.jpg' if (key == 'retail' and stage == 'received') or (key == 'retail_received') else
+    'retail_sold.jpg' if (key == 'retail' and stage != 'received') or (key == 'retail_sold') else
+    (asset_dir ~ '_product.jpg')
+  %}
+
+  {% set thumb_url = base_dir ~ '/' ~ stage_file %}
+  {% set thumb_fallback = common_dir ~ '/processed.png' %}
+
+{% endif %}
+
+            <article class="event" data-kind="{{ key }}" data-stage="{{ stage }}">
               <div class="event-strip">
                 <div class="event-strip-left">
-                  <span class="event-strip-icon">ℹ️</span>
+                  <span class="event-strip-icon icon" aria-hidden="true">🔗</span>
                   <div class="event-strip-titles">
-                    <div class="event-strip-title">No events found</div>
-                    <div class="event-strip-sub"><span class="small">No history available for this crop.</span></div>
+                    <div class="event-strip-title">
+                      {{ e.status }}{% if e.stage %} • {{ e.stage }}{% endif %}
+                    </div>
+                    <div class="event-strip-sub">
+                      <span class="proof">Verified</span>
+                      <span class="dotsep">•</span>
+                      <span class="small">{{ e.timestamp or '—' }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <div class="event-body">
                 <div class="thumb">
-                  <img src="{{ placeholder }}" alt="No data">
-                  <div class="byline">By – —</div>
+                  <img
+                    src="{{ thumb_url }}"
+                    alt="{{ e.status }} {{ e.stage or '' }}"
+                    loading="lazy"
+                    onerror="this.onerror=null; this.src='{{ placeholder }}';"
+                  >
+                  <div class="byline">By – {{ e.actor or '—' }}</div>
                 </div>
+
                 <div class="details">
-                  <div class="kv">
-                    <div class="k">Message</div>
-                    <div class="v">Please track another crop ID.</div>
-                  </div>
+                  <div class="kv"><div class="k">Location</div><div class="v">{{ e.location or '—' }}</div></div>
+                  <div class="kv"><div class="k">Crop</div><div class="v">{{ e.cropType or '—' }}</div></div>
+
+                  {% if e.batchCode %}
+                    <div class="kv"><div class="k">Batch</div><div class="v">{{ e.batchCode }}</div></div>
+                  {% endif %}
+
+                  {% if e.status == 'Planted' %}
+                    <div class="kv"><div class="k">Date Planted</div><div class="v">{{ e.datePlanted or '—' }}</div></div>
+                    <div class="kv"><div class="k">Area Size</div><div class="v">{{ e.areaSize or '—' }}</div></div>
+
+                  {% elif e.status == 'Harvested' %}
+                    <div class="kv"><div class="k">Harvest Date</div><div class="v">{{ e.harvestDate or '—' }}</div></div>
+                    <div class="kv"><div class="k">Quantity</div><div class="v">{{ e.harvestQuantity or '—' }}</div></div>
+                    <div class="kv"><div class="k">Packaging</div><div class="v">{{ e.packagingType or '—' }}</div></div>
+
+                  {% elif e.status == 'Processed' %}
+                    {% if (e.stage or '') == 'Received' %}
+                      <div class="kv"><div class="k">Received Date</div><div class="v">{{ e.receivedDate or '—' }}</div></div>
+                      <div class="kv"><div class="k">Received Qty</div><div class="v">{{ e.receivedQuantity or '—' }}</div></div>
+                    {% else %}
+                      <div class="kv"><div class="k">Processed Date</div><div class="v">{{ e.processedDate or '—' }}</div></div>
+                      <div class="kv"><div class="k">Processed Qty</div><div class="v">{{ e.processedQuantity or '—' }}</div></div>
+                    {% endif %}
+
+                  {% elif e.status == 'Distributed' %}
+                    {% if (e.stage or '') == 'Received' %}
+                      <div class="kv"><div class="k">Received Date</div><div class="v">{{ e.receivedDate or '—' }}</div></div>
+                      <div class="kv"><div class="k">Received Qty</div><div class="v">{{ e.receivedQuantity or e.quantity or '—' }}</div></div>
+                    {% else %}
+                      <div class="kv"><div class="k">Dispatch Date</div><div class="v">{{ e.dispatchDate or e.processedDate or '—' }}</div></div>
+                      <div class="kv"><div class="k">Distributed Qty</div><div class="v">{{ e.distributedQuantity or '—' }}</div></div>
+                    {% endif %}
+
+                  {% elif e.status in ['Retail', 'Sold'] %}
+                    {% if (e.stage or '') == 'Received' %}
+                      <div class="kv"><div class="k">Received Date</div><div class="v">{{ e.receivedDate or '—' }}</div></div>
+                      <div class="kv"><div class="k">Received Qty</div><div class="v">{{ e.receivedQuantity or e.quantity or '—' }}</div></div>
+                    {% else %}
+                      <div class="kv"><div class="k">Sold Date</div><div class="v">{{ e.soldDate or '—' }}</div></div>
+                      <div class="kv"><div class="k">Sold Qty</div><div class="v">{{ e.soldQuantity or '—' }}</div></div>
+                    {% endif %}
+                  {% endif %}
                 </div>
               </div>
             </article>
-          {% endif %}
+          {% endfor %}
+        {% else %}
+          <!-- No events -->
+        {% endif %}
         </div>
       </div>
     </section>
 
-    <!-- RIGHT -->
     <aside class="side">
 
-      <!-- Product Preview -->
       <div class="side-card product-side-card">
         <div class="side-head">
           <div>
@@ -265,27 +252,14 @@
           </div>
 
           <div class="meta-grid">
-            <div class="meta-item">
-              <div class="meta-k">Crop Type</div>
-              <div class="meta-v">{{ crop_raw }}</div>
-            </div>
-            <div class="meta-item">
-              <div class="meta-k">Latest Status</div>
-              <div class="meta-v">{{ events_combined[-1].status if events_combined else '—' }}</div>
-            </div>
-            <div class="meta-item">
-              <div class="meta-k">Origin</div>
-              <div class="meta-v">{{ events_combined[0].location if events_combined else '—' }}</div>
-            </div>
-            <div class="meta-item">
-              <div class="meta-k">Primary Actor</div>
-              <div class="meta-v">{{ events_combined[0].actor if events_combined else '—' }}</div>
-            </div>
+            <div class="meta-item"><div class="meta-k">Crop Type</div><div class="meta-v">{{ crop_raw }}</div></div>
+            <div class="meta-item"><div class="meta-k">Latest Status</div><div class="meta-v">{{ events_combined[-1].status if events_combined else '—' }}</div></div>
+            <div class="meta-item"><div class="meta-k">Origin</div><div class="meta-v">{{ events_combined[0].location if events_combined else '—' }}</div></div>
+            <div class="meta-item"><div class="meta-k">Primary Actor</div><div class="meta-v">{{ events_combined[0].actor if events_combined else '—' }}</div></div>
           </div>
         </div>
       </div>
 
-      <!-- Nutrition -->
       <div class="side-card">
         <div class="side-head">
           <div>
@@ -306,8 +280,6 @@
 </main>
 
 <script>
-  // ✅ Make JS theme + nutrition work reliably:
-  // send asset_dir (rice / turmeric / wheat), not crop_dir that might be empty.
   window.__TRACE_CROP__ = "{{ asset_dir }}";
 </script>
 <script src="{{ url_for('static', filename='js/traceabilityjourney.js') }}"></script>

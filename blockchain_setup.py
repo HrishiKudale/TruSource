@@ -10,7 +10,7 @@ except ImportError:
     from web3.middleware import geth_poa_middleware as _POA  # web3<6
 
 # ---------- Network & Keys (EDIT THESE) ----------
-AMOY_RPC = "https://rpc-amoy.polygon.technology"
+AMOY_RPC = "https://polygon-amoy.drpc.org"
 
 
 # Your deployed contract on Amoy (from Remix "Deployed Contracts")
