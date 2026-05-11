@@ -61,8 +61,8 @@ class CropService:
                     planted = {
                         "id": cid,
                         "name": ev[14],
-                        "crop_type": ev[16],
-                        "crop_name": ev[17],
+                        "crop_type": ev[17],
+                        "crop_name": ev[16],
                         "date_planted": ev[6],
                         "farming_type": ev[4] if len(ev) > 5 else "",
                         "seed_type": ev[5] if len(ev) > 6 else "",
@@ -71,7 +71,7 @@ class CropService:
 
                 elif status == "Harvested":
                     harvested = {
-                        "harvest_date": ev[5],
+                        "harvest_date": ev[7],
                         "harvest_qty": int(ev[12] or 0),
                         "packaging_type": ev[10],
                     }
@@ -147,7 +147,7 @@ class CropService:
 
             if status == "Harvested":
                 harvested = {
-                    "harvest_date": ev[5],
+                    "harvest_date": ev[7],
                     "harvest_qty": int(ev[12]),
                     "packaging_type": ev[10]
                 }
@@ -213,7 +213,7 @@ class CropService:
 
             if status == "Harvested":
                 harvested = {
-                    "harvestDate": ev[5],
+                    "harvestDate": ev[7],
                     "harvestedQty": ev[12],
                 }
 
