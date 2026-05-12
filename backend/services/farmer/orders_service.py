@@ -104,7 +104,7 @@ class OrderService:
                 "orderDate": od.get("order_date") or od.get("orderDate") or "-",
                 "pickupDate": (pd.get("pickup_date") or pd.get("pickupDate") or "-"),
                 "cropId": cd.get("crop_id") or "-",
-                "cropType": cd.get("crop_type") or "-",
+                "cropName": cd.get("crop_name") or "-",
                 "quantityKg": cd.get("quantity_kg") or 0,
                 "price": cd.get("price") or 0,
                 "buyerId": buyer_id,
@@ -204,7 +204,8 @@ class OrderService:
             "buyerId": doc.get("buyerId") or doc.get("buyer_id") or "",
             "buyerType": doc.get("buyerType") or doc.get("buyer_type") or "",
             "cropId": doc.get("cropId") or doc.get("crop_id") or "",
-            "cropType": doc.get("cropType") or doc.get("crop_name") or "",
+            "cropName": doc.get("cropName") or doc.get("crop_name") or "",
+            "cropType": doc.get("cropType") or doc.get("crop_type") or "",
             "quantityKg": doc.get("quantityKg") or doc.get("quantity") or 0,
             "pickupFrom": doc.get("pickupFrom") or doc.get("location") or "",
         }
@@ -284,6 +285,7 @@ class OrderService:
 
             "crop_details": [{
                 "crop_id": crop_id,
+                "crop_name": crop_name,
                 "crop_type": crop_type or "",
                 "quantity_kg": qty,
                 "price": price,
@@ -346,6 +348,7 @@ class OrderService:
                 # crop_details
                 "cropId": cd.get("crop_id", "-"),
                 "cropType": cd.get("crop_type", "-"),
+                "cropName": cd.get("crop_name","-"),
                 "quantityKg": cd.get("quantity_kg", 0),
                 "price": cd.get("price", 0),
 

@@ -1,0 +1,176 @@
+# backend/routes/farmer/dashboard_routes.py
+
+from flask import Blueprint, redirect, render_template, request, session, jsonify, url_for
+
+from flask_jwt_extended import (
+    get_jwt,
+    verify_jwt_in_request,
+    get_jwt_identity
+)
+from flask_jwt_extended.exceptions import NoAuthorizationError
+
+from backend.services.farmer.crop_service import CropService
+from backend.services.farmer.dashboard_service import DashboardService
+from backend.services.traceability.traceability_services import TraceabilityService
+
+dashboard_bp = Blueprint(
+    "manufacturer_dashboard_bp",
+    __name__,
+    url_prefix="/manufacturer/dashboard",
+)
+
+# ----------------------------
+# HYBRID AUTH HELPERS
+# ----------------------------
+
+
+def _get_manufacturer_id_web_or_jwt():
+    # 1) Web session auth
+    if session.get("role") == "manufacturer" and session.get("user_id"):
+        return session.get("user_id")
+
+    # 2) JWT auth (mobile)
+    try:
+        verify_jwt_in_request(optional=True)
+
+        user_id = get_jwt_identity()   # ✅ string now
+        claims = get_jwt() or {}
+        role = (claims.get("role") or "").lower()
+
+        if role == "manufacturer" and user_id:
+            return user_id
+        return None
+    except Exception:
+        return None
+
+
+
+def _require_manufacturer_web_page():
+    """
+    Web-only gate for HTML pages that rely on session.
+    """
+    if session.get("role") != "manufacturer" or not session.get("user_id"):
+        return False, redirect(url_for("auth.newlogin")), None  # your existing route
+    manufacturer_id = session.get("user_id")
+    if not manufacturer_id:
+        return False, redirect(url_for("auth.newlogin")), None
+    return True, None, manufacturer_id
+
+
+# ----------------------------
+# PAGES (WEB)
+# ----------------------------
+@dashboard_bp.get("/")
+def dashboard_page():
+    ok, resp, manufacturer_id = _require_manufacturer_web_page()
+    if not ok:
+        return resp
+
+    till = request.args.get("till")  # ?till=YYYY-MM-DD
+    dashboard = DashboardService.build_dashboard(manufacturer_id, till_date=till)
+
+    crop_data = CropService.get_my_crops(manufacturer_id)
+    crops = crop_data.get("crops", [])
+
+    return render_template(
+        "manufacturer/manufacturer_dashboard.html",
+        dashboard=dashboard,
+        active_page="dashboard",
+        active_submenu="dashboard",
+        crops=crops
+    )
+
+
+# ----------------------------
+# APIs (WEB AJAX + MOBILE)
+# ----------------------------
+# dashboard_routes.py (inside your /farmer/dashboard/data handler)
+
+@dashboard_bp.get("/data-full")
+def manufacturer_dashboard_full_data():
+    # Authenticate using JWT or web cookie
+    manufacturer_id = _get_manufacturer_id_web_or_jwt()
+    if not manufacturer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    try:
+        # Optional query param ?till=YYYY-MM-DD
+        till = request.args.get("till")
+
+        # Build full dashboard data
+        dashboard = DashboardService.build_dashboard(manufacturer_id, till_date=till)
+
+        # Get crop list
+        crop_data = CropService.get_my_crops(manufacturer_id)
+        crops = crop_data.get("crops", [])
+
+        # Return JSON instead of HTML template
+        return jsonify(
+            ok=True,
+            data={
+                "dashboard": dashboard,
+                "crops": crops
+            }
+        ), 200
+
+    except Exception as e:
+        import traceback
+        print("Dashboard error:", repr(e))
+        traceback.print_exc()
+        return jsonify(ok=False, err="server_error", message=str(e)), 500
+
+
+@dashboard_bp.get("/data")
+def manufacturer_dashboard_data():
+    manufacturer_id = _get_manufacturer_id_web_or_jwt()
+    if not manufacturer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    try:
+        crops = TraceabilityService.get_user_crop_summaries(manufacturer_id)
+
+        return jsonify(ok=True, data={"crops": crops}), 200
+
+    except Exception as e:
+        import traceback
+        print("Dashboard error:", repr(e))
+        traceback.print_exc()
+        return jsonify(ok=False, err="server_error", message=str(e)), 500
+
+
+
+
+@dashboard_bp.get("/api/farms")
+def api_farms():
+    """
+    Works for:
+      - Web (session)
+      - Mobile (Bearer token)
+    """
+    manufacturer_id= _get_manufacturer_id_web_or_jwt()
+    if not manufacturer_id:
+        return jsonify({"error": "unauthorized"}), 401
+
+    crop_type = request.args.get("cropType")  # from dropdown (e.g. Wheat)
+    crop_id = request.args.get("crop_id")     # optional
+
+    farms = DashboardService.get_farm_polygons(
+        user_id=manufacturer_id,
+        crop_type=crop_type,
+        crop_id=crop_id
+    )
+
+    return jsonify({
+        "ok": True,
+        "count": len(farms),
+        "farms": farms
+    }), 200
+
+
+@dashboard_bp.get("/debug/jwt")
+def debug_jwt():
+    try:
+        verify_jwt_in_request()  # NOT optional
+        return jsonify(ok=True, identity=get_jwt_identity(), claims=get_jwt()), 200
+    except Exception as e:
+        return jsonify(ok=False, error=str(e)), 401

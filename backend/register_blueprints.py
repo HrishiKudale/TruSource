@@ -68,3 +68,7 @@ def register_all_blueprints(app):
 
     from backend.routes.public_traceability import public_trace_bp
     app.register_blueprint(public_trace_bp)
+
+
+    from backend.routes.manufacturer.dashboard_routes import dashboard_bp
+    app.register_blueprint(dashboard_bp)

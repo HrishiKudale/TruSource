@@ -129,11 +129,11 @@
             {% for order in orders %}
             <tr class="click-row"
                 data-href="{{ url_for('farmer_sales_bp.orders_info_page', order_id=order.orderId) }}"
-                data-search="{{ (order.orderId ~ ' ' ~ order.cropType ~ ' ' ~ order.buyerType ~ ' ' ~ order.buyerId ~ ' ' ~ order.status)|lower }}">
+                data-search="{{ (order.orderId ~ ' ' ~ order.cropName ~ ' ' ~ order.buyerType ~ ' ' ~ order.buyerId ~ ' ' ~ order.status)|lower }}">
               <td>{{ order.orderId }}</td>
               <td>{{ order.orderDate }}</td>
               <td>{{ order.pickupDate or "-" }}</td>
-              <td>{{ order.cropType or "-" }}</td>
+              <td>{{ order.cropName or "-" }}</td>
               <td>{{ order.quantityKg or 0 }}</td>
               <td>{{ order.price or 0 }}</td>
               <td>{{ order.buyerType or "-" }}</td>

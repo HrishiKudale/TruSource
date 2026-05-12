@@ -1,0 +1,477 @@
+{% extends "manufacturer/manufacturer_base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='farmer_dashboard.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+
+<div class="dash-wrap">
+  <!-- Page Header -->
+  <div class="dash-header">
+    <div class="dash-title">
+      <span class="grid-ico" aria-hidden="true">
+        <img src="{{ url_for('static', filename='svg-icons/Dashboard/Dashboard.svg') }}" alt="Dashboard">
+      </span>
+      <h1>Dashboard</h1>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- LEFT MAIN -->
+    <div class="dash-left">
+
+      <!-- KPI Row -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-label">Active Crops</div>
+            <span class="kpi-info">i</span>
+          </div>
+          <div class="kpi-value" id="kpiActiveCrops">
+            {{ (dashboard.kpis.active_crops if dashboard and dashboard.kpis else 0) }}
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-label">Pending Payments</div>
+            <span class="kpi-info">i</span>
+          </div>
+          <div class="kpi-value" id="kpiPendingPayments">
+            {{ (dashboard.kpis.pending_payments if dashboard and dashboard.kpis else 0) }}
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-label">Buyer Offers Received</div>
+            <span class="kpi-info">i</span>
+          </div>
+          <div class="kpi-value" id="kpiBuyerOffers">
+            {{ (dashboard.kpis.buyer_offers if dashboard and dashboard.kpis else 0) }}
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-label">Upcoming Shipments</div>
+            <span class="kpi-info">i</span>
+          </div>
+          <div class="kpi-value" id="kpiUpcomingShipments">
+            {{ (dashboard.kpis.upcoming_shipments if dashboard and dashboard.kpis else 0) }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Weather & Crop Health Card -->
+      <div class="card big-card" id="weatherHealthCard">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="ico-circle green" aria-hidden="true">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Weather & Crop Health.svg') }}" alt="Weather"style="height: 38px;width: 38px;">
+            </span>
+            <div class="card-title">Weather &amp; Crop Health</div>
+          </div>
+
+          <div class="card-head-right">
+            <select id="cropTypeSelect" class="select-pill"style="font-family: var(--body-md-reg-font-family);font-size: 10px;color: lightslategrey;">
+              {% set crops = (dashboard.crops if dashboard and dashboard.crops else ["Wheat"]) %}
+              {% for c in crops %}
+                <option value="{{ c }}">{{ c }}</option>
+              {% endfor %}
+            </select>
+            <div class="segmented" role="tablist" aria-label="Stats Toggle">
+              <button class="seg-btn" data-tab="soil" type="button">Soil Data</button>
+              <button class="seg-btn active" data-tab="weather" type="button">Weather</button>
+              <button class="seg-btn" data-tab="status" type="button">Crop Status</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- EMPTY STATE -->
+          <div class="empty-state" id="emptyWeatherCard" style="display:none;">
+            <img src="{{ url_for('static', filename='illustrations/Empty_crop_table.svg') }}" alt="No data">
+            <div class="empty-title">No data yet</div>
+            <div class="empty-sub">Connect a device or add a crop to see weather and soil insights.</div>
+          </div>
+
+          <div id="weatherCardContent" style="display:block;">
+
+            <!-- SOIL TAB -->
+            <div class="tab-panel" id="tab-soil">
+              <div class="tab-top">
+                <div class="tab-label">Soil Data</div>
+                <div class="tab-filters">
+                  <select class="select-ghost" id="soilMetricSelect">
+                    <option value="soil_temp">Soil Temperature</option>
+                    <option value="soil_moisture">Soil Moisture</option>
+                    <option value="ph">pH</option>
+                    <option value="npk">NPK Level</option>
+                  </select>
+
+                  <select class="select-ghost" id="soilRangeSelect">
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="chart-wrap fixed-h">
+                <canvas id="soilLineChart"></canvas>
+              </div>
+
+              <div class="metric-grid">
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">Soil Temperature</div>
+                  <div class="metric-value" id="mSoilTemp">—</div>
+                </div>
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">pH</div>
+                  <div class="metric-value" id="mPh">—</div>
+                </div>
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">Soil Moisture</div>
+                  <div class="metric-value" id="mMoisture">—</div>
+                </div>
+                <div class="metric-item">
+                  <span class="dot" aria-hidden="true"></span>
+                  <div class="metric-name">Soil EC</div>
+                  <div class="metric-value" id="mEc">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- WEATHER TAB (MATCH SCREENSHOT) -->
+            <div class="tab-panel active" id="tab-weather">
+
+              <div class="wx-kpi-row">
+                <div class="wx-kpi">
+                  <div class="wx-kpi-label">Temperature</div>
+                  <div class="wx-kpi-val" id="wxTempKpi">—</div>
+                </div>
+                <div class="wx-kpi">
+                  <div class="wx-kpi-label">Humidity</div>
+                  <div class="wx-kpi-val" id="wxHumidityKpi">—</div>
+                </div>
+                <div class="wx-kpi">
+                  <div class="wx-kpi-label">Wind Speed</div>
+                  <div class="wx-kpi-val" id="wxWindKpi">—</div>
+                </div>
+                <div class="wx-kpi">
+                  <div class="wx-kpi-label">Wind Direction</div>
+                  <div class="wx-kpi-val" id="wxWindDirKpi">—</div>
+                </div>
+              </div>
+
+              <div class="wx-chart-head">
+                <select class="select-ghost" id="weatherMetricSelect">
+                  <option value="hourly_temp">Hourly Temperature Forecast</option>
+                </select>
+
+                <div class="wx-actions">
+                  <button id="weatherUseMyLocationBtn" class="select-ghost" type="button">Use my location</button>
+                  <button id="weatherRefreshBtn" class="select-ghost" type="button">Refresh</button>
+                </div>
+              </div>
+
+              <div class="chart-wrap fixed-h">
+                <canvas id="weatherBarChart"></canvas>
+              </div>
+
+              <div class="muted wx-locline">
+                Location: <span id="wxLocText">—</span>
+              </div>
+
+              <!-- Location Modal -->
+              <div class="wx-modal" id="wxLocModal" style="display:none;">
+                <div class="wx-modal-backdrop" data-close="1"></div>
+                <div class="wx-modal-box" role="dialog" aria-modal="true" aria-label="Location permission">
+                  <div class="wx-modal-title">Use your current location?</div>
+                  <div class="wx-modal-sub">
+                    We’ll fetch live weather for your exact area to show accurate field conditions.
+                  </div>
+                  <div class="wx-modal-actions">
+                    <button class="wx-btn ghost" data-close="1" type="button">Not now</button>
+                    <button class="wx-btn primary" id="wxAllowBtn" type="button">Allow location</button>
+                  </div>
+                  <div class="wx-modal-note muted">
+                    You can change this anytime using “Use my location”.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- CROP STATUS TAB -->
+            <div class="tab-panel" id="tab-status">
+              <div class="tab-top" style="justify-content:flex-start;">
+                <div class="tab-label">Crop Status</div>
+              </div>
+
+              <div id="cropStatusPanel" class="crop-status-panel" style="display:block;">
+                <div class="map-wrap">
+                  <div id="farmMap" class="farm-map" style="height:320px; min-height:320px;"></div>
+                </div>
+                <div id="mapHint" class="muted" style="font-size:12px; margin-top:10px; display:none;">
+                  No farm polygons found for the selected crop.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom two cards -->
+      <div class="bottom-row">
+        <!-- Order Overview -->
+        <div class="card" id="orderOverviewCard">
+          <div class="card-head compact">
+            <div class="card-head-left">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Order Overview.svg') }}" alt="Orders" style="height: 38px;width: 38px;">
+              <div class="card-title">Order Overview</div>
+            </div>
+            <select class="select-ghost" id="orderRangeSelect">
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+
+          <div class="card-body">
+            <div class="empty-state" id="emptyOrderCard" style="display:none; text-align:center; margin:50px;">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_order_table.svg') }}" alt="No orders"><br>
+            </div>
+
+            <div id="orderCardContent" style="display:block;">
+              <div class="donut-wrap">
+                <canvas id="orderDonutChart"></canvas>
+                <div class="donut-center">
+                  <div class="muted small">Total Order</div>
+                  <div class="donut-total" id="orderTotal">0</div>
+                </div>
+              </div>
+
+              <div class="legend-grid legend-order">
+                <div class="legend-item"><span class="legend-dot dot-req"></span> Requested <span class="legend-val" id="oRequested">0</span></div>
+                <div class="legend-item"><span class="legend-dot dot-transit"></span> In transit <span class="legend-val" id="oInTransit">0</span></div>
+                <div class="legend-item"><span class="legend-dot dot-comp"></span> Completed <span class="legend-val" id="oCompleted">0</span></div>
+                <div class="legend-item"><span class="legend-dot dot-paid"></span> Payment Received <span class="legend-val" id="oPaid">0</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shipment Overview -->
+        <div class="card" id="shipmentOverviewCard">
+          <div class="card-head compact">
+            <div class="card-head-left">
+              <span class="ico-circle yellow" aria-hidden="true">
+                <img src="{{ url_for('static', filename='svg-icons/Dashboard/Shipment Overview.svg') }}" alt="Shipments"style="height: 38px;width: 38px;">
+              </span>
+              <div class="card-title">Shipment Overview</div>
+            </div>
+            <select class="select-ghost" id="shipRangeSelect">
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+
+          <div class="card-body">
+            <div class="empty-state" id="emptyShipmentCard" style="display:none; text-align:center; margin:50px;">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_shipment_table.svg') }}" alt="No shipments"><br>
+            </div>
+
+            <div id="shipmentCardContent" style="display:block;">
+              <div class="ship-bars" id="shipBars">
+                <!-- injected by JS -->
+              </div>
+
+              <div class="legend-row legend-ship">
+                <div class="legend-item"><span class="legend-dot dot-ship-req"></span> Requested <span class="legend-val" id="sRequested">0</span></div>
+                <div class="legend-item"><span class="legend-dot dot-ship-pend"></span> Pending <span class="legend-val" id="sPending">0</span></div>
+                <div class="legend-item"><span class="legend-dot dot-ship-transit"></span> In transit <span class="legend-val" id="sInTransit">0</span></div>
+                <div class="legend-item"><span class="legend-dot dot-ship-del"></span> Delivered <span class="legend-val" id="sDelivered">0</span></div>
+                <div class="legend-item"><span class="legend-dot dot-ship-pay"></span> Payment <span class="legend-val" id="sPayment">0</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="dash-right">
+
+      <!-- Pending Tasks -->
+      <div class="card right-card" id="tasksCard">
+        <div class="card-head compact">
+          <div class="card-head-left">
+            <span class="ico-circle purple" aria-hidden="true">
+              <img src="{{ url_for('static', filename='svg-icons/Dashboard/Pending Tasks.svg') }}" alt="Tasks"style="height: 38px;width: 38px;">
+            </span>
+            <div class="card-title">Pending Tasks</div>
+          </div>
+          <input type="date" class="date-pill" id="tasksDate">
+        </div>
+
+        <div class="empty-state empty-state--compact" id="emptyTasksCard" style="display:block; text-align:center; margin:50px;">
+          <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_pending_tasks.svg') }}" alt="No pending tasks"><br>
+        </div>
+
+        <div class="right-list" id="pendingTasksList"></div>
+      </div>
+
+    <!-- Warehouse -->
+    <div class="card right-card" id="warehouseCard">
+      <div class="card-head compact">
+        <div class="card-head-left">
+          <span class="ico-circle amber" aria-hidden="true">
+            <img src="{{ url_for('static', filename='svg-icons/Dashboard/Warehouse.svg') }}" alt="Warehouse"style="height: 38px;width: 38px;">
+          </span>
+          <div class="card-title">Warehouse</div>
+        </div>
+        <input type="date" class="date-pill" id="warehouseDate">
+      </div>
+
+      <div class="empty-state empty-state--compact" id="emptyWarehouseCard" style="display:block; text-align:center; margin:50px;">
+        <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_warehouse_table.svg') }}" alt="No warehouse data"><br>
+      </div>
+
+      <!-- ✅ FIXED STRUCTURE -->
+      <div class="pie-wrap pie-wrap--col" id="warehousePieWrap" style="display:none;">
+        <div class="pie-chart-box">
+          <canvas id="warehousePieChart"></canvas>
+        </div>
+
+        <!-- ✅ BELOW CHART -->
+        <div class="pie-legend pie-legend--below">
+          <div class="pie-leg-item"><span class="pie-dot dot-wh-req"></span> Requested <b id="whRequested">0</b></div>
+          <div class="pie-leg-item"><span class="pie-dot dot-wh-stored"></span> Stored <b id="whStored">0</b></div>
+          <div class="pie-leg-item"><span class="pie-dot dot-wh-pay"></span> Pending payment <b id="whPendingPay">0</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manufacturer -->
+    <div class="card right-card" id="manufacturerCard">
+      <div class="card-head compact">
+        <div class="card-head-left">
+          <span class="ico-circle orange" aria-hidden="true">
+            <img src="{{ url_for('static', filename='svg-icons/Dashboard/Manufacturer.svg') }}" alt="Manufacturer"style="height: 38px;width: 38px;">
+          </span>
+          <div class="card-title">Manufacturer</div>
+        </div>
+        <input type="date" class="date-pill" id="mfgDate">
+      </div>
+
+      <div class="empty-state empty-state--compact" id="emptyManufacturerCard" style="display:block; text-align:center; margin:50px;">
+        <img src="{{ url_for('static', filename='svg-icons/Dashboard/illustrations/Empty_manufacturer_table.svg') }}" alt="No manufacturer updates"><br>
+      </div>
+
+      <!-- ✅ FIXED STRUCTURE -->
+      <div class="pie-wrap pie-wrap--col" id="mfgPieWrap" style="display:none;">
+        <div class="pie-chart-box">
+          <canvas id="mfgPieChart"></canvas>
+        </div>
+
+        <!-- ✅ BELOW CHART -->
+        <div class="pie-legend pie-legend--below">
+          <div class="pie-leg-item"><span class="pie-dot dot-mfg-req"></span> Requested <b id="mfgRequested">0</b></div>
+          <div class="pie-leg-item"><span class="pie-dot dot-mfg-proc"></span> Processing <b id="mfgProcessing">0</b></div>
+          <div class="pie-leg-item"><span class="pie-dot dot-mfg-pay"></span> Pending payment <b id="mfgPendingPay">0</b></div>
+        </div>
+      </div>
+    </div>
+
+
+<script id="dashboard-json" type="application/json">
+  {{ dashboard|tojson|safe }}
+</script>
+<script>
+  window.__DASHBOARD__ = JSON.parse(
+    document.getElementById("dashboard-json")?.textContent || "{}"
+  );
+</script>
+
+<!-- Leaflet (Crop Status) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
+<!-- Empty-state logic (your existing helper) -->
+<script>
+  function toggleEmptyState(emptyElId, contentElId, isEmpty) {
+    const emptyEl = document.getElementById(emptyElId);
+    const contentEl = contentElId ? document.getElementById(contentElId) : null;
+    if (!emptyEl) return;
+    emptyEl.style.display = isEmpty ? "flex" : "none";
+    if (contentEl) contentEl.style.display = isEmpty ? "none" : "block";
+  }
+
+  function hasAnySoilData(d) {
+    const s = d?.soil || d?.soil_data || null;
+    if (!s) return false;
+    const keys = ["soil_temp", "soil_moisture", "ph", "npk"];
+    return keys.some((k) => Array.isArray(s?.[k]) && s[k].length > 0);
+  }
+
+  function hasAnyWeatherData(d) {
+    return !!(d?.geo || d?.weather || d?.weather_data);
+  }
+
+  function applyKpis(d) {
+    const k = d?.kpis || {};
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (val === undefined || val === null) return;
+      el.textContent = String(val);
+    };
+    set("kpiActiveCrops", k.active_crops);
+    set("kpiPendingPayments", k.pending_payments);
+    set("kpiBuyerOffers", k.buyer_offers);
+    set("kpiUpcomingShipments", k.upcoming_shipments);
+  }
+
+  window.applyDashboardEmptyStates = function (dashboard) {
+    const hasCrops = Array.isArray(dashboard?.crops) && dashboard.crops.length > 0;
+    const soilOk = hasAnySoilData(dashboard);
+    const weatherOk = hasAnyWeatherData(dashboard);
+    const weatherHealthEmpty = !(hasCrops || soilOk || weatherOk);
+    toggleEmptyState("emptyWeatherCard", "weatherCardContent", weatherHealthEmpty);
+
+    // Orders
+    const totalOrders = Number(document.getElementById("orderTotal")?.textContent || "0");
+    toggleEmptyState("emptyOrderCard", "orderCardContent", totalOrders <= 0);
+
+    // Shipments
+    const shipSum =
+      Number(document.getElementById("sRequested")?.textContent || "0") +
+      Number(document.getElementById("sPending")?.textContent || "0") +
+      Number(document.getElementById("sInTransit")?.textContent || "0") +
+      Number(document.getElementById("sDelivered")?.textContent || "0") +
+      Number(document.getElementById("sPayment")?.textContent || "0");
+    toggleEmptyState("emptyShipmentCard", "shipmentCardContent", shipSum <= 0);
+
+    // Right cards
+    const tasksEmpty = !(Array.isArray(dashboard?.pending_tasks) && dashboard.pending_tasks.length > 0);
+    toggleEmptyState("emptyTasksCard", null, tasksEmpty);
+
+    // Warehouse/manufacturer are controlled by JS (pieWrap toggles), keep empty visible until JS decides.
+  };
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const d = window.__DASHBOARD__ || {};
+    applyKpis(d);
+    window.applyDashboardEmptyStates(d);
+    setTimeout(() => window.applyDashboardEmptyStates(d), 800);
+    setTimeout(() => window.applyDashboardEmptyStates(d), 1800);
+  });
+</script>
+
+<script src="{{ url_for('static', filename='js/farmer_dashboard.js') }}" defer></script>
+{% endblock %}
