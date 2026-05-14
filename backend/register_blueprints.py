@@ -70,5 +70,14 @@ def register_all_blueprints(app):
     app.register_blueprint(public_trace_bp)
 
 
+
+
+
+    # Manufacturer modules
     from backend.routes.manufacturer.dashboard_routes import dashboard_bp
+    from backend.routes.manufacturer.operations_routes import operations_bp
+
+
+    # Register all Manufacturer blueprints    
     app.register_blueprint(dashboard_bp)
+    app.register_blueprint(operations_bp)

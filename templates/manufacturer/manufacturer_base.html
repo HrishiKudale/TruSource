@@ -63,19 +63,19 @@
 
             <!-- DASHBOARD -->
             <li class="{{ 'component-2' if current_page == 'dashboard' else 'component' }}">
-              <a href="{{ url_for('farmer_dashboard_bp.dashboard_page') }}" class="component-link">
+              <a href="{{ url_for('manufacturer_dashboard_bp.dashboard_page') }}" class="component-link">
                 <img class="img sidebar-icon {% if current_page == 'dashboard' %}active{% endif %}"
                      src="{{ url_for('static', filename='svg-icons/Dashboard.svg') }}">
                 <span class="{{ 'dashboard' if current_page == 'dashboard' else 'text-wrapper-2' }}">Dashboard</span>
               </a>
             </li>
 
-            <!-- MY CROPS -->
-            <li class="{{ 'component-2' if current_page == 'my_crops' else 'component' }}">
-              <a href="{{ url_for('farmer_crop_bp.my_crops') }}" class="component-link">
-                <img class="img sidebar-icon {% if current_page == 'my_crops' %}active{% endif %}"
+            <!-- MY OPERATIONS -->
+            <li class="{{ 'component-2' if current_page == 'operations' else 'component' }}">
+              <a href="{{ url_for('manufacturer_crop_bp.my_operations') }}" class="component-link">
+                <img class="img sidebar-icon {% if current_page == 'operations' %}active{% endif %}"
                      src="{{ url_for('static', filename='svg-icons/My Crop.svg') }}">
-                <span class="{{ 'dashboard' if current_page == 'my_crops' else 'text-wrapper-2' }}">My Operations</span>
+                <span class="{{ 'dashboard' if current_page == 'operations' else 'text-wrapper-2' }}">My Operations</span>
               </a>
             </li>
 

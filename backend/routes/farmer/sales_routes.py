@@ -180,7 +180,26 @@ def create_order_page():
 
 @sales_bp.get("/api/generate_order_id")
 def api_generate_order_id():
+    
     return jsonify({"orderId": OrderService.generate_order_id()})
+def _get_farmer_id_web_or_jwt():
+    # 1) Web session auth
+    if session.get("role") == "farmer" and session.get("user_id"):
+        return session.get("user_id")
+
+    # 2) JWT auth (mobile)
+    try:
+        verify_jwt_in_request(optional=True)
+
+        user_id = get_jwt_identity()   # ✅ string now
+        claims = get_jwt() or {}
+        role = (claims.get("role") or "").lower()
+
+        if role == "farmer" and user_id:
+            return user_id
+        return None
+    except Exception:
+        return None
 
 
 @sales_bp.get("/api/generate_request_id")
@@ -203,6 +222,24 @@ def api_generate_request_id():
     rand_part = str(random.randint(10000, 99999))
 
     return jsonify({"requestId": f"REQ-{initials}-{date_part}-{rand_part}"})
+def _get_farmer_id_web_or_jwt():
+    # 1) Web session auth
+    if session.get("role") == "farmer" and session.get("user_id"):
+        return session.get("user_id")
+
+    # 2) JWT auth (mobile)
+    try:
+        verify_jwt_in_request(optional=True)
+
+        user_id = get_jwt_identity()   # ✅ string now
+        claims = get_jwt() or {}
+        role = (claims.get("role") or "").lower()
+
+        if role == "farmer" and user_id:
+            return user_id
+        return None
+    except Exception:
+        return None
 
 
 @sales_bp.get("/api/request/<request_id>")
