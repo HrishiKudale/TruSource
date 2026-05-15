@@ -219,6 +219,9 @@ def api_request_prefill(request_id):
 
 @sales_bp.get("/api/buyer/<buyer_id>")
 def api_buyer_details(buyer_id):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify({"error": "unauthorized"}), 401
     buyer_type = (request.args.get("buyerType") or "").strip().lower()
 
     db = get_db()
@@ -307,3 +310,89 @@ def orders_info_page_api(order_id: str):
         },
     ), 200
 
+@sales_bp.get("/api/order/create-data")
+def api_create_order_data():
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify({"error": "unauthorized"}), 401
+    """
+    API version of the /order/create route.
+    Used by both Web and Mobile App.
+    """
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify({"error": "unauthorized"}), 401
+
+    # Get requestId (optional)
+    request_id = (request.args.get("requestId") or "").strip()
+
+    # Mongo Collections
+    db, users_col = _users_collection()
+
+    # ------------------------------------
+    # Buyers (manufacturers & retailers)
+    # ------------------------------------
+    buyers = []
+    if users_col is not None:
+        buyers = _safe_list(
+            users_col.find(
+                {"role": {"$in": ["manufacturer", "retailer"]}},
+                {
+                    "_id": 0,
+                    "userId": 1,
+                    "name": 1,
+                    "officeName": 1,
+                    "role": 1,
+                    "location": 1,
+                    "address": 1,
+                    "contactPerson": 1,
+                    "phone": 1,
+                    "email": 1,
+                },
+            )
+        )
+
+    # ------------------------------------
+    # Crops (from blockchain)
+    # ------------------------------------
+    crop_data = CropService.get_my_crops(farmer_id) or {}
+    crops = crop_data.get("crops", [])
+
+    # ------------------------------------
+    # Warehouses
+    # ------------------------------------
+    warehouses = []
+    if users_col is not None:
+        warehouses = _safe_list(
+            users_col.find(
+                {"role": "warehouse"},
+                {
+                    "_id": 0,
+                    "warehouseId": 1,
+                    "userId": 1,
+                    "name": 1,
+                    "officeName": 1,
+                },
+            )
+        )
+
+    # ------------------------------------
+    # Farms (if any)
+    # ------------------------------------
+    farms = []
+    if users_col is not None:
+        farms = session.get("user_id")  # You may want to change this later
+
+    # ------------------------------------
+    # Return JSON for Web + App
+    # ------------------------------------
+    return jsonify({
+        "buyers": buyers,
+        "crops": crops,
+        "warehouses": warehouses,
+        "farms": farms,
+        "requestId": request_id,
+        "mongoEnabled": bool(users_col is not None),
+        "activePage": "sales",
+        "activeSubmenu": "orders"
+    })
