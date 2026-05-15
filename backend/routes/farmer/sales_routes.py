@@ -315,10 +315,7 @@ def api_create_order_data():
     farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
         return jsonify({"error": "unauthorized"}), 401
-    """
-    API version of the /order/create route.
-    Used by both Web and Mobile App.
-    """
+
     farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
         return jsonify({"error": "unauthorized"}), 401
@@ -361,9 +358,9 @@ def api_create_order_data():
     # ------------------------------------
     # Warehouses
     # ------------------------------------
-    warehouses = []
+    pickup = []
     if users_col is not None:
-        warehouses = _safe_list(
+        pickup = _safe_list(
             users_col.find(
                 {"role": "warehouse"},
                 {
@@ -389,7 +386,7 @@ def api_create_order_data():
     return jsonify({
         "buyers": buyers,
         "crops": crops,
-        "warehouses": warehouses,
+        "pickup": pickup,
         "farms": farms,
         "requestId": request_id,
         "mongoEnabled": bool(users_col is not None),
