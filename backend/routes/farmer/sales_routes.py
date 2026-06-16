@@ -257,7 +257,7 @@ def api_buyer_details(buyer_id):
 
 @sales_bp.post("/order/create")
 def create_order():
-    farmer_id = _require_farmer_session()
+    farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
         return jsonify({"error": "unauthorized"}), 401
 

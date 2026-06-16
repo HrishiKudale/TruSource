@@ -10,7 +10,6 @@
     el.value = (v === undefined || v === null) ? "" : String(v);
   };
 
-
   const getVal = (el) => (el && el.value != null) ? String(el.value).trim() : "";
 
   const getSelectText = (sel) => {
@@ -59,7 +58,7 @@
 
   // crop fields
   const cropIdSelect   = getField("cropIdSelect", "crop_id");
-  const cropTypeSelect = getField("cropTypeSelect", "crop");
+  const cropTypeSelect = getField("cropTypeSelect", "crop_name");
   const quantityKgEl   = getField("quantityKg", "quantity");
   const priceEl        = getField("price", "price");
   const paymentTermsEl = getField("paymentTerms", "payment_terms");
@@ -478,5 +477,8 @@
     const params = new URLSearchParams(window.location.search || "");
     const rid = params.get("requestId") || params.get("request_id") || (window.ADD_ORDER_PREFILL_REQUEST_ID || "");
     if (rid) await prefillFromRequestId(rid);
+    document.getElementById("openOrderSummaryBtn").addEventListener("click", function () {
+    document.getElementById("orderForm").requestSubmit();
+});
   });
 })();

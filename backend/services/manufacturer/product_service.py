@@ -20,7 +20,7 @@ class ProductService:
     # MY OPERATIONS
     #
     @staticmethod
-    def get_my_operations(manufacturer_id: str) -> Dict[str,Any]:
+    def get_my_products(manufacturer_id: str) -> Dict[str,Any]:
         products: List[Dict[str, Any]] = []
         total_products = 0
         requested_products = 0
@@ -81,7 +81,7 @@ class ProductService:
 
             # ✅ add exactly ONE row per crop id
             if planted:
-                crops.append(
+                products.append(
                     {
                         "id": planted["id"],
                         "name": planted["name"],
@@ -103,8 +103,8 @@ class ProductService:
                 total_sold_qtl += int(sold_qty or 0)
 
         return {
-            "crops": crops,
-            "total_crops": len(crops),
+            "products": products,
+            "total_crops": len(products),
             "total_area_acres": total_area,
             "total_harvest_qtl": total_harvest_qtl,
             "total_sold_qtl": total_sold_qtl,

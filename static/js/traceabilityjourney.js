@@ -17,7 +17,11 @@
     if (s.includes("turmeric") || s.includes("lakadong")) return "turmeric";
     if (s.includes("rice") || s.includes("assam red")) return "rice";
     if (s.includes("wheat")) return "wheat";
+    if (s.includes("kiwi")) return "kiwi";
     if (s.includes("makhana")) return "makhana";
+    if (s.includes("cinnamon")) return "cinnamon";
+    if (s.includes("cardamom")) return "cardamom";
+    if (s.includes("coffee")) return "coffee";
 
     return "rice";
   };
@@ -55,14 +59,37 @@
       rice: { bg1:"#f2fbf4", bg2:"#e9fbff", brand:"#22c55e", brand2:"#0ea5e9" },
       wheat:{ bg1:"#fff7ed", bg2:"#f0fdf4", brand:"#f59e0b", brand2:"#22c55e" },
       turmeric:{ bg1:"#fff7ed", bg2:"#fffbeb", brand:"#f59e0b", brand2:"#eab308" },
+      kiwi:{bg1:"#fff7ed", bg2:"#f0fdf4", brand:"#f59e0b", brand2:"#22c55e"},
       makhana:{
         bg1:"#FFF9F0",
         bg2:"#FDEFD9",
         brand:"#C49A6C",
         brand2:"#D7B98A"
-      }
-    };
+      },
+        cinnamon:{
+          bg1:"#FAF3EE",
+          bg2:"#F2E2D2",
+          brand:"#6F4E37",
+          brand2:"#A47149"
+  },
 
+        
+        coffee:{
+          bg1:"#FAF3EE",
+          bg2:"#F2E2D2",
+          brand:"#6F4E37",
+          brand2:"#A47149"
+  },
+  cardamom:{
+  bg1:"#F6F8EE",
+  bg2:"#E7EFD7",
+  brand:"#4F6F2A",
+  brand2:"#8BAA5A"
+},
+
+
+    };
+    
     const t = themes[crop] || themes.rice;
 
     document.documentElement.style.setProperty("--bg1", t.bg1);
@@ -81,7 +108,24 @@
       rice: { Calories:"130 kcal", Carbs:"28 g", Protein:"2.7 g", Fat:"0.3 g", Fiber:"0.4 g", Sodium:"1 mg" },
       wheat:{ Calories:"120 kcal", Carbs:"25 g", Protein:"4 g", Fat:"0.9 g", Fiber:"3.6 g", Sodium:"2 mg" },
       turmeric:{ Calories:"312 kcal", Carbs:"67 g", Protein:"9.7 g", Fat:"3.3 g", Fiber:"22 g", Sodium:"38 mg" },
-      makhana:{ Calories:"347 kcal", Carbs:"77 g", Protein:"9.7 g", Fat:"0.1 g", Fiber:"14 g", Sodium:"26 mg" }
+      kiwi:{Calories:"312 kcal", Carbs:"67 g", Protein:"9.7 g", Fat:"3.3 g", Fiber:"22 g", Sodium:"38 mg"},
+      makhana:{ Calories:"347 kcal", Carbs:"77 g", Protein:"9.7 g", Fat:"0.1 g", Fiber:"14 g", Sodium:"26 mg" },
+      cinnamon:{
+        Calories:"247 kcal",
+        Carbs:"81 g",
+        Protein:"4 g",
+        Fat:"1.2 g",
+        Fiber:"53 g",
+        Sodium:"10 mg"
+      },
+      cardamom:{
+  Calories:"311 kcal",
+  Carbs:"68 g",
+  Protein:"11 g",
+  Fat:"6.7 g",
+  Fiber:"28 g",
+  Sodium:"18 mg"
+},
     };
 
     const d = map[crop] || map.rice;

@@ -225,7 +225,8 @@ class OrderService:
         farmer_id = payload.get("farmerId")
         buyer_id = payload.get("buyerId")
         crop_id = payload.get("cropId") or payload.get("crop_id")
-        crop_type = payload.get("cropType") or payload.get("crop_type")
+        crop_name = payload.get("cropName") or payload.get("crop_name")
+
 
         if not farmer_id or not buyer_id or not crop_id:
             return {"error": "Missing farmerId/buyerId/cropId"}
@@ -286,7 +287,6 @@ class OrderService:
             "crop_details": [{
                 "crop_id": crop_id,
                 "crop_name": crop_name,
-                "crop_type": crop_type or "",
                 "quantity_kg": qty,
                 "price": price,
             }],
