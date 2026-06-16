@@ -166,7 +166,7 @@ def processing_overview_api():
     if not farmer_id:
         return jsonify(ok=False, err="auth"), 401
 
-    farmer_id = session["user_id"]
+
     return jsonify(FarmerProcessingService.get_processing_overview(farmer_id))
 
 

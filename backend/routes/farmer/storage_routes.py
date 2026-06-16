@@ -171,7 +171,6 @@ def storage_list_api():
     if not farmer_id:
         return jsonify(ok=False, err="auth"), 401
 
-    farmer_id = session["user_id"]
     items = FarmerStorageService.list_storage(farmer_id)
     return jsonify({"ok": True, "items": items})
 
