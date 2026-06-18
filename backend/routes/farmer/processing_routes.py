@@ -180,14 +180,6 @@ def processing_request_api():
     return jsonify(CropService.get_my_crops(farmer_id))
 
 
-@processing_bp.get("api/manufacturer/<manufacturer_id>")
-def manufacturer_info_page(manufacturer_id: str):
-    farmer_id = _get_farmer_id_web_or_jwt()
-    if not farmer_id:
-        return jsonify(ok=False, err="auth"), 401
-    return jsonify(FarmerProcessingService.get_manufacturer_info(farmer_id, manufacturer_id))
-
-
 
 @processing_bp.get("/api/request/<request_id>")
 def processing_request_detail_api(request_id: str):
@@ -242,18 +234,31 @@ def process_status_page(manufacturer_id: str, crop_id: str):
         **data
     )
 
-@processing_bp.get("api/manufacturer/<manufacturer_id>/crop/<crop_id>/status")
-def process_status_page(manufacturer_id: str, crop_id: str):
+@processing_bp.get("/api/manufacturer/<manufacturer_id>")
+def manufacturer_info_api(manufacturer_id: str):
     farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
         return jsonify(ok=False, err="auth"), 401
 
-    data = FarmerProcessingService.get_process_status(farmer_id, manufacturer_id, crop_id)
+    return jsonify(
+        FarmerProcessingService.get_manufacturer_info(
+            farmer_id,
+            manufacturer_id
+        )
+    )
 
-    if not data.get("ok"):
-        flash(data.get("error") or "Process status not found.", "error")
-        return redirect(url_for("farmer_processing_bp.manufacturer_info_page", manufacturer_id=manufacturer_id))
+
+@processing_bp.get("/api/manufacturer/<manufacturer_id>/crop/<crop_id>/status")
+def process_status_api(manufacturer_id: str, crop_id: str):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    data = FarmerProcessingService.get_process_status(
+        farmer_id,
+        manufacturer_id,
+        crop_id
+    )
 
     return jsonify({"ok": True, "data": data})
-
 
