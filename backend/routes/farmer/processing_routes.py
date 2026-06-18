@@ -176,7 +176,7 @@ def processing_request_api():
     if not farmer_id:
         return jsonify(ok=False, err="auth"), 401
 
-    farmer_id = session["user_id"]
+  
     return jsonify(CropService.get_my_crops(farmer_id))
 
 
@@ -186,7 +186,6 @@ def processing_request_detail_api(request_id: str):
     if not farmer_id:
         return jsonify(ok=False, err="auth"), 401
 
-    farmer_id = session["user_id"]
     return jsonify(FarmerProcessingService.get_processing_request_detail(farmer_id, request_id))
 
 @processing_bp.get("/api/crop/<crop_id>")
@@ -195,16 +194,15 @@ def processing_detail_api(crop_id: str):
     if not farmer_id:
         return jsonify(ok=False, err="auth"), 401
 
-    farmer_id = session["user_id"]
+
     return jsonify(FarmerProcessingService.get_processing_detail(farmer_id, crop_id))
 
 # ----------------- MANUFACTURER / FACTORY INFO PAGE -----------------
 @processing_bp.get("/manufacturer/<manufacturer_id>")
 def manufacturer_info_page(manufacturer_id: str):
-    if session.get("role") != "farmer" or not session.get("user_id"):
-        return redirect("/newlogin")
-
-    farmer_id = session["user_id"]
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
     data = FarmerProcessingService.get_manufacturer_info(farmer_id, manufacturer_id)
 
     return render_template(
@@ -218,10 +216,9 @@ def manufacturer_info_page(manufacturer_id: str):
 # ----------------- PROCESS STATUS PAGE (BY MANUFACTURER + CROP) -----------------
 @processing_bp.get("/manufacturer/<manufacturer_id>/crop/<crop_id>/status")
 def process_status_page(manufacturer_id: str, crop_id: str):
-    if session.get("role") != "farmer" or not session.get("user_id"):
-        return redirect("/newlogin")
-
-    farmer_id = session["user_id"]
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
 
     data = FarmerProcessingService.get_process_status(farmer_id, manufacturer_id, crop_id)
 

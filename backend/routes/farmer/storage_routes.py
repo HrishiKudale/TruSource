@@ -219,12 +219,8 @@ def warehouse_info_api(warehouse_id):
     if not farmer_id:
         return jsonify(ok=False, err="auth"), 401
 
-    farmer_id = session["user_id"]
-    data = FarmerStorageService.get_warehouse_info_page_data(farmer_id, warehouse_id)
 
-    if not data.get("ok"):
-        return jsonify(data), 404
-    return jsonify(data)
+    return jsonify (FarmerStorageService.get_warehouse_info_page_data(farmer_id, warehouse_id))
 
 
 @storage_bp.get("/api/add")
