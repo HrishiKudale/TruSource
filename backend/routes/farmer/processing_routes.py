@@ -180,7 +180,7 @@ def processing_request_api():
     return jsonify(CropService.get_my_crops(farmer_id))
 
 
-@processing_bp.get("/manufacturer/<manufacturer_id>")
+@processing_bp.get("api/manufacturer/<manufacturer_id>")
 def manufacturer_info_page(manufacturer_id: str):
     farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
@@ -242,7 +242,7 @@ def process_status_page(manufacturer_id: str, crop_id: str):
         **data
     )
 
-@processing_bp.get("/manufacturer/<manufacturer_id>/crop/<crop_id>/status")
+@processing_bp.get("api/manufacturer/<manufacturer_id>/crop/<crop_id>/status")
 def process_status_page(manufacturer_id: str, crop_id: str):
     farmer_id = _get_farmer_id_web_or_jwt()
     if not farmer_id:
