@@ -1,9 +1,12 @@
 # backend/routes/farmer/marketplace_routes.py
 
 from flask import Blueprint, redirect, render_template, request, session, jsonify, url_for
+from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
+
 from backend.services.farmer.crop_service import CropService
 from backend.services.farmer.marketplace_service import MarketService
 from backend.mongo import mongo
+
 
 marketplace_bp = Blueprint(
     "farmer_marketplace_bp",
@@ -11,51 +14,41 @@ marketplace_bp = Blueprint(
     url_prefix="/farmer/marketplace",
 )
 
+
 # ------------------------------------------------------------
 # Helpers
 # ------------------------------------------------------------
 def _require_farmer():
-    """Returns (ok, response_or_none, farmer_id_or_none)"""
+    """Web session auth only."""
     if session.get("role") != "farmer":
         return False, redirect(url_for("auth.new_login")), None
+
     farmer_id = session.get("user_id")
     if not farmer_id:
         return False, redirect(url_for("auth.new_login")), None
+
     return True, None, farmer_id
 
 
-def _get_pickup_entities_for_dropdown():
-    """
-    Pickup From dropdown users list.
-    Adjust roles below depending on your app's logic.
-    This returns [{name, entityId/_id, location}] objects
-    that match what your searchable dropdown expects.
-    """
-    users = mongo.db.users.find(
-        {
-            "role": {"$in": ["warehouse", "manufacturer", "transporter", "buyer", "fpo", "company"]},
-            "name": {"$exists": True, "$ne": ""},
-        },
-        {"_id": 1, "name": 1, "entityId": 1, "location": 1}
-    )
+def _get_farmer_id_web_or_jwt():
+    # 1) Web session auth
+    if session.get("role") == "farmer" and session.get("user_id"):
+        return session.get("user_id")
 
-    out = []
-    for u in users:
-        out.append({
-            "name": u.get("name", ""),
-            "entityId": u.get("entityId") or str(u.get("_id")),
-            "_id": str(u.get("_id")),
-            "location": u.get("location", "") or "",
-        })
+    # 2) JWT auth mobile/API
+    try:
+        verify_jwt_in_request(optional=True)
 
-    # Also allow farmer himself as pickup (optional, if needed)
-    # farmer_id = session.get("user_id")
-    # if farmer_id:
-    #     f = mongo.db.users.find_one({"_id": farmer_id}, {"name": 1, "location": 1})
-    #     if f:
-    #         out.insert(0, {"name": f.get("name","Me"), "entityId": str(farmer_id), "_id": str(farmer_id), "location": f.get("location","")})
+        user_id = get_jwt_identity()
+        claims = get_jwt() or {}
+        role = (claims.get("role") or "").lower()
 
-    return out
+        if role == "farmer" and user_id:
+            return user_id
+
+        return None
+    except Exception:
+        return None
 
 
 def _load_add_marketplace_context(farmer_id: str):
@@ -67,9 +60,8 @@ def _load_add_marketplace_context(farmer_id: str):
     }
 
 
-
 # ------------------------------------------------------------
-# Pages
+# Web Pages
 # ------------------------------------------------------------
 @marketplace_bp.get("/")
 def marketplace_home():
@@ -92,14 +84,13 @@ def marketplace_home():
 
 @marketplace_bp.get("/crop/add")
 def add_market_blank():
-    """Show Add Marketplace form (blank)."""
     ok, resp, farmer_id = _require_farmer()
     if not ok:
         return resp
-    
 
     ctx = _load_add_marketplace_context(farmer_id)
     pickup_entities = MarketService.get_pickup_entities_for_market()
+
     return render_template(
         "AddMarketplace.html",
         active_page="sales",
@@ -113,7 +104,6 @@ def add_market_blank():
 
 @marketplace_bp.get("/add/<crop_id>")
 def add_market_list(crop_id: str):
-    """Prefill AddMarketplace.html for selected crop (if marketplace listing exists)."""
     ok, resp, farmer_id = _require_farmer()
     if not ok:
         return resp
@@ -122,14 +112,12 @@ def add_market_list(crop_id: str):
     pickup_entities = MarketService.get_pickup_entities_for_market()
     crop = MarketService.get_listing_by_crop(farmer_id, crop_id)
 
-    # optional: coordinates if stored in marketplace doc
     coord_doc = mongo.db.marketplace.find_one(
         {"farmerId": farmer_id, "cropId": crop_id},
-        {"_id": 0, "coordinates": 1}
+        {"_id": 0, "coordinates": 1},
     )
     coords = coord_doc.get("coordinates", []) if coord_doc else []
 
-    # If listing doesn't exist, still prefill cropId from crops list (optional)
     if not crop:
         crop = {"crop_id": crop_id, "cropId": crop_id}
 
@@ -144,17 +132,12 @@ def add_market_list(crop_id: str):
     )
 
 
-# ------------------------------------------------------------
-# Create Listing
-# ------------------------------------------------------------
 @marketplace_bp.post("/create")
 def create_marketplace_listing():
-    """Create a marketplace listing from AddMarketplace form or JSON."""
     ok, resp, farmer_id = _require_farmer()
     if not ok:
         return jsonify({"error": "unauthorized"}), 401
 
-    # IMPORTANT: For HTML form, keep flat=True (your form has single values)
     payload = request.get_json(silent=True) if request.is_json else request.form.to_dict(flat=True)
     payload = payload or {}
 
@@ -177,17 +160,14 @@ def create_marketplace_listing():
                 coords=[],
             ), 400
 
+        return jsonify(result), 400
 
     if request.is_json:
         return jsonify(result), 201
 
-    # FIX: redirect to correct endpoint
     return redirect(url_for("farmer_marketplace_bp.marketplace_home"))
 
 
-# ------------------------------------------------------------
-# Demand Pages
-# ------------------------------------------------------------
 @marketplace_bp.get("/demand/<demand_id>")
 def market_info_page(demand_id):
     ok, resp, farmer_id = _require_farmer()
@@ -219,20 +199,15 @@ def submit_negotiation(demand_id):
     if not ok:
         return resp
 
-    proposed_price = request.form.get("proposed_price")
-    price_unit = request.form.get("price_unit")
-    note = request.form.get("note")
-
     result = MarketService.submit_negotiation(
         demand_id=demand_id,
         farmer_id=farmer_id,
-        proposed_price=proposed_price,
-        price_unit=price_unit,
-        note=note,
+        proposed_price=request.form.get("proposed_price"),
+        price_unit=request.form.get("price_unit"),
+        note=request.form.get("note"),
     )
 
     if result.get("error"):
-        # Make sure demand data is proper
         data = MarketService.get_demand_info(demand_id)
         return render_template(
             "MarketInfo.html",
@@ -248,14 +223,12 @@ def submit_negotiation(demand_id):
 
 @marketplace_bp.get("/listing/<listing_id>")
 def listing_details_page(listing_id):
-    if session.get("role") != "farmer":
-        return redirect(url_for("auth.new_login"))
-
-    farmer_id = session.get("user_id")
-    if not farmer_id:
-        return redirect(url_for("auth.new_login"))
+    ok, resp, farmer_id = _require_farmer()
+    if not ok:
+        return resp
 
     data = MarketService.get_listing_details(farmer_id, listing_id)
+
     if data.get("error"):
         return render_template(
             "ListingInfo.html",
@@ -268,76 +241,267 @@ def listing_details_page(listing_id):
 
     return render_template(
         "ListingInfo.html",
-        listing=data["listing"],
-        requests=data["requests"],
+        listing=data.get("listing"),
+        requests=data.get("requests", []),
         active_page="sales",
         active_submenu="marketplace",
     )
+
+
 @marketplace_bp.post("/listing/<listing_id>/request/<req_id>/accept")
 def accept_buyer_request(listing_id, req_id):
-    if session.get("role") != "farmer":
-        return jsonify({"error":"unauthorized"}), 401
-    farmer_id = session.get("user_id")
+    ok, resp, farmer_id = _require_farmer()
+    if not ok:
+        return jsonify({"error": "unauthorized"}), 401
 
     payload = request.get_json(silent=True) or {}
     result = MarketService.accept_request(farmer_id, listing_id, req_id, payload)
 
     if result.get("error"):
         return jsonify(result), 400
+
     return jsonify(result), 200
 
 
 @marketplace_bp.post("/listing/<listing_id>/request/<req_id>/counter")
 def counter_offer(listing_id, req_id):
-    if session.get("role") != "farmer":
-        return jsonify({"error":"unauthorized"}), 401
-    farmer_id = session.get("user_id")
+    ok, resp, farmer_id = _require_farmer()
+    if not ok:
+        return jsonify({"error": "unauthorized"}), 401
 
     payload = request.get_json(silent=True) or {}
     result = MarketService.counter_offer(farmer_id, listing_id, req_id, payload)
 
     if result.get("error"):
         return jsonify(result), 400
+
     return jsonify(result), 200
 
 
 @marketplace_bp.post("/listing/<listing_id>/request/<req_id>/reject")
 def reject_request(listing_id, req_id):
-    if session.get("role") != "farmer":
-        return jsonify({"error":"unauthorized"}), 401
-    farmer_id = session.get("user_id")
+    ok, resp, farmer_id = _require_farmer()
+    if not ok:
+        return jsonify({"error": "unauthorized"}), 401
 
     result = MarketService.reject_request(farmer_id, listing_id, req_id)
+
     if result.get("error"):
         return jsonify(result), 400
+
     return jsonify(result), 200
 
 
+# ------------------------------------------------------------
+# API Routes
+# ------------------------------------------------------------
 
-@marketplace_bp.get("/listing/<listing_id>")
-def listing_details(listing_id):
-    if session.get("role") != "farmer" or not session.get("user_id"):
-        return redirect(url_for("auth.new_login"))
+@marketplace_bp.get("/api/home")
+def marketplace_home_api():
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
 
-    farmer_id = session["user_id"]
+    return jsonify({
+        "ok": True,
+        "active_demand": MarketService.get_active_demand_for_farmer(),
+        "listings": MarketService.get_my_listings(farmer_id),
+        "top_buyers": [],
+    }), 200
+
+
+@marketplace_bp.get("/api/list")
+def marketplace_list_api():
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    listings = MarketService.get_my_listings(farmer_id)
+
+    return jsonify({
+        "ok": True,
+        "items": listings,
+        "listings": listings,
+    }), 200
+
+
+@marketplace_bp.get("/api/crop/add")
+def add_market_blank_api():
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    ctx = _load_add_marketplace_context(farmer_id)
+    pickup_entities = MarketService.get_pickup_entities_for_market()
+
+    return jsonify({
+        "ok": True,
+        "crop": None,
+        "pickup_entities": pickup_entities,
+        "coords": [],
+        **ctx,
+    }), 200
+
+
+@marketplace_bp.get("/api/add/<crop_id>")
+def add_market_list_api(crop_id: str):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    ctx = _load_add_marketplace_context(farmer_id)
+    pickup_entities = MarketService.get_pickup_entities_for_market()
+    crop = MarketService.get_listing_by_crop(farmer_id, crop_id)
+
+    coord_doc = mongo.db.marketplace.find_one(
+        {"farmerId": farmer_id, "cropId": crop_id},
+        {"_id": 0, "coordinates": 1},
+    )
+    coords = coord_doc.get("coordinates", []) if coord_doc else []
+
+    if not crop:
+        crop = {"crop_id": crop_id, "cropId": crop_id}
+
+    return jsonify({
+        "ok": True,
+        "crop": crop,
+        "pickup_entities": pickup_entities,
+        "coords": coords,
+        **ctx,
+    }), 200
+
+
+@marketplace_bp.post("/api/create")
+def create_marketplace_listing_api():
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    payload = request.get_json(silent=True) or {}
+    result = MarketService.create_listing(farmer_id, payload)
+
+    if result.get("error"):
+        return jsonify(ok=False, err=result["error"], result=result), 400
+
+    return jsonify(ok=True, result=result), 201
+
+
+@marketplace_bp.get("/api/demand/<demand_id>")
+def market_info_api(demand_id):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    data = MarketService.get_demand_info(demand_id)
+
+    if data.get("error"):
+        return jsonify(ok=False, err=data["error"]), 404
+
+    return jsonify({
+        "ok": True,
+        "demand": data.get("demand"),
+        "buyer": data.get("buyer"),
+    }), 200
+
+
+@marketplace_bp.post("/api/demand/<demand_id>/negotiate")
+def submit_negotiation_api(demand_id):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    payload = request.get_json(silent=True) or {}
+
+    result = MarketService.submit_negotiation(
+        demand_id=demand_id,
+        farmer_id=farmer_id,
+        proposed_price=payload.get("proposed_price"),
+        price_unit=payload.get("price_unit"),
+        note=payload.get("note"),
+    )
+
+    if result.get("error"):
+        return jsonify(ok=False, err=result["error"], result=result), 400
+
+    return jsonify(ok=True, result=result), 200
+
+
+@marketplace_bp.get("/api/listing/<listing_id>")
+def listing_details_api(listing_id):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    data = MarketService.get_listing_details(farmer_id, listing_id)
+
+    if data.get("error"):
+        return jsonify(ok=False, err=data["error"]), 404
+
+    return jsonify({
+        "ok": True,
+        "listing": data.get("listing"),
+        "requests": data.get("requests", []),
+    }), 200
+
+
+@marketplace_bp.get("/api/listing/<listing_id>/farmer")
+def listing_details_for_farmer_api(listing_id):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
 
     data = MarketService.get_listing_details_for_farmer(farmer_id, listing_id)
-    if data.get("error"):
-        return render_template(
-            "Marketplace.html",
-            active_page="sales",
-            active_submenu="marketplace",
-            active_demand=MarketService.get_active_demand_for_farmer(),
-            listings=MarketService.get_my_listings(farmer_id),
-            top_buyers=[],
-            error=data["error"]
-        ), 404
 
-    return render_template(
-        "ListingInfo.html",
-        active_page="sales",
-        active_submenu="marketplace",
-        status=data["status"],
-        listing=data["listing"],
-        accepted=data.get("accepted"),
-    )
+    if data.get("error"):
+        return jsonify(ok=False, err=data["error"]), 404
+
+    return jsonify({
+        "ok": True,
+        "status": data.get("status"),
+        "listing": data.get("listing"),
+        "accepted": data.get("accepted"),
+    }), 200
+
+
+@marketplace_bp.post("/api/listing/<listing_id>/request/<req_id>/accept")
+def accept_buyer_request_api(listing_id, req_id):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    payload = request.get_json(silent=True) or {}
+    result = MarketService.accept_request(farmer_id, listing_id, req_id, payload)
+
+    if result.get("error"):
+        return jsonify(ok=False, err=result["error"], result=result), 400
+
+    return jsonify(ok=True, result=result), 200
+
+
+@marketplace_bp.post("/api/listing/<listing_id>/request/<req_id>/counter")
+def counter_offer_api(listing_id, req_id):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    payload = request.get_json(silent=True) or {}
+    result = MarketService.counter_offer(farmer_id, listing_id, req_id, payload)
+
+    if result.get("error"):
+        return jsonify(ok=False, err=result["error"], result=result), 400
+
+    return jsonify(ok=True, result=result), 200
+
+
+@marketplace_bp.post("/api/listing/<listing_id>/request/<req_id>/reject")
+def reject_request_api(listing_id, req_id):
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    result = MarketService.reject_request(farmer_id, listing_id, req_id)
+
+    if result.get("error"):
+        return jsonify(ok=False, err=result["error"], result=result), 400
+
+    return jsonify(ok=True, result=result), 200
