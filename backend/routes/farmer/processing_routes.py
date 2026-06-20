@@ -260,5 +260,31 @@ def process_status_api(manufacturer_id: str, crop_id: str):
         crop_id
     )
 
-    return jsonify({"ok": True, "data": data})
+    return jsonify(data)
 
+@processing_bp.get("/api/manufacturers")
+def manufacturers_list_api():
+    farmer_id = _get_farmer_id_web_or_jwt()
+    if not farmer_id:
+        return jsonify(ok=False, err="auth"), 401
+
+    users_col = get_col("users")
+    if users_col is None:
+        return jsonify(ok=False, error="Mongo is disabled/unavailable."), 503
+
+    manufacturers = list(
+        users_col.find(
+            {"role": "manufacturer"},
+            {
+                "_id": 0,
+                "userId": 1,
+                "name": 1,
+                "role": 1,
+                "officeName": 1,
+                "location": 1,
+                "cropType": 1,
+            },
+        )
+    )
+
+    return jsonify(ok=True, manufacturers=manufacturers)
